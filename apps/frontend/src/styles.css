@@ -1,0 +1,8 @@
+/* Global styles */
+html, body, #root { height: 100%; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+}
+/* Ensure button text is not all-caps */
+.v-btn .v-btn__content { text-transform: none; }

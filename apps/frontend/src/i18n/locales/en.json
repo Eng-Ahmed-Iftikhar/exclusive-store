@@ -1,0 +1,75 @@
+{
+  "promo": {
+    "message": "Summer Sale For All Swim Suits And Free Express Delivery - OFF 50%!",
+    "shopNow": "ShopNow"
+  },
+  "auth": {
+    "login": "Log in to Exclusive",
+    "enterDetails": "Enter your details below",
+    "email": "Email or Phone Number",
+    "password": "Password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot Password?",
+    "loginCta": "Log In",
+    "noAccount": "Don't have an account?",
+    "signUp": "Sign up"
+  },
+  "nav": {
+    "home": "Home",
+    "contact": "Contact",
+    "about": "About",
+    "signup": "Sign Up",
+    "searchPlaceholder": "What are you looking for?"
+  },
+  "footer": {
+    "exclusive": "Exclusive",
+    "subscribe": "Subscribe",
+    "offer": "Get 10% off your first order",
+    "support": "Support",
+    "address": "111 Bijoy sarani, Dhaka, DH 1515, Bangladesh.",
+    "email": "exclusive@gmail.com",
+    "phone": "+88015-88888-9999",
+    "account": "Account",
+    "loginRegister": "Login / Register",
+    "cart": "Cart",
+    "wishlist": "Wishlist",
+    "shop": "Shop",
+    "quickLink": "Quick Link",
+    "privacy": "Privacy Policy",
+    "terms": "Terms Of Use",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "copyright": "© Copyright Rimel 2022. All right reserved"
+  },
+  "notifications": {
+    "favorites": {
+      "added": "added to your favorites!",
+      "removed": "removed from your favorites",
+      "error": "Failed to update favorites. Please try again."
+    },
+    "cart": {
+      "added": "added to cart!",
+      "updated": "Cart updated successfully",
+      "removed": "Item removed from cart",
+      "cleared": "Cart cleared successfully",
+      "error": "Failed to update cart. Please try again."
+    }
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": "Your cart is empty",
+    "startShopping": "Start Shopping",
+    "total": "Total:",
+    "items": "items",
+    "clearCart": "Clear Cart",
+    "checkout": "Checkout",
+    "inCart": "In Cart",
+    "addToCart": "Add To Cart",
+    "updateCart": "Update Cart",
+    "alreadyInCart": "This item is already in your cart",
+    "item": "item",
+    "items": "items"
+  }
+}
+
+

@@ -1,0 +1,14 @@
+{
+  "name": "@./frontend",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@stripe/stripe-js": "^7.8.0",
+    "country-state-city": "^3.2.1",
+    "libphonenumber-js": "^1.12.13",
+    "vue-select": "^3.20.4"
+  },
+  "devDependencies": {
+    "@types/vue-select": "^3.16.8"
+  }
+}

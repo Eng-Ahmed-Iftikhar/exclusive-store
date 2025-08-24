@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "include": [
+    "apps/**/*.ts",
+    "apps/**/*.tsx",
+    "apps/**/*.vue",
+    "libs/**/*.ts",
+    "libs/**/*.tsx",
+    "libs/**/*.vue"
+  ],
+  "references": [
+    {
+      "path": "./libs/shared"
+    },
+    {
+      "path": "./apps/frontend"
+    },
+    {
+      "path": "./apps/backend"
+    }
+  ]
+}

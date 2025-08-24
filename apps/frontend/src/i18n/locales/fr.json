@@ -1,0 +1,53 @@
+{
+  "promo": {
+    "message": "Soldes d'été sur tous les maillots de bain et livraison express gratuite - 50% de réduction !",
+    "shopNow": "Acheter"
+  },
+  "auth": {
+    "login": "Connectez-vous à Exclusive",
+    "enterDetails": "Entrez vos informations ci-dessous",
+    "email": "E-mail ou numéro de téléphone",
+    "password": "Mot de passe",
+    "rememberMe": "Se souvenir de moi",
+    "forgotPassword": "Mot de passe oublié ?",
+    "loginCta": "Se connecter",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "signUp": "S'inscrire"
+  },
+  "nav": {
+    "home": "Accueil",
+    "contact": "Contact",
+    "about": "À propos",
+    "signup": "S'inscrire",
+    "searchPlaceholder": "Que recherchez-vous ?"
+  },
+  "footer": {
+    "exclusive": "Exclusive",
+    "subscribe": "S'abonner",
+    "offer": "Obtenez 10% de réduction sur votre première commande",
+    "support": "Support",
+    "address": "111 Bijoy sarani, Dhaka, DH 1515, Bangladesh.",
+    "email": "exclusive@gmail.com",
+    "phone": "+88015-88888-9999",
+    "account": "Compte",
+    "loginRegister": "Connexion / Inscription",
+    "cart": "Panier",
+    "wishlist": "Liste de souhaits",
+    "shop": "Boutique",
+    "quickLink": "Liens utiles",
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions d'utilisation",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "copyright": "© Copyright Rimel 2022. Tous droits réservés"
+  },
+  "notifications": {
+    "favorites": {
+      "added": "ajouté à vos favoris !",
+      "removed": "retiré de vos favoris",
+      "error": "Échec de la mise à jour des favoris. Veuillez réessayer."
+    }
+  }
+}
+
+
