@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateItemDto,
@@ -39,7 +44,9 @@ export class ItemsService {
       });
 
       if (existingItem) {
-        throw new ConflictException(`Item with SKU '${createItemDto.sku}' already exists`);
+        throw new ConflictException(
+          `Item with SKU '${createItemDto.sku}' already exists`
+        );
       }
     }
 
@@ -64,7 +71,10 @@ export class ItemsService {
     return this.mapToItemResponse(item);
   }
 
-  async getAllItems(query: ItemQueryDto, userId?: string): Promise<{
+  async getAllItems(
+    query: ItemQueryDto,
+    userId?: string
+  ): Promise<{
     items: ItemResponseDto[];
     total: number;
     page: number;
@@ -92,7 +102,7 @@ export class ItemsService {
 
     // Build where clause
     const where: any = {};
-    
+
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
@@ -109,7 +119,7 @@ export class ItemsService {
         slug: category,
       };
     }
-    
+
     // Subcategory filtering
     if (subcategoryId) {
       where.subcategoryId = subcategoryId;
@@ -118,7 +128,7 @@ export class ItemsService {
         slug: subcategory,
       };
     }
-    
+
     if (isFeatured !== undefined) where.isFeatured = isFeatured;
     if (isActive !== undefined) where.isActive = isActive;
 
@@ -175,9 +185,11 @@ export class ItemsService {
             where: { isApproved: true },
           },
           ratings: true,
-          favorites: userId ? {
-            where: { userId },
-          } : false,
+          favorites: userId
+            ? {
+                where: { userId },
+              }
+            : false,
         },
         orderBy: orderByClause,
         skip,
@@ -227,9 +239,11 @@ export class ItemsService {
             },
           },
         },
-        favorites: userId ? {
-          where: { userId },
-        } : false,
+        favorites: userId
+          ? {
+              where: { userId },
+            }
+          : false,
       },
     });
 
@@ -240,7 +254,10 @@ export class ItemsService {
     return this.mapToItemResponse(item);
   }
 
-  async updateItem(id: string, updateItemDto: UpdateItemDto): Promise<ItemResponseDto> {
+  async updateItem(
+    id: string,
+    updateItemDto: UpdateItemDto
+  ): Promise<ItemResponseDto> {
     // Check if item exists
     const existingItem = await this.prisma.item.findUnique({
       where: { id },
@@ -257,7 +274,9 @@ export class ItemsService {
       });
 
       if (skuConflict) {
-        throw new ConflictException(`Item with SKU '${updateItemDto.sku}' already exists`);
+        throw new ConflictException(
+          `Item with SKU '${updateItemDto.sku}' already exists`
+        );
       }
     }
 
@@ -308,7 +327,9 @@ export class ItemsService {
     });
 
     if (!item) {
-      throw new NotFoundException(`Item with ID '${createPriceDto.itemId}' not found`);
+      throw new NotFoundException(
+        `Item with ID '${createPriceDto.itemId}' not found`
+      );
     }
 
     const price = await this.prisma.price.create({
@@ -318,7 +339,10 @@ export class ItemsService {
     return this.mapToPriceResponse(price);
   }
 
-  async updatePrice(id: string, updatePriceDto: UpdatePriceDto): Promise<PriceResponseDto> {
+  async updatePrice(
+    id: string,
+    updatePriceDto: UpdatePriceDto
+  ): Promise<PriceResponseDto> {
     // Check if price exists
     const existingPrice = await this.prisma.price.findUnique({
       where: { id },
@@ -360,7 +384,9 @@ export class ItemsService {
     });
 
     if (!item) {
-      throw new NotFoundException(`Item with ID '${createStockDto.itemId}' not found`);
+      throw new NotFoundException(
+        `Item with ID '${createStockDto.itemId}' not found`
+      );
     }
 
     // Check if stock already exists for this item
@@ -369,7 +395,9 @@ export class ItemsService {
     });
 
     if (existingStock) {
-      throw new ConflictException(`Stock already exists for item '${createStockDto.itemId}'`);
+      throw new ConflictException(
+        `Stock already exists for item '${createStockDto.itemId}'`
+      );
     }
 
     const stock = await this.prisma.stock.create({
@@ -379,7 +407,10 @@ export class ItemsService {
     return this.mapToStockResponse(stock);
   }
 
-  async updateStock(id: string, updateStockDto: UpdateStockDto): Promise<StockResponseDto> {
+  async updateStock(
+    id: string,
+    updateStockDto: UpdateStockDto
+  ): Promise<StockResponseDto> {
     // Check if stock exists
     const existingStock = await this.prisma.stock.findUnique({
       where: { id },
@@ -414,14 +445,18 @@ export class ItemsService {
 
   // ===== IMAGE OPERATIONS =====
 
-  async createItemImage(createItemImageDto: CreateItemImageDto): Promise<ItemImageResponseDto> {
+  async createItemImage(
+    createItemImageDto: CreateItemImageDto
+  ): Promise<ItemImageResponseDto> {
     // Check if item exists
     const item = await this.prisma.item.findUnique({
       where: { id: createItemImageDto.itemId },
     });
 
     if (!item) {
-      throw new NotFoundException(`Item with ID '${createItemImageDto.itemId}' not found`);
+      throw new NotFoundException(
+        `Item with ID '${createItemImageDto.itemId}' not found`
+      );
     }
 
     // If this is the primary image, unset other primary images
@@ -439,7 +474,10 @@ export class ItemsService {
     return this.mapToItemImageResponse(image);
   }
 
-  async updateItemImage(id: string, updateItemImageDto: UpdateItemImageDto): Promise<ItemImageResponseDto> {
+  async updateItemImage(
+    id: string,
+    updateItemImageDto: UpdateItemImageDto
+  ): Promise<ItemImageResponseDto> {
     // Check if image exists
     const existingImage = await this.prisma.itemImage.findUnique({
       where: { id },
@@ -482,14 +520,19 @@ export class ItemsService {
 
   // ===== REVIEW OPERATIONS =====
 
-  async createReview(userId: string, createReviewDto: CreateReviewDto): Promise<ReviewResponseDto> {
+  async createReview(
+    userId: string,
+    createReviewDto: CreateReviewDto
+  ): Promise<ReviewResponseDto> {
     // Check if item exists
     const item = await this.prisma.item.findUnique({
       where: { id: createReviewDto.itemId },
     });
 
     if (!item) {
-      throw new NotFoundException(`Item with ID '${createReviewDto.itemId}' not found`);
+      throw new NotFoundException(
+        `Item with ID '${createReviewDto.itemId}' not found`
+      );
     }
 
     // Check if user already reviewed this item
@@ -516,7 +559,11 @@ export class ItemsService {
     return this.mapToReviewResponse(review);
   }
 
-  async updateReview(id: string, userId: string, updateReviewDto: UpdateReviewDto): Promise<ReviewResponseDto> {
+  async updateReview(
+    id: string,
+    userId: string,
+    updateReviewDto: UpdateReviewDto
+  ): Promise<ReviewResponseDto> {
     // Check if review exists and belongs to user
     const existingReview = await this.prisma.review.findUnique({
       where: { id },
@@ -543,7 +590,10 @@ export class ItemsService {
     return this.mapToReviewResponse(updatedReview);
   }
 
-  async adminUpdateReview(id: string, updateReviewDto: AdminUpdateReviewDto): Promise<ReviewResponseDto> {
+  async adminUpdateReview(
+    id: string,
+    updateReviewDto: AdminUpdateReviewDto
+  ): Promise<ReviewResponseDto> {
     // Check if review exists
     const existingReview = await this.prisma.review.findUnique({
       where: { id },
@@ -587,14 +637,19 @@ export class ItemsService {
 
   // ===== RATING OPERATIONS =====
 
-  async createRating(userId: string, createRatingDto: CreateRatingDto): Promise<RatingResponseDto> {
+  async createRating(
+    userId: string,
+    createRatingDto: CreateRatingDto
+  ): Promise<RatingResponseDto> {
     // Check if item exists
     const item = await this.prisma.item.findUnique({
       where: { id: createRatingDto.itemId },
     });
 
     if (!item) {
-      throw new NotFoundException(`Item with ID '${createRatingDto.itemId}' not found`);
+      throw new NotFoundException(
+        `Item with ID '${createRatingDto.itemId}' not found`
+      );
     }
 
     // Check if user already rated this item
@@ -621,7 +676,11 @@ export class ItemsService {
     return this.mapToRatingResponse(rating);
   }
 
-  async updateRating(id: string, userId: string, updateRatingDto: UpdateRatingDto): Promise<RatingResponseDto> {
+  async updateRating(
+    id: string,
+    userId: string,
+    updateRatingDto: UpdateRatingDto
+  ): Promise<RatingResponseDto> {
     // Check if rating exists and belongs to user
     const existingRating = await this.prisma.rating.findUnique({
       where: { id },
@@ -669,14 +728,19 @@ export class ItemsService {
 
   // ===== FAVORITE OPERATIONS =====
 
-  async addToFavorites(userId: string, createFavoriteDto: CreateFavoriteDto): Promise<FavoriteResponseDto> {
+  async addToFavorites(
+    userId: string,
+    createFavoriteDto: CreateFavoriteDto
+  ): Promise<FavoriteResponseDto> {
     // Check if item exists
     const item = await this.prisma.item.findUnique({
       where: { id: createFavoriteDto.itemId },
     });
 
     if (!item) {
-      throw new NotFoundException(`Item with ID '${createFavoriteDto.itemId}' not found`);
+      throw new NotFoundException(
+        `Item with ID '${createFavoriteDto.itemId}' not found`
+      );
     }
 
     // Check if already in favorites
@@ -733,7 +797,10 @@ export class ItemsService {
 
   // ===== FEATURED ITEMS =====
 
-  async getFeaturedItems(userId?: string, limit: number = 10): Promise<ItemResponseDto[]> {
+  async getFeaturedItems(
+    userId?: string,
+    limit = 10
+  ): Promise<ItemResponseDto[]> {
     const items = await this.prisma.item.findMany({
       where: {
         isFeatured: true,
@@ -755,9 +822,11 @@ export class ItemsService {
           where: { isApproved: true },
         },
         ratings: true,
-        favorites: userId ? {
-          where: { userId },
-        } : false,
+        favorites: userId
+          ? {
+              where: { userId },
+            }
+          : false,
       },
       orderBy: { sortOrder: 'asc' },
       take: limit,
@@ -766,7 +835,10 @@ export class ItemsService {
     return items.map((item) => this.mapToItemResponse(item));
   }
 
-  async getBestSellingItems(userId?: string, limit: number = 10): Promise<ItemResponseDto[]> {
+  async getBestSellingItems(
+    userId?: string,
+    limit = 10
+  ): Promise<ItemResponseDto[]> {
     // Get items with high ratings and good reviews
     const items = await this.prisma.item.findMany({
       where: {
@@ -793,9 +865,11 @@ export class ItemsService {
           where: { isApproved: true },
         },
         ratings: true,
-        favorites: userId ? {
-          where: { userId },
-        } : false,
+        favorites: userId
+          ? {
+              where: { userId },
+            }
+          : false,
       },
       orderBy: [
         { ratings: { _count: 'desc' } }, // Most rated first
@@ -807,7 +881,11 @@ export class ItemsService {
     return items.map((item) => this.mapToItemResponse(item));
   }
 
-  async getItemsByRating(userId?: string, minRating: number = 4, limit: number = 10): Promise<ItemResponseDto[]> {
+  async getItemsByRating(
+    userId?: string,
+    minRating = 4,
+    limit = 10
+  ): Promise<ItemResponseDto[]> {
     const items = await this.prisma.item.findMany({
       where: {
         isActive: true,
@@ -833,21 +911,23 @@ export class ItemsService {
           where: { isApproved: true },
         },
         ratings: true,
-        favorites: userId ? {
-          where: { userId },
-        } : false,
+        favorites: userId
+          ? {
+              where: { userId },
+            }
+          : false,
       },
-      orderBy: [
-        { ratings: { _count: 'desc' } },
-        { sortOrder: 'asc' },
-      ],
+      orderBy: [{ ratings: { _count: 'desc' } }, { sortOrder: 'asc' }],
       take: limit,
     });
 
     return items.map((item) => this.mapToItemResponse(item));
   }
 
-  async getNewArrivalItems(userId?: string, limit: number = 8): Promise<ItemResponseDto[]> {
+  async getNewArrivalItems(
+    userId?: string,
+    limit = 8
+  ): Promise<ItemResponseDto[]> {
     // Get recently created items
     const items = await this.prisma.item.findMany({
       where: {
@@ -869,9 +949,11 @@ export class ItemsService {
           where: { isApproved: true },
         },
         ratings: true,
-        favorites: userId ? {
-          where: { userId },
-        } : false,
+        favorites: userId
+          ? {
+              where: { userId },
+            }
+          : false,
       },
       orderBy: [
         { createdAt: 'desc' }, // Most recent first
@@ -886,11 +968,15 @@ export class ItemsService {
   // ===== HELPER METHODS =====
 
   private mapToItemResponse(item: any): ItemResponseDto {
-    const currentPrice = Number(item.prices?.find((p: any) => p.isActive)?.price) || 0;
-    const salePrice = Number(item.prices?.find((p: any) => p.isActive)?.salePrice) || 0;
-    const averageRating = item.ratings?.length > 0 
-      ? item.ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / item.ratings.length 
-      : 0;
+    const currentPrice =
+      Number(item.prices?.find((p: any) => p.isActive)?.price) || 0;
+    const salePrice =
+      Number(item.prices?.find((p: any) => p.isActive)?.salePrice) || 0;
+    const averageRating =
+      item.ratings?.length > 0
+        ? item.ratings.reduce((sum: number, r: any) => sum + r.rating, 0) /
+          item.ratings.length
+        : 0;
     const totalReviews = item.reviews?.length || 0;
     const isFavorite = item.favorites?.length > 0;
 
@@ -919,7 +1005,10 @@ export class ItemsService {
       isFavorite,
       currentPrice,
       salePrice,
-      isOnSale: Boolean(salePrice) && Number(salePrice) < Number(currentPrice) && Number(salePrice) > 0,
+      isOnSale:
+        Boolean(salePrice) &&
+        Number(salePrice) < Number(currentPrice) &&
+        Number(salePrice) > 0,
     };
   }
 

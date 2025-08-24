@@ -167,7 +167,7 @@ export class SearchService {
     ]);
 
     return [
-      ...categories.map((cat) => ({
+      ...categories.map((cat: any) => ({
         type: 'category' as const,
         id: cat.id,
         name: cat.name,
