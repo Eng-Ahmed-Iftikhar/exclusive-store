@@ -1,4 +1,11 @@
-import { IsEmail, IsString, MinLength, IsBoolean, IsOptional, MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  MinLength,
+  IsBoolean,
+  IsOptional,
+  MaxLength,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class LoginDto {
@@ -73,6 +80,24 @@ export class UserResponseDto {
   name!: string;
 
   @ApiProperty({
+    description: 'User role (user, admin, or superadmin)',
+    example: 'admin',
+    enum: ['user', 'admin', 'superadmin'],
+  })
+  role!: string;
+
+  @ApiProperty({
+    description: 'Detailed role information',
+    required: false,
+  })
+  roleDetails?: {
+    id: string;
+    name: string;
+    displayName: string;
+    description: string | null;
+  } | null;
+
+  @ApiProperty({
     description: 'User creation timestamp',
     example: '2024-01-15T10:30:00.000Z',
   })
@@ -123,8 +148,6 @@ export class RefreshTokenResponseDto {
   })
   accessToken!: string;
 }
-
-
 
 export class VerifyEmailDto {
   @ApiProperty({
@@ -197,11 +220,17 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  role: string;
+  roleDetails?: {
+    id: string;
+    name: string;
+    displayName: string;
+    description: string | null;
+  } | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface AuthResponse {
-  user: User;
   accessToken: string;
 }

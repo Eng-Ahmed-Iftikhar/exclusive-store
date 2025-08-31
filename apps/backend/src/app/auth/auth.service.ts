@@ -37,9 +37,19 @@ export class AuthService {
     return this.configService.jwtExpiresIn;
   }
   async login(loginDto: LoginDto): Promise<AuthResponse> {
-    // Find user by email
+    // Find user by email with role information
     const dbUser = await this.prisma.user.findUnique({
       where: { email: loginDto.email },
+      include: {
+        role: {
+          select: {
+            id: true,
+            name: true,
+            displayName: true,
+            description: true,
+          },
+        },
+      },
     });
 
     if (!dbUser) {
@@ -55,24 +65,14 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    // Convert database user to response user (exclude password)
-    const user: User = {
-      id: dbUser.id,
-      email: dbUser.email,
-      name: dbUser.name || '',
-      createdAt: dbUser.createdAt,
-      updatedAt: dbUser.updatedAt,
-    };
-
     // Generate token pair and store refresh token in Redis (creates new refresh token)
     const { accessToken } = await this.generateNewRefreshToken(
-      user.id,
-      user.email,
+      dbUser.id,
+      dbUser.email,
       loginDto.rememberMe
     );
 
     return {
-      user,
       accessToken,
     };
   }
@@ -91,12 +91,34 @@ export class AuthService {
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(registerDto.password, saltRounds);
 
-    // Create user in database
+    // Get default user role
+    const defaultRole = await this.prisma.role.findUnique({
+      where: { name: 'user' },
+    });
+
+    if (!defaultRole) {
+      throw new Error(
+        'Default user role not found. Please add a default user role to the database.'
+      );
+    }
+
+    // Create user in database with default role
     const dbUser = await this.prisma.user.create({
       data: {
         email: registerDto.email,
         name: registerDto.name,
         password: hashedPassword,
+        roleId: defaultRole.id,
+      },
+      include: {
+        role: {
+          select: {
+            id: true,
+            name: true,
+            displayName: true,
+            description: true,
+          },
+        },
       },
     });
 
@@ -105,6 +127,8 @@ export class AuthService {
       id: dbUser.id,
       email: dbUser.email,
       name: dbUser.name || '',
+      role: dbUser.role?.name || 'user',
+      roleDetails: dbUser.role,
       createdAt: dbUser.createdAt,
       updatedAt: dbUser.updatedAt,
     };
@@ -119,7 +143,6 @@ export class AuthService {
     this.sendWelcomeEmailAsync(user);
 
     return {
-      user,
       accessToken,
     };
   }

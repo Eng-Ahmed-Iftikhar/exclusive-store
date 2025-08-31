@@ -43,6 +43,7 @@ async function bootstrap() {
       configService.frontendUrl,
       'http://localhost:4200',
       'http://localhost:5173',
+      'http://localhost:5473',
     ],
     credentials: true,
   });

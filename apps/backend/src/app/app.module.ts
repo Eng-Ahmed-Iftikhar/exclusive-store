@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AppConfigModule } from './config/config.module';
 import { AuthModule } from './auth/auth.module';
+import { AdminModule } from './admin/admin.module';
 import { CartModule } from './cart/cart.module';
 import { CategoryModule } from './category/category.module';
 import { EmailModule } from './email/email.module';
@@ -15,6 +16,11 @@ import { OrdersModule } from './orders/orders.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 import { SearchModule } from './search/search.module';
+import { RbacModule } from './rbac/rbac.module';
+import { TeamsModule } from './teams/teams.module';
+import { ResourcesModule } from './resources/resources.module';
+import { RolesModule } from './roles/roles.module';
+import { PermissionsModule } from './permissions/permissions.module';
 
 @Module({
   imports: [
@@ -26,6 +32,7 @@ import { SearchModule } from './search/search.module';
     PrismaModule,
     RedisModule,
     AuthModule,
+    AdminModule,
     CategoryModule,
     ItemsModule,
     CartModule,
@@ -34,6 +41,11 @@ import { SearchModule } from './search/search.module';
     OrdersModule,
     EmailModule,
     SearchModule,
+    RbacModule,
+    TeamsModule,
+    ResourcesModule,
+    RolesModule,
+    PermissionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

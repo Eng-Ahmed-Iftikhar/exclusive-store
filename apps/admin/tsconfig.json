@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "allowJs": false,
+    "esModuleInterop": false,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@auth/*": ["./src/sections/*"],
+      "@components/*": ["./src/components/*"],
+      "@views/*": ["./src/views/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@pages/*": ["./src/pages/*"],
+      "@store/*": ["./src/store/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@types/*": ["./src/types/*"],
+      "@apis/*": ["./src/apis/*"],
+      "@layouts/*": ["./src/layouts/*"],
+      "@navigations/*": ["./src/navigations/*"],
+   
+    },
+    "strict": true,
+    "types": ["vite/client"]
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ],
+  "extends": "../../tsconfig.base.json"
+}

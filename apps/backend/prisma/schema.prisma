@@ -20,6 +20,7 @@ model User {
   email           String   @unique
   name            String
   password        String
+  roleId          String?  // Link to roles table instead of hardcoded string
   isEmailVerified Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -33,8 +34,114 @@ model User {
   cart             Cart?
   orders           Order[]
   paymentHistory   PaymentHistory[]
+  
+  // RBAC Relations
+  role            Role?           @relation("UserRole", fields: [roleId], references: [id])
+  userTeams       UserTeam[]
+  createdRoles    Role[]          @relation("RoleCreator")
+  createdTeams    Team[]          @relation("TeamCreator")
 
   @@map("users")
+}
+
+// RBAC System Tables
+model Resource {
+  id          String   @id @default(cuid())
+  name        String   @unique // e.g., "customer", "order", "product"
+  displayName String   // e.g., "Customer Management", "Order Management"
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  roleResources RoleResource[]
+
+  @@map("resources")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  name        String   @unique // e.g., "view", "create", "edit", "delete"
+  displayName String   // e.g., "View", "Create", "Edit", "Delete"
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  roleResources RoleResource[]
+
+  @@map("permissions")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique // e.g., "user", "admin", "superadmin"
+  displayName String   // e.g., "User", "Admin", "Super Admin"
+  description String?
+  isSystem    Boolean  @default(false) // System roles cannot be deleted
+  isActive    Boolean  @default(true)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  creator      User           @relation("RoleCreator", fields: [createdBy], references: [id])
+  roleResources RoleResource[]
+  userTeams    UserTeam[]
+  users        User[]         @relation("UserRole")
+
+  @@map("roles")
+}
+
+model RoleResource {
+  id           String @id @default(cuid())
+  roleId       String
+  resourceId   String
+  permissionId String
+  createdAt    DateTime @default(now())
+
+  // Relations
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  resource   Resource   @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, resourceId, permissionId])
+  @@map("role_resources")
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  displayName String
+  description String?
+  isActive    Boolean  @default(true)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  creator    User       @relation("TeamCreator", fields: [createdBy], references: [id])
+  userTeams UserTeam[]
+
+  @@map("teams")
+}
+
+model UserTeam {
+  id     String @id @default(cuid())
+  userId String
+  teamId String
+  roleId String
+  joinedAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId, roleId])
+  @@map("user_teams")
 }
 
 model VerificationCode {
