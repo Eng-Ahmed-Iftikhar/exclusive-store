@@ -19,7 +19,7 @@ import { CheckPermissionDto } from './dto/rbac.dto';
 @ApiTags('RBAC - Permission Checking')
 @Controller('rbac')
 @UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 export class RbacController {
   constructor(private readonly rbacService: RbacService) {}
 

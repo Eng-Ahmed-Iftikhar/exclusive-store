@@ -24,7 +24,7 @@ import { CreateResourceDto, UpdateResourceDto } from './dto/resources.dto';
 @ApiTags('Resources - System Resources Management')
 @Controller('resources')
 @UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 export class ResourcesController {
   constructor(private readonly resourcesService: ResourcesService) {}
 

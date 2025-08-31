@@ -27,7 +27,7 @@ import {
 @ApiTags('Permissions - System Permissions Management')
 @Controller('permissions')
 @UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 export class PermissionsController {
   constructor(private readonly permissionsService: PermissionsService) {}
 

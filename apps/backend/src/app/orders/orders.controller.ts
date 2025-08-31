@@ -241,7 +241,7 @@ export class OrdersController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get user orders (authenticated users only)' })
   @ApiResponse({
     status: 200,
@@ -255,7 +255,7 @@ export class OrdersController {
 
   @Get('user')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get user orders (authenticated users only)' })
   @ApiResponse({
     status: 200,

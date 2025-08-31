@@ -30,7 +30,7 @@ import {
 @ApiTags('Roles - System Roles Management')
 @Controller('roles')
 @UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
@@ -40,10 +40,7 @@ export class RolesController {
   @ApiOperation({ summary: 'Create a new role' })
   @ApiResponse({ status: 201, description: 'Role created successfully' })
   @ApiResponse({ status: 409, description: 'Role already exists' })
-  async createRole(
-    @Body() createRoleDto: CreateRoleDto,
-    @Request() req: any
-  ) {
+  async createRole(@Body() createRoleDto: CreateRoleDto, @Request() req: any) {
     return this.rolesService.createRole(createRoleDto, req.user.id);
   }
 
@@ -56,14 +53,20 @@ export class RolesController {
 
   @Get('system')
   @ApiOperation({ summary: 'Get all system roles' })
-  @ApiResponse({ status: 200, description: 'System roles retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'System roles retrieved successfully',
+  })
   async getSystemRoles() {
     return this.rolesService.getSystemRoles();
   }
 
   @Get('active')
   @ApiOperation({ summary: 'Get all active roles' })
-  @ApiResponse({ status: 200, description: 'Active roles retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Active roles retrieved successfully',
+  })
   async getActiveRoles() {
     return this.rolesService.getActiveRoles();
   }
@@ -132,7 +135,10 @@ export class RolesController {
   @Get(':roleId/resources')
   @ApiOperation({ summary: 'Get all resources assigned to a role' })
   @ApiParam({ name: 'roleId', description: 'Role ID' })
-  @ApiResponse({ status: 200, description: 'Role resources retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Role resources retrieved successfully',
+  })
   async getRoleResources(@Param('roleId') roleId: string) {
     return this.rolesService.getRoleResources(roleId);
   }
@@ -150,6 +156,10 @@ export class RolesController {
     @Param('resourceId') resourceId: string,
     @Param('permissionId') permissionId: string
   ) {
-    return this.rolesService.removeResourceFromRole(roleId, resourceId, permissionId);
+    return this.rolesService.removeResourceFromRole(
+      roleId,
+      resourceId,
+      permissionId
+    );
   }
 }

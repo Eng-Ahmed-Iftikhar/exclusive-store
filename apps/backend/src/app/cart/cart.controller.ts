@@ -11,10 +11,21 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+} from '@nestjs/swagger';
 import { CartService } from './cart.service';
 import { CartRecoveryService } from './cart-recovery.service';
-import { AddToCartDto, UpdateCartItemDto, CartDto, CartResponseDto } from './dto/cart.dto';
+import {
+  AddToCartDto,
+  UpdateCartItemDto,
+  CartDto,
+  CartResponseDto,
+} from './dto/cart.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
@@ -23,14 +34,18 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 export class CartController {
   constructor(
     private readonly cartService: CartService,
-    private readonly cartRecoveryService: CartRecoveryService,
+    private readonly cartRecoveryService: CartRecoveryService
   ) {}
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get user cart (authenticated users)' })
-  @ApiResponse({ status: 200, description: 'User cart retrieved successfully', type: CartDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User cart retrieved successfully',
+    type: CartDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getUserCart(@CurrentUser() user: any): Promise<CartDto> {
     return this.cartService.getUserCart(user.id);
@@ -39,7 +54,11 @@ export class CartController {
   @Get(':cartId')
   @ApiOperation({ summary: 'Get cart by ID (guest users)' })
   @ApiParam({ name: 'cartId', description: 'Cart ID' })
-  @ApiResponse({ status: 200, description: 'Cart retrieved successfully', type: CartDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Cart retrieved successfully',
+    type: CartDto,
+  })
   @ApiResponse({ status: 404, description: 'Cart not found' })
   async getCartById(@Param('cartId') cartId: string): Promise<CartDto> {
     return this.cartService.getCartById(cartId);
@@ -47,19 +66,27 @@ export class CartController {
 
   @Post()
   @ApiOperation({ summary: 'Create new cart (guest users)' })
-  @ApiResponse({ status: 201, description: 'Cart created successfully', type: CartDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Cart created successfully',
+    type: CartDto,
+  })
   async createCart(): Promise<CartDto> {
     return this.cartService.createCart();
   }
 
   @Post('items')
   @ApiOperation({ summary: 'Add item to cart' })
-  @ApiResponse({ status: 201, description: 'Item added to cart successfully', type: CartResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Item added to cart successfully',
+    type: CartResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Cart or item not found' })
   async addToCart(
     @Body() addToCartDto: AddToCartDto,
-    @Request() req: any,
+    @Request() req: any
   ): Promise<CartResponseDto> {
     // Extract cart ID from query parameters
     const cartId = req.query.cartId;
@@ -76,13 +103,17 @@ export class CartController {
   @Put('items/:cartItemId')
   @ApiOperation({ summary: 'Update cart item quantity' })
   @ApiParam({ name: 'cartItemId', description: 'Cart item ID' })
-  @ApiResponse({ status: 200, description: 'Cart item updated successfully', type: CartResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Cart item updated successfully',
+    type: CartResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Cart or cart item not found' })
   async updateCartItem(
     @Param('cartItemId') cartItemId: string,
     @Body() updateDto: UpdateCartItemDto,
-    @Request() req: any,
+    @Request() req: any
   ): Promise<CartResponseDto> {
     // Extract cart ID from query parameters
     const cartId = req.query.cartId;
@@ -93,18 +124,27 @@ export class CartController {
     // Extract user ID if authenticated
     const userId = req.user?.id;
 
-    return this.cartService.updateCartItem(cartId, cartItemId, updateDto, userId);
+    return this.cartService.updateCartItem(
+      cartId,
+      cartItemId,
+      updateDto,
+      userId
+    );
   }
 
   @Delete('items/:cartItemId')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Remove item from cart' })
   @ApiParam({ name: 'cartItemId', description: 'Cart item ID' })
-  @ApiResponse({ status: 200, description: 'Item removed from cart successfully', type: CartResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Item removed from cart successfully',
+    type: CartResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Cart or cart item not found' })
   async removeFromCart(
     @Param('cartItemId') cartItemId: string,
-    @Request() req: any,
+    @Request() req: any
   ): Promise<CartResponseDto> {
     // Extract cart ID from query parameters
     const cartId = req.query.cartId;
@@ -121,7 +161,11 @@ export class CartController {
   @Delete()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Clear entire cart' })
-  @ApiResponse({ status: 200, description: 'Cart cleared successfully', type: CartResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Cart cleared successfully',
+    type: CartResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Cart not found' })
   async clearCart(@Request() req: any): Promise<CartResponseDto> {
     // Extract cart ID from query parameters
@@ -138,11 +182,14 @@ export class CartController {
 
   @Post('cleanup')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Clean up orphaned carts and items (Admin only)' })
   @ApiResponse({ status: 200, description: 'Cleanup completed successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async cleanupOrphanedCarts(): Promise<{ deletedCarts: number; deletedItems: number }> {
+  async cleanupOrphanedCarts(): Promise<{
+    deletedCarts: number;
+    deletedItems: number;
+  }> {
     return this.cartService.cleanupOrphanedCarts();
   }
 
@@ -151,12 +198,16 @@ export class CartController {
   @ApiParam({ name: 'cartId', description: 'Cart ID to validate' })
   @ApiResponse({ status: 200, description: 'Cart validation completed' })
   @ApiResponse({ status: 404, description: 'Cart not found' })
-  async validateCart(@Param('cartId') cartId: string): Promise<{ isValid: boolean; issues: string[] }> {
+  async validateCart(
+    @Param('cartId') cartId: string
+  ): Promise<{ isValid: boolean; issues: string[] }> {
     return this.cartService.validateCartIntegrity(cartId);
   }
 
   @Post('recover')
-  @ApiOperation({ summary: 'Attempt to recover cart from cart item or create new cart' })
+  @ApiOperation({
+    summary: 'Attempt to recover cart from cart item or create new cart',
+  })
   @ApiResponse({ status: 200, description: 'Cart recovery completed' })
   async recoverCart(
     @Body() body: { cartItemId?: string; userId?: string; oldCartId?: string }
@@ -167,7 +218,9 @@ export class CartController {
 
     // Try to recover from cart item first
     if (body.cartItemId) {
-      const recovery = await this.cartRecoveryService.recoverCartFromItem(body.cartItemId);
+      const recovery = await this.cartRecoveryService.recoverCartFromItem(
+        body.cartItemId
+      );
       if (recovery && recovery.cartExists) {
         cartId = recovery.cartId;
         recovered = true;
@@ -192,7 +245,10 @@ export class CartController {
 
     // If no cart found at all, create a new one
     if (!cartId) {
-      const newCart = await this.cartRecoveryService.createRecoveryCart(body.userId, body.oldCartId);
+      const newCart = await this.cartRecoveryService.createRecoveryCart(
+        body.userId,
+        body.oldCartId
+      );
       cartId = newCart.cartId;
       migratedItems = newCart.migratedItems;
     }
@@ -201,12 +257,16 @@ export class CartController {
   }
 
   @Post('recalculate-prices')
-  @ApiOperation({ summary: 'Recalculate cart item prices (useful when sale prices change)' })
-  @ApiResponse({ status: 200, description: 'Cart prices recalculated successfully', type: CartResponseDto })
+  @ApiOperation({
+    summary: 'Recalculate cart item prices (useful when sale prices change)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Cart prices recalculated successfully',
+    type: CartResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Cart not found' })
-  async recalculateCartPrices(
-    @Request() req: any,
-  ): Promise<CartResponseDto> {
+  async recalculateCartPrices(@Request() req: any): Promise<CartResponseDto> {
     // Extract cart ID from query parameters
     const cartId = req.query.cartId;
     if (!cartId) {

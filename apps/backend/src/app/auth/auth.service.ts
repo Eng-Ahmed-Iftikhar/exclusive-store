@@ -93,7 +93,7 @@ export class AuthService {
 
     // Get default user role
     const defaultRole = await this.prisma.role.findUnique({
-      where: { name: 'user' },
+      where: { name: 'customer' },
     });
 
     if (!defaultRole) {

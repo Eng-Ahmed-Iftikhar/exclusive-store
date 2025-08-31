@@ -32,7 +32,7 @@ import {
 @ApiTags('Teams - Team Management')
 @Controller('teams')
 @UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 export class TeamsController {
   constructor(private readonly teamsService: TeamsService) {}
 
