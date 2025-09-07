@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import PermissionTable from '@/sections/app/management/permissions/PermissionTable';
 import { Permission } from '@/apis/services/permissionApi';
-import PermissionFormHeader from '@/sections/app/management/permissions/PermissionFormHeader';
 
 function PermissionView() {
   const navigate = useNavigate();
@@ -16,11 +15,6 @@ function PermissionView() {
 
   return (
     <div className="p-6">
-      <PermissionFormHeader
-        title="Permissions"
-        description="Manage permissions for your application"
-        onBack={() => navigate('/')}
-      />
       <PermissionTable onEdit={handleEdit} onCreate={handleCreate} />
     </div>
   );

@@ -4,7 +4,6 @@ import {
   useUpdateRoleMutation,
 } from '@/apis/services/roleApi';
 import RoleForm from '@/sections/app/management/roles/RoleForm';
-import RoleFormHeader from '@/sections/app/management/roles/RoleFormHeader';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -20,10 +19,6 @@ const EditRoleView: React.FC = () => {
     refetchOnMountOrArgChange: true,
   });
   const [updateRole] = useUpdateRoleMutation();
-
-  const handleBack = () => {
-    navigate('/management/roles');
-  };
 
   const handleCancel = () => {
     navigate('/management/roles');
@@ -73,26 +68,16 @@ const EditRoleView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen ">
-      <div className="w-full p-4">
-        <div className="mt-6 w-full space-y-8">
-          <RoleFormHeader
-            title="Edit Role"
-            description="Update role details and permissions"
-            onBack={handleBack}
-          />
-
-          <RoleForm
-            mode="edit"
-            initialData={roleData}
-            onSubmit={handleSubmit}
-            onCancel={handleCancel}
-            isSubmitting={isSubmitting}
-            title={`Edit Role: ${roleData?.name || ''}`}
-            description="Update the role details below"
-          />
-        </div>
-      </div>
+    <div className="min-h-screen p-6 ">
+      <RoleForm
+        mode="edit"
+        initialData={roleData}
+        onSubmit={handleSubmit}
+        onCancel={handleCancel}
+        isSubmitting={isSubmitting}
+        title={`Edit Role: ${roleData?.name || ''}`}
+        description="Update the role details below"
+      />
     </div>
   );
 };

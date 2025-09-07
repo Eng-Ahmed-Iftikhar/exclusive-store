@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import EditPermissionForm from '@/sections/app/management/permissions/EditPermissionForm';
-import PermissionFormHeader from '@/sections/app/management/permissions/PermissionFormHeader';
 
 function EditPermissionView() {
   const navigate = useNavigate();
@@ -23,21 +22,13 @@ function EditPermissionView() {
 
   return (
     <div className="p-6">
-      <PermissionFormHeader
-        title="Edit Permission"
-        description="Update permission details and settings"
-        onBack={handleCancel}
+      <EditPermissionForm
+        permissionId={id}
+        onSuccess={handleSuccess}
+        onCancel={handleCancel}
+        isSubmitting={isSubmitting}
+        setIsSubmitting={setIsSubmitting}
       />
-
-      <div className="mt-6">
-        <EditPermissionForm
-          permissionId={id}
-          onSuccess={handleSuccess}
-          onCancel={handleCancel}
-          isSubmitting={isSubmitting}
-          setIsSubmitting={setIsSubmitting}
-        />
-      </div>
     </div>
   );
 }

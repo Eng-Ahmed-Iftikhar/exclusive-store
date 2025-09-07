@@ -1,29 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { RootState } from '@/store';
 import {
   useGetResourceByIdQuery,
   useUpdateResourceMutation,
 } from '@/apis/services/resourceApi';
-import { FiSave, FiX } from 'react-icons/fi';
-import { z } from 'zod';
-import { toFormikValidationSchema } from 'zod-formik-adapter';
-
-// Validation schema for resource update
-const resourceUpdateSchema = z.object({
-  displayName: z
-    .string()
-    .min(1, 'Display name is required')
-    .max(100, 'Display name must be less than 100 characters'),
-  description: z
-    .string()
-    .max(500, 'Description must be less than 500 characters')
-    .optional(),
-  isActive: z.boolean().optional(),
-});
-
-type ResourceUpdateFormData = z.infer<typeof resourceUpdateSchema>;
+import ResourceForm from './ResourceForm';
 
 interface EditResourceFormProps {
   resourceId: string;
@@ -41,11 +23,7 @@ const EditResourceForm: React.FC<EditResourceFormProps> = ({
   setIsSubmitting,
 }) => {
   const { theme } = useSelector((state: RootState) => state.ui);
-  const [formData, setFormData] = useState({
-    displayName: '',
-    description: '',
-    isActive: true,
-  });
+  const [resourceData, setResourceData] = useState<any>(null);
 
   const {
     data: resource,
@@ -57,43 +35,25 @@ const EditResourceForm: React.FC<EditResourceFormProps> = ({
 
   useEffect(() => {
     if (resource) {
-      setFormData({
-        displayName: resource.displayName,
+      setResourceData({
+        name: resource.name,
+        displayName: resource.displayName || '',
         description: resource.description || '',
-        isActive: resource.isActive,
+        isActive: resource.isActive ?? true,
       });
     }
   }, [resource]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: checked,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
 
     try {
       await updateResource({
         id: resourceId,
         data: {
-          displayName: formData.displayName,
-          description: formData.description,
-          isActive: formData.isActive,
+          displayName: data.displayName,
+          description: data.description,
+          isActive: data.isActive,
         },
       }).unwrap();
       onSuccess();
@@ -170,187 +130,20 @@ const EditResourceForm: React.FC<EditResourceFormProps> = ({
     );
   }
 
-  if (!resource) {
+  if (!resourceData) {
     return null;
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div
-        className={`rounded-2xl border shadow-xl ${
-          theme === 'dark'
-            ? 'bg-slate-800 border-slate-700'
-            : 'bg-white border-gray-200'
-        }`}
-      >
-        {/* Form Header */}
-        <div
-          className={`px-8 py-6 border-b ${
-            theme === 'dark' ? 'border-slate-700' : 'border-gray-200'
-          }`}
-        >
-          <h2
-            className={`text-xl font-semibold ${
-              theme === 'dark' ? 'text-white' : 'text-gray-900'
-            }`}
-          >
-            Edit Resource: {resource.name}
-          </h2>
-          <p
-            className={`text-sm mt-1 ${
-              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-            }`}
-          >
-            Update the resource details below
-          </p>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-8 space-y-8">
-          <div className="space-y-2">
-            <label
-              className={`block text-sm font-semibold ${
-                theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
-              }`}
-            >
-              Resource Name (Read-only)
-            </label>
-            <input
-              type="text"
-              value={resource.name}
-              disabled
-              className={`w-full px-4 py-3 rounded-xl border ${
-                theme === 'dark'
-                  ? 'bg-slate-600 border-slate-500 text-gray-400'
-                  : 'bg-gray-100 border-gray-200 text-gray-500'
-              }`}
-            />
-            <p
-              className={`text-sm ${
-                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-              }`}
-            >
-              Resource name cannot be changed after creation
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <label
-              className={`block text-sm font-semibold ${
-                theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
-              }`}
-            >
-              Display Name *
-            </label>
-            <input
-              type="text"
-              name="displayName"
-              value={formData.displayName}
-              onChange={handleInputChange}
-              required
-              className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 ${
-                theme === 'dark'
-                  ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:bg-slate-600 focus:border-green-500'
-                  : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-green-500'
-              } focus:ring-4 focus:ring-green-500/20 focus:outline-none`}
-              placeholder="e.g., Users, Orders, Products"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              className={`block text-sm font-semibold ${
-                theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
-              }`}
-            >
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              rows={4}
-              className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 resize-none ${
-                theme === 'dark'
-                  ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:bg-slate-600 focus:border-green-500'
-                  : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-green-500'
-              } focus:ring-4 focus:ring-green-500/20 focus:outline-none`}
-              placeholder="Describe what this resource represents..."
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                name="isActive"
-                checked={formData.isActive}
-                onChange={handleCheckboxChange}
-                className={`w-5 h-5 rounded border-2 transition-colors ${
-                  theme === 'dark'
-                    ? 'border-slate-600 bg-slate-700 text-green-500 focus:ring-green-500/20'
-                    : 'border-gray-300 bg-white text-green-600 focus:ring-green-500/20'
-                } focus:ring-4 focus:outline-none`}
-              />
-              <span
-                className={`text-sm font-semibold ${
-                  theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
-                }`}
-              >
-                Active
-              </span>
-            </label>
-            <p
-              className={`text-sm ${
-                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-              }`}
-            >
-              Inactive resources cannot be assigned to roles
-            </p>
-          </div>
-
-          {/* Actions */}
-          <div
-            className={`flex items-center justify-end gap-4 pt-8 border-t ${
-              theme === 'dark' ? 'border-slate-700' : 'border-gray-200'
-            }`}
-          >
-            <button
-              type="button"
-              onClick={onCancel}
-              className={`group flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                theme === 'dark'
-                  ? 'bg-slate-700 text-gray-300 hover:bg-slate-600 hover:text-white border border-slate-600 hover:border-slate-500'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 border border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <FiX className="w-4 h-4 group-hover:rotate-90 transition-transform duration-200" />
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`group flex items-center gap-2 px-8 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                isSubmitting
-                  ? 'bg-gray-400 text-white cursor-not-allowed'
-                  : theme === 'dark'
-                  ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl'
-                  : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl'
-              }`}
-            >
-              <FiSave
-                className={`w-4 h-4 ${
-                  isSubmitting
-                    ? 'animate-spin'
-                    : 'group-hover:scale-110 transition-transform duration-200'
-                }`}
-              />
-              {isSubmitting ? 'Updating...' : 'Update Resource'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <ResourceForm
+      mode="edit"
+      initialData={resourceData}
+      onSubmit={handleSubmit}
+      onCancel={onCancel}
+      isSubmitting={isSubmitting}
+      title={`Edit Resource: ${resourceData.name}`}
+      description="Update the resource details below"
+    />
   );
 };
 
