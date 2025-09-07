@@ -82,6 +82,15 @@ export const API_ROUTES = {
     BY_ID: (id: string) => `/resources/${id}`,
   },
 
+  // Roles Routes
+  ROLES: {
+    BASE: '/roles',
+    LIST: '/roles',
+    ACTIVE: '/roles/active',
+    SYSTEM: '/roles/system',
+    BY_ID: (id: string) => `/roles/${id}`,
+  },
+
   // Notifications Routes
   NOTIFICATIONS: {
     BASE: '/notifications',

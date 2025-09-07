@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   Request,
   HttpCode,
@@ -45,10 +46,18 @@ export class RolesController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all active roles' })
+  @ApiOperation({ summary: 'Get all active roles with pagination' })
   @ApiResponse({ status: 200, description: 'Roles retrieved successfully' })
-  async getAllRoles() {
-    return this.rolesService.getAllRoles();
+  async getAllRoles(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+    @Query('search') search: string = ''
+  ) {
+    return this.rolesService.getAllRoles(
+      parseInt(page),
+      parseInt(limit),
+      search
+    );
   }
 
   @Get('system')

@@ -5,16 +5,21 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ActivityService } from '../activity/activity.service';
 import {
   CreateRoleDto,
   UpdateRoleDto,
   AssignResourceToRoleDto,
   BulkAssignResourcesDto,
 } from './dto/roles.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class RolesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private activityService: ActivityService
+  ) {}
 
   // ==================== ROLE MANAGEMENT ====================
 
@@ -29,27 +34,76 @@ export class RolesService {
       );
     }
 
-    return this.prisma.role.create({
+    // Extract assignments from DTO
+    const { assignments, ...roleData } = createRoleDto;
+
+    const role = await this.prisma.role.create({
       data: {
-        ...createRoleDto,
+        ...roleData,
         createdBy,
       },
     });
+
+    // Handle assignments if provided
+    if (assignments && assignments.length > 0) {
+      await this.bulkAssignResourcesToRole({
+        roleId: role.id,
+        assignments,
+      });
+    }
+
+    // Log activity
+    await this.activityService.createActivity({
+      type: 'system',
+      title: 'Role Created',
+      description: `Role "${role.displayName}" (${role.name}) was created`,
+      metadata: { roleId: role.id, roleName: role.name },
+      userId: createdBy,
+    });
+
+    return role;
   }
 
-  async getAllRoles() {
-    return this.prisma.role.findMany({
-      where: { isActive: true },
-      include: {
-        creator: {
-          select: { id: true, name: true, email: true },
+  async getAllRoles(page = 1, limit = 10, search = '') {
+    const skip = (page - 1) * limit;
+
+    // Build where clause for search
+    const whereClause: any = { isActive: true };
+    if (search) {
+      whereClause.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { displayName: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [roles, total] = await Promise.all([
+      this.prisma.role.findMany({
+        where: whereClause,
+        include: {
+          creator: {
+            select: { id: true, name: true, email: true },
+          },
+          _count: {
+            select: { roleResources: true, userTeams: true },
+          },
         },
-        _count: {
-          select: { roleResources: true, userTeams: true },
-        },
-      },
-      orderBy: { name: 'asc' },
-    });
+        orderBy: { name: 'asc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.role.count({ where: whereClause }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      roles,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 
   async getRoleById(id: string) {
@@ -82,10 +136,32 @@ export class RolesService {
       throw new ForbiddenException('Cannot modify system roles');
     }
 
-    return this.prisma.role.update({
+    // Extract assignments from DTO
+    const { assignments, ...roleData } = updateRoleDto;
+
+    const updatedRole = await this.prisma.role.update({
       where: { id },
-      data: updateRoleDto,
+      data: roleData,
     });
+
+    // Handle assignments if provided
+    if (assignments !== undefined) {
+      await this.bulkAssignResourcesToRole({
+        roleId: id,
+        assignments,
+      });
+    }
+
+    // Log activity
+    await this.activityService.createActivity({
+      type: 'system',
+      title: 'Role Updated',
+      description: `Role "${updatedRole.displayName}" (${updatedRole.name}) was updated`,
+      metadata: { roleId: updatedRole.id, roleName: updatedRole.name },
+      userId: role.createdBy,
+    });
+
+    return updatedRole;
   }
 
   async deleteRole(id: string) {
@@ -106,10 +182,21 @@ export class RolesService {
       );
     }
 
-    return this.prisma.role.update({
+    const deletedRole = await this.prisma.role.update({
       where: { id },
       data: { isActive: false },
     });
+
+    // Log activity
+    await this.activityService.createActivity({
+      type: 'system',
+      title: 'Role Deleted',
+      description: `Role "${deletedRole.displayName}" (${deletedRole.name}) was deleted`,
+      metadata: { roleId: deletedRole.id, roleName: deletedRole.name },
+      userId: role.createdBy,
+    });
+
+    return deletedRole;
   }
 
   async getSystemRoles() {
@@ -212,7 +299,7 @@ export class RolesService {
     }
 
     // Use transaction to ensure all assignments succeed or fail together
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Remove existing assignments for this role
       await tx.roleResource.deleteMany({
         where: { roleId: bulkAssignDto.roleId },

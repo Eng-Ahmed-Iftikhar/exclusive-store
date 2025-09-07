@@ -8,6 +8,9 @@ import EditPermissionPage from '@/pages/app/management/EditPermissionPage';
 import ResourcePage from '@/pages/app/management/ResourcePage';
 import CreateResourcePage from '@/pages/app/management/CreateResourcePage';
 import EditResourcePage from '@/pages/app/management/EditResourcePage';
+import RolePage from '@/pages/app/management/RolePage';
+import CreateRolePage from '@/pages/app/management/CreateRolePage';
+import EditRolePage from '@/pages/app/management/EditRolePage';
 import Login from '@/pages/auth/LoginPage';
 import { PUBLIC_ROUTES, ADMIN_ROUTES, ROUTES } from '@/routers/routes';
 import { ProtectedRoute, GuestRoute } from '@components/ProtectedRoute';
@@ -21,6 +24,9 @@ const COMPONENT_MAP = {
   Resources: ResourcePage,
   CreateResource: CreateResourcePage,
   EditResource: EditResourcePage,
+  Roles: RolePage,
+  CreateRole: CreateRolePage,
+  EditRole: EditRolePage,
   Login: Login,
 };
 

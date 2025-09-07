@@ -6,7 +6,9 @@ import { adminApi } from '../apis/services/adminApi';
 import { authApi } from '../apis/services/authApi';
 import { permissionApi } from '../apis/services/permissionApi';
 import { resourceApi } from '../apis/services/resourceApi';
+import { roleApi } from '../apis/services/roleApi';
 import { notificationApi } from '../apis/services/notificationApi';
+import { rbacApi } from '../apis/services/rbacApi';
 import rootReducer from './slices';
 
 // Persist config
@@ -23,7 +25,9 @@ const apiMiddleware = [
   authApi.middleware,
   permissionApi.middleware,
   resourceApi.middleware,
+  roleApi.middleware,
   notificationApi.middleware,
+  rbacApi.middleware,
 ];
 
 export const store = configureStore({

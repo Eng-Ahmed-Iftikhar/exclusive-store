@@ -1,4 +1,11 @@
-import { IsString, IsBoolean, IsOptional, IsNotEmpty, IsArray, IsUUID } from 'class-validator';
+import {
+  IsString,
+  IsBoolean,
+  IsOptional,
+  IsNotEmpty,
+  IsArray,
+  IsUUID,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateRoleDto {
@@ -22,6 +29,25 @@ export class CreateRoleDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @ApiProperty({
+    description: 'Array of resource-permission assignments',
+    required: false,
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        resourceId: { type: 'string', format: 'uuid' },
+        permissionId: { type: 'string', format: 'uuid' },
+      },
+    },
+  })
+  @IsArray()
+  @IsOptional()
+  assignments?: Array<{
+    resourceId: string;
+    permissionId: string;
+  }>;
 }
 
 export class UpdateRoleDto {
@@ -42,6 +68,25 @@ export class UpdateRoleDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @ApiProperty({
+    description: 'Array of resource-permission assignments',
+    required: false,
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        resourceId: { type: 'string', format: 'uuid' },
+        permissionId: { type: 'string', format: 'uuid' },
+      },
+    },
+  })
+  @IsArray()
+  @IsOptional()
+  assignments?: Array<{
+    resourceId: string;
+    permissionId: string;
+  }>;
 }
 
 export class RoleResponseDto {

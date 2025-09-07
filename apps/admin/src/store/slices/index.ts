@@ -7,12 +7,18 @@ import { adminApi } from '@/apis/services/adminApi';
 import { authApi } from '@/apis/services/authApi';
 import { permissionApi } from '@/apis/services/permissionApi';
 import { resourceApi } from '@/apis/services/resourceApi';
+import { roleApi } from '@/apis/services/roleApi';
+import { notificationApi } from '@/apis/services/notificationApi';
+import { rbacApi } from '@/apis/services/rbacApi';
 
 const apiReducers = {
   [adminApi.reducerPath]: adminApi.reducer,
   [authApi.reducerPath]: authApi.reducer,
   [permissionApi.reducerPath]: permissionApi.reducer,
   [resourceApi.reducerPath]: resourceApi.reducer,
+  [roleApi.reducerPath]: roleApi.reducer,
+  [notificationApi.reducerPath]: notificationApi.reducer,
+  [rbacApi.reducerPath]: rbacApi.reducer,
 };
 
 const rootReducer = combineReducers({

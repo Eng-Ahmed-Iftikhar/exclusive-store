@@ -6,6 +6,9 @@ const MANAGEMENT_ROUTES = {
   ADMIN_RESOURCES: '/resources',
   ADMIN_CREATE_RESOURCE: '/resources/create',
   ADMIN_EDIT_RESOURCE: '/resources/edit/:id',
+  ADMIN_ROLES: '/roles',
+  ADMIN_CREATE_ROLE: '/roles/create',
+  ADMIN_EDIT_ROLE: '/roles/edit/:id',
 };
 
 // Route Paths
@@ -38,6 +41,9 @@ export const ROUTE_NAMES = {
   RESOURCES: 'Resources',
   CREATE_RESOURCE: 'Create Resource',
   EDIT_RESOURCE: 'Edit Resource',
+  ROLES: 'Roles',
+  CREATE_ROLE: 'Create Role',
+  EDIT_ROLE: 'Edit Role',
 } as const;
 
 // Public Routes Array
@@ -93,6 +99,24 @@ export const ADMIN_ROUTES = [
     name: ROUTE_NAMES.EDIT_RESOURCE,
     element: 'EditResource',
     icon: 'edit-resource',
+  },
+  {
+    path: ROUTES.ADMIN_MANAGEMENT + ROUTES.ADMIN_ROLES,
+    name: ROUTE_NAMES.ROLES,
+    element: 'Roles',
+    icon: 'roles',
+  },
+  {
+    path: ROUTES.ADMIN_MANAGEMENT + ROUTES.ADMIN_CREATE_ROLE,
+    name: ROUTE_NAMES.CREATE_ROLE,
+    element: 'CreateRole',
+    icon: 'create-role',
+  },
+  {
+    path: ROUTES.ADMIN_MANAGEMENT + ROUTES.ADMIN_EDIT_ROLE,
+    name: ROUTE_NAMES.EDIT_ROLE,
+    element: 'EditRole',
+    icon: 'edit-role',
   },
 ];
 
