@@ -1,22 +1,39 @@
+import { useCreateRoleMutation } from '@/apis/services/roleApi';
+import RoleForm from '@/sections/app/management/roles/RoleForm';
+import RoleFormHeader from '@/sections/app/management/roles/RoleFormHeader';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import RoleFormHeader from '@/sections/app/management/roles/RoleFormHeader';
-import CreateRoleForm from '@/sections/app/management/roles/CreateRoleForm';
 
 const CreateRoleView: React.FC = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createRole] = useCreateRoleMutation();
 
   const handleBack = () => {
     navigate('/management/roles');
   };
 
-  const handleSuccess = () => {
+  const handleCancel = () => {
     navigate('/management/roles');
   };
 
-  const handleCancel = () => {
-    navigate('/management/roles');
+  const handleSubmit = async (data: any) => {
+    setIsSubmitting(true);
+
+    try {
+      await createRole({
+        name: data.name,
+        displayName: data.displayName,
+        description: data.description,
+        assignments: data.assignments,
+      }).unwrap();
+
+      navigate('/management/roles');
+    } catch (error) {
+      console.error('Failed to create role:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -28,11 +45,13 @@ const CreateRoleView: React.FC = () => {
             description="Create a new role with specific permissions and access controls"
             onBack={handleBack}
           />
-          <CreateRoleForm
-            onSuccess={handleSuccess}
+          <RoleForm
+            mode="create"
+            onSubmit={handleSubmit}
             onCancel={handleCancel}
             isSubmitting={isSubmitting}
-            setIsSubmitting={setIsSubmitting}
+            title="Role Details"
+            description="Fill in the details below to create a new role"
           />
         </div>
       </div>

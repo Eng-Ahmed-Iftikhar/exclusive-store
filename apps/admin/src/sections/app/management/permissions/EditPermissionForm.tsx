@@ -1,11 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { RootState } from '@/store';
 import {
   useGetPermissionByIdQuery,
   useUpdatePermissionMutation,
 } from '@/apis/services/permissionApi';
 import { FiSave, FiX } from 'react-icons/fi';
+import { z } from 'zod';
+import { toFormikValidationSchema } from 'zod-formik-adapter';
+
+// Validation schema for permission update
+const permissionUpdateSchema = z.object({
+  displayName: z
+    .string()
+    .min(1, 'Display name is required')
+    .max(100, 'Display name must be less than 100 characters'),
+  description: z
+    .string()
+    .max(500, 'Description must be less than 500 characters')
+    .optional(),
+  isActive: z.boolean().optional(),
+});
+
+type PermissionUpdateFormData = z.infer<typeof permissionUpdateSchema>;
 
 interface EditPermissionFormProps {
   permissionId: string;

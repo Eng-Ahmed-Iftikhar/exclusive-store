@@ -1,8 +1,30 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { RootState } from '@/store';
 import { useCreateResourceMutation } from '@/apis/services/resourceApi';
 import { FiSave, FiX } from 'react-icons/fi';
+import { z } from 'zod';
+import { toFormikValidationSchema } from 'zod-formik-adapter';
+
+// Validation schema for resource creation
+const resourceSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Resource name is required')
+    .regex(/^[a-z_]+$/, 'Resource name must be lowercase with underscores only')
+    .max(50, 'Resource name must be less than 50 characters'),
+  displayName: z
+    .string()
+    .min(1, 'Display name is required')
+    .max(100, 'Display name must be less than 100 characters'),
+  description: z
+    .string()
+    .max(500, 'Description must be less than 500 characters')
+    .optional(),
+});
+
+type ResourceFormData = z.infer<typeof resourceSchema>;
 
 interface CreateResourceFormProps {
   onSuccess: () => void;

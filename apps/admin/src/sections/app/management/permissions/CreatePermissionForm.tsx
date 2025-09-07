@@ -1,8 +1,33 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useSelector } from 'react-redux';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { RootState } from '@/store';
 import { useCreatePermissionMutation } from '@/apis/services/permissionApi';
 import { FiSave, FiX } from 'react-icons/fi';
+import { z } from 'zod';
+import { toFormikValidationSchema } from 'zod-formik-adapter';
+
+// Validation schema for permission creation
+const permissionSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Permission name is required')
+    .regex(
+      /^[a-z_]+$/,
+      'Permission name must be lowercase with underscores only'
+    )
+    .max(50, 'Permission name must be less than 50 characters'),
+  displayName: z
+    .string()
+    .min(1, 'Display name is required')
+    .max(100, 'Display name must be less than 100 characters'),
+  description: z
+    .string()
+    .max(500, 'Description must be less than 500 characters')
+    .optional(),
+});
+
+type PermissionFormData = z.infer<typeof permissionSchema>;
 
 interface CreatePermissionFormProps {
   onSuccess: () => void;
@@ -18,33 +43,22 @@ const CreatePermissionForm: React.FC<CreatePermissionFormProps> = ({
   setIsSubmitting,
 }) => {
   const { theme } = useSelector((state: RootState) => state.ui);
-  const [formData, setFormData] = useState({
+  const [createPermission] = useCreatePermissionMutation();
+
+  const initialValues: PermissionFormData = {
     name: '',
     displayName: '',
     description: '',
-  });
-
-  const [createPermission] = useCreatePermissionMutation();
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: PermissionFormData) => {
     setIsSubmitting(true);
 
     try {
       await createPermission({
-        name: formData.name,
-        displayName: formData.displayName,
-        description: formData.description,
+        name: values.name,
+        displayName: values.displayName,
+        description: values.description,
       }).unwrap();
       onSuccess();
     } catch (error) {
@@ -86,122 +100,157 @@ const CreatePermissionForm: React.FC<CreatePermissionFormProps> = ({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-8 space-y-8">
-          <div className="space-y-2">
-            <label
-              className={`block text-sm font-semibold ${
-                theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
-              }`}
-            >
-              Permission Name *
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              required
-              className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 ${
-                theme === 'dark'
-                  ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:bg-slate-600 focus:border-blue-500'
-                  : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-blue-500'
-              } focus:ring-4 focus:ring-blue-500/20 focus:outline-none`}
-              placeholder="e.g., view_users"
-            />
-            <p
-              className={`text-sm ${
-                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-              }`}
-            >
-              Use lowercase with underscores (e.g., view_users, create_orders)
-            </p>
-          </div>
+        <Formik
+          initialValues={initialValues}
+          validationSchema={toFormikValidationSchema(permissionSchema)}
+          onSubmit={handleSubmit}
+        >
+          {({ errors, touched }) => (
+            <Form className="p-8 space-y-8">
+              <div className="space-y-2">
+                <label
+                  className={`block text-sm font-semibold ${
+                    theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+                  }`}
+                >
+                  Permission Name *
+                </label>
+                <Field
+                  type="text"
+                  name="name"
+                  className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 ${
+                    theme === 'dark'
+                      ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:bg-slate-600 focus:border-blue-500'
+                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-blue-500'
+                  } focus:ring-4 focus:ring-blue-500/20 focus:outline-none ${
+                    errors.name && touched.name
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                      : ''
+                  }`}
+                  placeholder="e.g., view_users"
+                />
+                <ErrorMessage
+                  name="name"
+                  component="div"
+                  className={`text-sm ${
+                    theme === 'dark' ? 'text-red-400' : 'text-red-600'
+                  }`}
+                />
+                <p
+                  className={`text-sm ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  }`}
+                >
+                  Use lowercase with underscores (e.g., view_users,
+                  create_orders)
+                </p>
+              </div>
 
-          <div className="space-y-2">
-            <label
-              className={`block text-sm font-semibold ${
-                theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
-              }`}
-            >
-              Display Name *
-            </label>
-            <input
-              type="text"
-              name="displayName"
-              value={formData.displayName}
-              onChange={handleInputChange}
-              required
-              className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 ${
-                theme === 'dark'
-                  ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:bg-slate-600 focus:border-blue-500'
-                  : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-blue-500'
-              } focus:ring-4 focus:ring-blue-500/20 focus:outline-none`}
-              placeholder="e.g., View Users"
-            />
-          </div>
+              <div className="space-y-2">
+                <label
+                  className={`block text-sm font-semibold ${
+                    theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+                  }`}
+                >
+                  Display Name *
+                </label>
+                <Field
+                  type="text"
+                  name="displayName"
+                  className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 ${
+                    theme === 'dark'
+                      ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:bg-slate-600 focus:border-blue-500'
+                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-blue-500'
+                  } focus:ring-4 focus:ring-blue-500/20 focus:outline-none ${
+                    errors.displayName && touched.displayName
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                      : ''
+                  }`}
+                  placeholder="e.g., View Users"
+                />
+                <ErrorMessage
+                  name="displayName"
+                  component="div"
+                  className={`text-sm ${
+                    theme === 'dark' ? 'text-red-400' : 'text-red-600'
+                  }`}
+                />
+              </div>
 
-          <div className="space-y-2">
-            <label
-              className={`block text-sm font-semibold ${
-                theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
-              }`}
-            >
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              rows={4}
-              className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 resize-none ${
-                theme === 'dark'
-                  ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:bg-slate-600 focus:border-blue-500'
-                  : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-blue-500'
-              } focus:ring-4 focus:ring-blue-500/20 focus:outline-none`}
-              placeholder="Describe what this permission allows..."
-            />
-          </div>
+              <div className="space-y-2">
+                <label
+                  className={`block text-sm font-semibold ${
+                    theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+                  }`}
+                >
+                  Description
+                </label>
+                <Field
+                  as="textarea"
+                  name="description"
+                  rows={4}
+                  className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 resize-none ${
+                    theme === 'dark'
+                      ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:bg-slate-600 focus:border-blue-500'
+                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-blue-500'
+                  } focus:ring-4 focus:ring-blue-500/20 focus:outline-none ${
+                    errors.description && touched.description
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                      : ''
+                  }`}
+                  placeholder="Describe what this permission allows..."
+                />
+                <ErrorMessage
+                  name="description"
+                  component="div"
+                  className={`text-sm ${
+                    theme === 'dark' ? 'text-red-400' : 'text-red-600'
+                  }`}
+                />
+              </div>
 
-          {/* Actions */}
-          <div
-            className={`flex items-center justify-end gap-4 pt-8 border-t ${
-              theme === 'dark' ? 'border-slate-700' : 'border-gray-200'
-            }`}
-          >
-            <button
-              type="button"
-              onClick={onCancel}
-              className={`group flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                theme === 'dark'
-                  ? 'bg-slate-700 text-gray-300 hover:bg-slate-600 hover:text-white border border-slate-600 hover:border-slate-500'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 border border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <FiX className="w-4 h-4 group-hover:rotate-90 transition-transform duration-200" />
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`group flex items-center gap-2 px-8 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                isSubmitting
-                  ? 'bg-gray-400 text-white cursor-not-allowed'
-                  : theme === 'dark'
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl'
-                  : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl'
-              }`}
-            >
-              <FiSave
-                className={`w-4 h-4 ${
-                  isSubmitting
-                    ? 'animate-spin'
-                    : 'group-hover:scale-110 transition-transform duration-200'
+              {/* Actions */}
+              <div
+                className={`flex items-center justify-end gap-4 pt-8 border-t ${
+                  theme === 'dark' ? 'border-slate-700' : 'border-gray-200'
                 }`}
-              />
-              {isSubmitting ? 'Creating...' : 'Create'}
-            </button>
-          </div>
-        </form>
+              >
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className={`group flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                    theme === 'dark'
+                      ? 'bg-slate-700 text-gray-300 hover:bg-slate-600 hover:text-white border border-slate-600 hover:border-slate-500'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 border border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <FiX className="w-4 h-4 group-hover:rotate-90 transition-transform duration-200" />
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`group flex items-center gap-2 px-8 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                    isSubmitting
+                      ? 'bg-gray-400 text-white cursor-not-allowed'
+                      : theme === 'dark'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl'
+                      : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl'
+                  }`}
+                >
+                  <FiSave
+                    className={`w-4 h-4 ${
+                      isSubmitting
+                        ? 'animate-spin'
+                        : 'group-hover:scale-110 transition-transform duration-200'
+                    }`}
+                  />
+                  {isSubmitting ? 'Creating...' : 'Create'}
+                </button>
+              </div>
+            </Form>
+          )}
+        </Formik>
       </div>
     </div>
   );
