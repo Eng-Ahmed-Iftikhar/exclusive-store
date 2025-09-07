@@ -1,9 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 import { ActivityService } from './activity.service';
 import { ActivityController } from './activity.controller';
 import { ActivityGateway } from './activity.gateway';
 import { PrismaModule } from '../prisma/prisma.module';
 
+@Global()
 @Module({
   imports: [PrismaModule],
   controllers: [ActivityController],

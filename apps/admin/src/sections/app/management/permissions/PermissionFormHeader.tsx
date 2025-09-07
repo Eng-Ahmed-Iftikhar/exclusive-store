@@ -17,45 +17,46 @@ const PermissionFormHeader: React.FC<PermissionFormHeaderProps> = ({
   const { theme } = useSelector((state: RootState) => state.ui);
 
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-4">
+    <div className="mb-8">
+      <div className="flex items-center gap-4 mb-6">
         <button
           onClick={onBack}
-          className={`p-2 rounded-lg transition-colors ${
+          className={`group flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
             theme === 'dark'
-              ? 'text-gray-400 hover:bg-slate-700 hover:text-white'
-              : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+              ? 'text-gray-400 hover:bg-slate-800 hover:text-white border border-slate-700 hover:border-slate-600'
+              : 'text-gray-600 hover:bg-white hover:text-gray-900 border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md'
           }`}
         >
-          <FiArrowLeft className="w-5 h-5" />
+          <FiArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-200" />
+          <span className="font-medium">Back to Permissions</span>
         </button>
+      </div>
 
-        <div className="flex items-center gap-3">
-          <div
-            className={`p-3 rounded-lg ${
-              theme === 'dark'
-                ? 'bg-blue-900/30 text-blue-400'
-                : 'bg-blue-100 text-blue-600'
+      <div className="flex items-center gap-4">
+        <div
+          className={`p-4 rounded-xl shadow-lg ${
+            theme === 'dark'
+              ? 'bg-gradient-to-br from-blue-900/40 to-blue-800/40 text-blue-300 border border-blue-700/50'
+              : 'bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 border border-blue-200'
+          }`}
+        >
+          <FiShield className="w-8 h-8" />
+        </div>
+        <div>
+          <h1
+            className={`text-3xl font-bold mb-2 ${
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
             }`}
           >
-            <FiShield className="w-6 h-6" />
-          </div>
-          <div>
-            <h1
-              className={`text-2xl font-bold ${
-                theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}
-            >
-              {title}
-            </h1>
-            <p
-              className={`text-sm ${
-                theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-              }`}
-            >
-              {description}
-            </p>
-          </div>
+            {title}
+          </h1>
+          <p
+            className={`text-lg ${
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+            }`}
+          >
+            {description}
+          </p>
         </div>
       </div>
     </div>

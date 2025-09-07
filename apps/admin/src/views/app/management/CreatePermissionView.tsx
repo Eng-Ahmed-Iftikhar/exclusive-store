@@ -8,28 +8,30 @@ function CreatePermissionView() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSuccess = () => {
-    navigate('/permissions');
+    navigate('/management/permissions');
   };
 
   const handleCancel = () => {
-    navigate('/permissions');
+    navigate('/management/permissions');
   };
 
   return (
-    <div className="p-6">
-      <PermissionFormHeader
-        title="Create Permission"
-        description="Add a new permission to the system"
-        onBack={handleCancel}
-      />
-
-      <div className="mt-6">
-        <CreatePermissionForm
-          onSuccess={handleSuccess}
-          onCancel={handleCancel}
-          isSubmitting={isSubmitting}
-          setIsSubmitting={setIsSubmitting}
+    <div className="min-h-screen ">
+      <div className="w-full p-4">
+        <PermissionFormHeader
+          title="Create Permission"
+          description="Add a new permission to the system"
+          onBack={handleCancel}
         />
+
+        <div className="mt-6 w-full">
+          <CreatePermissionForm
+            onSuccess={handleSuccess}
+            onCancel={handleCancel}
+            isSubmitting={isSubmitting}
+            setIsSubmitting={setIsSubmitting}
+          />
+        </div>
       </div>
     </div>
   );

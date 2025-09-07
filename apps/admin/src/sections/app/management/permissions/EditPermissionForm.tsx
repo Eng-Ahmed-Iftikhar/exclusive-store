@@ -82,7 +82,7 @@ const EditPermissionForm: React.FC<EditPermissionFormProps> = ({
   if (isLoading) {
     return (
       <div
-        className={`max-w-2xl mx-auto rounded-xl border ${
+        className={`w-full mx-auto rounded-xl border ${
           theme === 'dark'
             ? 'bg-slate-800 border-slate-700'
             : 'bg-white border-gray-200'
@@ -109,7 +109,7 @@ const EditPermissionForm: React.FC<EditPermissionFormProps> = ({
   if (error) {
     return (
       <div
-        className={`max-w-2xl mx-auto rounded-xl border ${
+        className={`w-full mx-auto rounded-xl border ${
           theme === 'dark'
             ? 'bg-red-900/20 border-red-700 text-red-300'
             : 'bg-red-50 border-red-200 text-red-600'
@@ -147,7 +147,7 @@ const EditPermissionForm: React.FC<EditPermissionFormProps> = ({
 
   return (
     <div
-      className={`max-w-2xl mx-auto rounded-xl border ${
+      className={`w-full mx-auto rounded-xl border ${
         theme === 'dark'
           ? 'bg-slate-800 border-slate-700'
           : 'bg-white border-gray-200'
@@ -272,7 +272,7 @@ const EditPermissionForm: React.FC<EditPermissionFormProps> = ({
             }`}
           >
             <FiSave className="w-4 h-4" />
-            {isSubmitting ? 'Updating...' : 'Update Permission'}
+            {isSubmitting ? 'Updating...' : 'Update'}
           </button>
         </div>
       </form>

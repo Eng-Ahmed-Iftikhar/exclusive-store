@@ -2,6 +2,7 @@ const MANAGEMENT_ROUTES = {
   ADMIN_MANAGEMENT: '/management',
   ADMIN_PERMISSIONS: '/permissions',
   ADMIN_CREATE_PERMISSION: '/permissions/create',
+  ADMIN_EDIT_PERMISSION: '/permissions/edit/:id',
 };
 
 // Route Paths
@@ -62,6 +63,12 @@ export const ADMIN_ROUTES = [
     name: ROUTE_NAMES.CREATE_PERMISSION,
     element: 'CreatePermission',
     icon: 'create-permission',
+  },
+  {
+    path: ROUTES.ADMIN_MANAGEMENT + ROUTES.ADMIN_EDIT_PERMISSION,
+    name: ROUTE_NAMES.EDIT_PERMISSION,
+    element: 'EditPermission',
+    icon: 'edit-permission',
   },
 ];
 

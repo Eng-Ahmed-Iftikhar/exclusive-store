@@ -55,120 +55,154 @@ const CreatePermissionForm: React.FC<CreatePermissionFormProps> = ({
   };
 
   return (
-    <div
-      className={`max-w-2xl mx-auto rounded-xl border ${
-        theme === 'dark'
-          ? 'bg-slate-800 border-slate-700'
-          : 'bg-white border-gray-200'
-      }`}
-    >
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="p-6 space-y-6">
-        <div>
-          <label
-            className={`block text-sm font-medium mb-2 ${
-              theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+    <div className="w-full mx-auto">
+      <div
+        className={`rounded-2xl border shadow-xl ${
+          theme === 'dark'
+            ? 'bg-slate-800 border-slate-700'
+            : 'bg-white border-gray-200'
+        }`}
+      >
+        {/* Form Header */}
+        <div
+          className={`px-8 py-6 border-b ${
+            theme === 'dark' ? 'border-slate-700' : 'border-gray-200'
+          }`}
+        >
+          <h2
+            className={`text-xl font-semibold ${
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
             }`}
           >
-            Name *
-          </label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleInputChange}
-            required
-            className={`w-full px-3 py-2 rounded-lg border ${
-              theme === 'dark'
-                ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400'
-                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-            } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-            placeholder="e.g., view_users"
-          />
+            Permission Details
+          </h2>
           <p
-            className={`text-xs mt-1 ${
+            className={`text-sm mt-1 ${
               theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
             }`}
           >
-            Use lowercase with underscores (e.g., view_users, create_orders)
+            Fill in the details below to create a new permission
           </p>
         </div>
 
-        <div>
-          <label
-            className={`block text-sm font-medium mb-2 ${
-              theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-            }`}
-          >
-            Display Name *
-          </label>
-          <input
-            type="text"
-            name="displayName"
-            value={formData.displayName}
-            onChange={handleInputChange}
-            required
-            className={`w-full px-3 py-2 rounded-lg border ${
-              theme === 'dark'
-                ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400'
-                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-            } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-            placeholder="e.g., View Users"
-          />
-        </div>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-8 space-y-8">
+          <div className="space-y-2">
+            <label
+              className={`block text-sm font-semibold ${
+                theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+              }`}
+            >
+              Permission Name *
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+              className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 ${
+                theme === 'dark'
+                  ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:bg-slate-600 focus:border-blue-500'
+                  : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-blue-500'
+              } focus:ring-4 focus:ring-blue-500/20 focus:outline-none`}
+              placeholder="e.g., view_users"
+            />
+            <p
+              className={`text-sm ${
+                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+              }`}
+            >
+              Use lowercase with underscores (e.g., view_users, create_orders)
+            </p>
+          </div>
 
-        <div>
-          <label
-            className={`block text-sm font-medium mb-2 ${
-              theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-            }`}
-          >
-            Description
-          </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleInputChange}
-            rows={4}
-            className={`w-full px-3 py-2 rounded-lg border ${
-              theme === 'dark'
-                ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400'
-                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-            } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-            placeholder="Describe what this permission allows..."
-          />
-        </div>
+          <div className="space-y-2">
+            <label
+              className={`block text-sm font-semibold ${
+                theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+              }`}
+            >
+              Display Name *
+            </label>
+            <input
+              type="text"
+              name="displayName"
+              value={formData.displayName}
+              onChange={handleInputChange}
+              required
+              className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 ${
+                theme === 'dark'
+                  ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:bg-slate-600 focus:border-blue-500'
+                  : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-blue-500'
+              } focus:ring-4 focus:ring-blue-500/20 focus:outline-none`}
+              placeholder="e.g., View Users"
+            />
+          </div>
 
-        {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200 dark:border-slate-700">
-          <button
-            type="button"
-            onClick={onCancel}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              theme === 'dark'
-                ? 'bg-slate-700 text-gray-300 hover:bg-slate-600'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          <div className="space-y-2">
+            <label
+              className={`block text-sm font-semibold ${
+                theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+              }`}
+            >
+              Description
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              rows={4}
+              className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 resize-none ${
+                theme === 'dark'
+                  ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:bg-slate-600 focus:border-blue-500'
+                  : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-blue-500'
+              } focus:ring-4 focus:ring-blue-500/20 focus:outline-none`}
+              placeholder="Describe what this permission allows..."
+            />
+          </div>
+
+          {/* Actions */}
+          <div
+            className={`flex items-center justify-end gap-4 pt-8 border-t ${
+              theme === 'dark' ? 'border-slate-700' : 'border-gray-200'
             }`}
           >
-            <FiX className="w-4 h-4 inline mr-2" />
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-colors ${
-              isSubmitting
-                ? 'bg-gray-400 text-white cursor-not-allowed'
-                : theme === 'dark'
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-          >
-            <FiSave className="w-4 h-4" />
-            {isSubmitting ? 'Creating...' : 'Create Permission'}
-          </button>
-        </div>
-      </form>
+            <button
+              type="button"
+              onClick={onCancel}
+              className={`group flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                theme === 'dark'
+                  ? 'bg-slate-700 text-gray-300 hover:bg-slate-600 hover:text-white border border-slate-600 hover:border-slate-500'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 border border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <FiX className="w-4 h-4 group-hover:rotate-90 transition-transform duration-200" />
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`group flex items-center gap-2 px-8 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                isSubmitting
+                  ? 'bg-gray-400 text-white cursor-not-allowed'
+                  : theme === 'dark'
+                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl'
+                  : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl'
+              }`}
+            >
+              <FiSave
+                className={`w-4 h-4 ${
+                  isSubmitting
+                    ? 'animate-spin'
+                    : 'group-hover:scale-110 transition-transform duration-200'
+                }`}
+              />
+              {isSubmitting ? 'Creating...' : 'Create'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

@@ -9,15 +9,15 @@ function EditPermissionView() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSuccess = () => {
-    navigate('/permissions');
+    navigate('/management/permissions');
   };
 
   const handleCancel = () => {
-    navigate('/permissions');
+    navigate('/management/permissions');
   };
 
   if (!id) {
-    navigate('/permissions');
+    navigate('/management/permissions');
     return null;
   }
 

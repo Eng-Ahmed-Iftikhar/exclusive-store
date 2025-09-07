@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -40,13 +41,21 @@ export class PermissionsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all active permissions' })
+  @ApiOperation({ summary: 'Get all permissions with pagination and search' })
   @ApiResponse({
     status: 200,
     description: 'Permissions retrieved successfully',
   })
-  async getAllPermissions() {
-    return this.permissionsService.getAllPermissions();
+  async getAllPermissions(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+  ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 10;
+    const searchTerm = search || '';
+    
+    return this.permissionsService.getAllPermissions(pageNum, limitNum, searchTerm);
   }
 
   @Get('active')

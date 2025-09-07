@@ -5,10 +5,12 @@ import userReducer from './userSlice';
 import uiReducer from './uiSlice';
 import { adminApi } from '@/apis/services/adminApi';
 import { authApi } from '@/apis/services/authApi';
+import { permissionApi } from '@/apis/services/permissionApi';
 
 const apiReducers = {
   [adminApi.reducerPath]: adminApi.reducer,
   [authApi.reducerPath]: authApi.reducer,
+  [permissionApi.reducerPath]: permissionApi.reducer,
 };
 
 const rootReducer = combineReducers({
