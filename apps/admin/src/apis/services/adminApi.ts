@@ -5,12 +5,41 @@ import { baseQueryWithReauth } from './baseApi';
 export const adminApi = createApi({
   reducerPath: 'adminApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Dashboard', 'Products', 'Orders', 'Customers'],
+  tagTypes: ['Dashboard', 'Products', 'Orders', 'Customers', 'Activity'],
   endpoints: (builder) => ({
     // Dashboard Statistics
     getDashboardStats: builder.query({
       providesTags: ['Dashboard'],
       query: () => API_ROUTES.ADMIN.DASHBOARD_STATS,
+    }),
+
+    // Dashboard Charts
+    getDashboardCharts: builder.query({
+      providesTags: ['Dashboard'],
+      query: () => API_ROUTES.ADMIN.DASHBOARD_CHARTS,
+    }),
+
+    // Activity endpoints
+    getRecentActivities: builder.query({
+      providesTags: ['Activity'],
+      query: (params?: { limit?: number }) => ({
+        url: API_ROUTES.ACTIVITY.RECENT,
+        params,
+      }),
+    }),
+    getActivitiesByType: builder.query({
+      providesTags: ['Activity'],
+      query: ({ type, limit }: { type: string; limit?: number }) => ({
+        url: API_ROUTES.ACTIVITY.BY_TYPE,
+        params: { type, limit },
+      }),
+    }),
+    getActivitiesByUser: builder.query({
+      providesTags: ['Activity'],
+      query: ({ userId, limit }: { userId: string; limit?: number }) => ({
+        url: API_ROUTES.ACTIVITY.BY_USER,
+        params: { userId, limit },
+      }),
     }),
 
     // Products
@@ -130,6 +159,10 @@ export const adminApi = createApi({
 
 export const {
   useGetDashboardStatsQuery,
+  useGetDashboardChartsQuery,
+  useGetRecentActivitiesQuery,
+  useGetActivitiesByTypeQuery,
+  useGetActivitiesByUserQuery,
   useGetProductsQuery,
   useGetProductByIdQuery,
   useCreateProductMutation,

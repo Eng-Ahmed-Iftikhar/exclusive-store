@@ -13,6 +13,7 @@ import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { CustomLoggerService } from '../logger/logger.service';
 import { JwtPayload } from './strategies/jwt.strategy';
+import { ActivityService } from '../activity/activity.service';
 
 export interface TokenPair {
   accessToken: string;
@@ -30,7 +31,8 @@ export class AuthService {
     private redisService: RedisService,
     private emailService: EmailService,
     private logger: CustomLoggerService,
-    private configService: ConfigService
+    private configService: ConfigService,
+    private activityService: ActivityService
   ) {}
 
   private get accessTokenExpiry(): string {
@@ -70,6 +72,13 @@ export class AuthService {
       dbUser.id,
       dbUser.email,
       loginDto.rememberMe
+    );
+
+    // Log login activity
+    await this.activityService.logUserActivity(
+      dbUser.id,
+      'logged in',
+      dbUser.email
     );
 
     return {
@@ -142,14 +151,35 @@ export class AuthService {
     // Send welcome email (non-blocking)
     this.sendWelcomeEmailAsync(user);
 
+    // Log registration activity
+    await this.activityService.logUserActivity(
+      user.id,
+      'registered',
+      user.email
+    );
+
     return {
       accessToken,
     };
   }
 
   async logout(accessToken: string): Promise<{ message: string }> {
+    // Get user ID from token before revoking
+    let userId: string | null = null;
+    try {
+      const payload = this.jwtService.verify(accessToken) as JwtPayload;
+      userId = payload.sub;
+    } catch (error) {
+      // Token might be invalid, continue with logout
+    }
+
     // Revoke the token pair from Redis
     await this.revokeTokenPair(accessToken);
+
+    // Log logout activity if user ID is available
+    if (userId) {
+      await this.activityService.logUserActivity(userId, 'logged out');
+    }
 
     return { message: 'Logged out successfully' };
   }

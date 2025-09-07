@@ -6,9 +6,17 @@ import { CartModule } from '../cart/cart.module';
 import { AuthModule } from '../auth/auth.module';
 import { EmailModule } from '../email/email.module';
 import { AppConfigModule } from '../config/config.module';
+import { ActivityModule } from '../activity/activity.module';
 
 @Module({
-  imports: [AppConfigModule, PrismaModule, CartModule, AuthModule, EmailModule],
+  imports: [
+    AppConfigModule,
+    PrismaModule,
+    CartModule,
+    AuthModule,
+    EmailModule,
+    ActivityModule,
+  ],
   controllers: [OrdersController],
   providers: [OrdersService],
   exports: [OrdersService],

@@ -1,4 +1,4 @@
-import DashboardView from '@/views/DashboardView';
+import DashboardView from '@/views/app/DashboardView';
 
 function DashboardPage() {
   return <DashboardView />;

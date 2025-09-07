@@ -13,6 +13,13 @@ export const API_ROUTES = {
   // Admin Dashboard Routes
   ADMIN: {
     DASHBOARD_STATS: '/admin/dashboard/stats',
+    DASHBOARD_CHARTS: '/admin/dashboard/charts',
+  },
+  // Activity Routes
+  ACTIVITY: {
+    RECENT: '/activity/recent',
+    BY_TYPE: '/activity/by-type',
+    BY_USER: '/activity/by-user',
   },
 
   // Items/Products Routes

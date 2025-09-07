@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AdminLayout from '../layouts/app/Layout';
-import Dashboard from '@/pages/DashboardPage';
+import Dashboard from '@/pages/app/DashboardPage';
 import Login from '@/pages/auth/LoginPage';
 import { PUBLIC_ROUTES, ADMIN_ROUTES, ROUTES } from '@/routers/routes';
 import { ProtectedRoute, GuestRoute } from '@components/ProtectedRoute';

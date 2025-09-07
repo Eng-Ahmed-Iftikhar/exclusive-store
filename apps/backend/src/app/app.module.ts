@@ -21,12 +21,15 @@ import { TeamsModule } from './teams/teams.module';
 import { ResourcesModule } from './resources/resources.module';
 import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
+import { ActivityModule } from './activity/activity.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    EventEmitterModule.forRoot(),
     AppConfigModule,
     LoggerModule,
     PrismaModule,
@@ -46,6 +49,7 @@ import { PermissionsModule } from './permissions/permissions.module';
     ResourcesModule,
     RolesModule,
     PermissionsModule,
+    ActivityModule,
   ],
   controllers: [AppController],
   providers: [AppService],

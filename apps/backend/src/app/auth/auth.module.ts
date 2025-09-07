@@ -9,6 +9,7 @@ import { RedisModule } from '../redis/redis.module';
 import { EmailModule } from '../email/email.module';
 import { LoggerModule } from '../logger/logger.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { ActivityModule } from '../activity/activity.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     RedisModule,
     EmailModule,
     LoggerModule,
+    ActivityModule,
     JwtModule.registerAsync({
       imports: [AppConfigModule],
       useFactory: async (configService: ConfigService) => ({

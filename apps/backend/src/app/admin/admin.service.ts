@@ -16,7 +16,7 @@ export class AdminService {
       monthlyRevenue,
       lowStockItems,
       pendingReviews,
-      activeFlashSales
+      activeFlashSales,
     ] = await Promise.all([
       this.getTotalUsers(),
       this.getTotalItems(),
@@ -27,7 +27,7 @@ export class AdminService {
       this.getMonthlyRevenue(),
       this.getLowStockItems(),
       this.getPendingReviews(),
-      this.getActiveFlashSales()
+      this.getActiveFlashSales(),
     ]);
 
     return {
@@ -40,7 +40,7 @@ export class AdminService {
       monthlyRevenue,
       lowStockItems,
       pendingReviews,
-      activeFlashSales
+      activeFlashSales,
     };
   }
 
@@ -50,44 +50,47 @@ export class AdminService {
 
   private async getTotalItems() {
     return await this.prisma.item.count({
-      where: { isActive: true }
+      where: { isActive: true },
     });
   }
 
   private async getTotalOrders() {
     return await this.prisma.order.count({
-      where: { 
+      where: {
         status: { not: 'cancelled' },
-        paymentStatus: 'completed'
-      }
+        paymentStatus: 'completed',
+      },
     });
   }
 
   private async getTotalRevenue() {
     const orders = await this.prisma.order.findMany({
-      where: { 
+      where: {
         status: { not: 'cancelled' },
-        paymentStatus: 'completed'
+        paymentStatus: 'completed',
       },
-      select: { total: true }
+      select: { total: true },
     });
 
-    return orders.reduce((sum, order) => sum + Number(order.total), 0);
+    return orders.reduce(
+      (sum: number, order: { total: number }) => sum + order.total,
+      0
+    );
   }
 
   private async getRecentOrders() {
     return await this.prisma.order.findMany({
-      where: { 
+      where: {
         status: { not: 'cancelled' },
-        paymentStatus: 'completed'
+        paymentStatus: 'completed',
       },
       include: {
         user: {
-          select: { name: true, email: true }
-        }
+          select: { name: true, email: true },
+        },
       },
       orderBy: { createdAt: 'desc' },
-      take: 5
+      take: 5,
     });
   }
 
@@ -95,44 +98,46 @@ export class AdminService {
     const orderItems = await this.prisma.orderItem.groupBy({
       by: ['itemId'],
       _sum: {
-        quantity: true
+        quantity: true,
       },
       orderBy: {
         _sum: {
-          quantity: 'desc'
-        }
+          quantity: 'desc',
+        },
       },
-      take: 5
+      take: 5,
     });
 
     const topProducts = await Promise.all(
-      orderItems.map(async (item) => {
-        const itemDetails = await this.prisma.item.findUnique({
-          where: { id: item.itemId },
-          include: {
-            prices: {
-              where: { isActive: true },
-              take: 1
-            }
-          }
-        });
+      orderItems.map(
+        async (item: { itemId: string; _sum: { quantity: number | null } }) => {
+          const itemDetails = await this.prisma.item.findUnique({
+            where: { id: item.itemId },
+            include: {
+              prices: {
+                where: { isActive: true },
+                take: 1,
+              },
+            },
+          });
 
-        if (!itemDetails) return null;
+          if (!itemDetails) return null;
 
-        const totalRevenue = await this.prisma.orderItem.aggregate({
-          where: { itemId: item.itemId },
-          _sum: {
-            price: true
-          }
-        });
+          const totalRevenue = await this.prisma.orderItem.aggregate({
+            where: { itemId: item.itemId },
+            _sum: {
+              price: true,
+            },
+          });
 
-        return {
-          id: item.itemId,
-          name: itemDetails.name,
-          sales: item._sum.quantity || 0,
-          revenue: Number(totalRevenue._sum.price) || 0
-        };
-      })
+          return {
+            id: item.itemId,
+            name: itemDetails.name,
+            sales: item._sum?.quantity || 0,
+            revenue: Number(totalRevenue._sum.price) || 0,
+          };
+        }
+      )
     );
 
     return topProducts.filter(Boolean);
@@ -151,20 +156,26 @@ export class AdminService {
           where: {
             createdAt: {
               gte: startDate,
-              lte: endDate
+              lte: endDate,
             },
             status: { not: 'cancelled' },
-            paymentStatus: 'completed'
+            paymentStatus: 'completed',
           },
-          select: { total: true }
+          select: { total: true },
         });
 
-        const revenue = orders.reduce((sum, order) => sum + Number(order.total), 0);
-        const monthName = new Date(currentYear, month, 1).toLocaleString('default', { month: 'short' });
+        const revenue = orders.reduce(
+          (sum: number, order: { total: number }) => sum + order.total,
+          0
+        );
+        const monthName = new Date(currentYear, month, 1).toLocaleString(
+          'default',
+          { month: 'short' }
+        );
 
         return {
           month: monthName,
-          revenue: Math.round(revenue * 100) / 100
+          revenue: Math.round(revenue * 100) / 100,
         };
       })
     );
@@ -176,22 +187,22 @@ export class AdminService {
     return await this.prisma.stock.findMany({
       where: {
         quantity: {
-          lte: 10
-        }
+          lte: 10,
+        },
       },
       include: {
         item: {
-          select: { name: true, sku: true }
-        }
+          select: { name: true, sku: true },
+        },
       },
       orderBy: { quantity: 'asc' },
-      take: 5
+      take: 5,
     });
   }
 
   private async getPendingReviews() {
     return await this.prisma.review.count({
-      where: { isApproved: false }
+      where: { isApproved: false },
     });
   }
 
@@ -199,8 +210,153 @@ export class AdminService {
     return await this.prisma.flashSale.count({
       where: {
         isActive: true,
-        endDate: { gt: new Date() }
-      }
+        endDate: { gt: new Date() },
+      },
     });
+  }
+
+  // Chart-specific methods
+  async getChartData() {
+    const [monthlyRevenue, monthlyOrders, categoryDistribution] =
+      await Promise.all([
+        this.getMonthlyRevenueForChart(),
+        this.getMonthlyOrdersForChart(),
+        this.getCategoryDistributionForChart(),
+      ]);
+
+    return {
+      monthlyRevenue,
+      monthlyOrders,
+      categoryDistribution,
+    };
+  }
+
+  private async getMonthlyRevenueForChart() {
+    const currentYear = new Date().getFullYear();
+    const months = Array.from({ length: 12 }, (_, i) => i);
+
+    const monthlyData = await Promise.all(
+      months.map(async (month) => {
+        const startDate = new Date(currentYear, month, 1);
+        const endDate = new Date(currentYear, month + 1, 0);
+
+        const orders = await this.prisma.order.findMany({
+          where: {
+            createdAt: {
+              gte: startDate,
+              lte: endDate,
+            },
+            status: { not: 'cancelled' },
+            paymentStatus: 'completed',
+          },
+          select: { total: true },
+        });
+
+        const revenue = orders.reduce(
+          (sum: number, order: { total: number }) => sum + order.total,
+          0
+        );
+        const monthName = new Date(currentYear, month, 1).toLocaleString(
+          'default',
+          { month: 'short' }
+        );
+
+        return {
+          name: monthName,
+          revenue: Math.round(revenue * 100) / 100,
+        };
+      })
+    );
+
+    return monthlyData;
+  }
+
+  private async getMonthlyOrdersForChart() {
+    const currentYear = new Date().getFullYear();
+    const months = Array.from({ length: 12 }, (_, i) => i);
+
+    const monthlyData = await Promise.all(
+      months.map(async (month) => {
+        const startDate = new Date(currentYear, month, 1);
+        const endDate = new Date(currentYear, month + 1, 0);
+
+        const orders = await this.prisma.order.findMany({
+          where: {
+            createdAt: {
+              gte: startDate,
+              lte: endDate,
+            },
+            status: { not: 'cancelled' },
+            paymentStatus: 'completed',
+          },
+          select: { total: true },
+        });
+
+        const monthName = new Date(currentYear, month, 1).toLocaleString(
+          'default',
+          { month: 'short' }
+        );
+
+        return {
+          name: monthName,
+          orders: orders.length,
+        };
+      })
+    );
+
+    return monthlyData;
+  }
+
+  private async getCategoryDistributionForChart() {
+    const categories = await this.prisma.category.findMany({
+      where: { isActive: true },
+      include: {
+        items: {
+          where: { isActive: true },
+          include: {
+            orders: {
+              where: {
+                order: {
+                  status: { not: 'cancelled' },
+                  paymentStatus: 'completed',
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const categoryData = categories
+      .map(
+        (
+          category: { name: string; items: { orders: { length: number } }[] },
+          index: number
+        ) => {
+          const totalOrders = category.items.reduce(
+            (sum: number, item: { orders: { length: number } }) =>
+              sum + item.orders.length,
+            0
+          );
+
+          const colors = [
+            '#8884d8',
+            '#82ca9d',
+            '#ffc658',
+            '#ff7c7c',
+            '#8dd1e1',
+            '#d084d0',
+          ];
+
+          return {
+            name: category.name,
+            value: totalOrders,
+            color: colors[index % colors.length],
+          };
+        }
+      )
+      .filter((item: { value: number }) => item.value > 0);
+
+    return categoryData;
   }
 }

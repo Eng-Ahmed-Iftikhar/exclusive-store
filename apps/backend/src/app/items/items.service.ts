@@ -5,6 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ActivityService } from '../activity/activity.service';
 import {
   CreateItemDto,
   UpdateItemDto,
@@ -32,7 +33,10 @@ import {
 
 @Injectable()
 export class ItemsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly activityService: ActivityService
+  ) {}
 
   // ===== ITEM OPERATIONS =====
 
@@ -67,6 +71,9 @@ export class ItemsService {
         favorites: true,
       },
     });
+
+    // Log product creation activity
+    await this.activityService.logProductActivity(item.id, 'created', 'admin');
 
     return this.mapToItemResponse(item);
   }
@@ -298,6 +305,9 @@ export class ItemsService {
         favorites: true,
       },
     });
+
+    // Log product update activity
+    await this.activityService.logProductActivity(id, 'updated', 'admin');
 
     return this.mapToItemResponse(updatedItem);
   }

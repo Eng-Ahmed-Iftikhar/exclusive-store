@@ -34,6 +34,7 @@ model User {
   cart             Cart?
   orders           Order[]
   paymentHistory   PaymentHistory[]
+  activities       Activity[]
   
   // RBAC Relations
   role            Role?           @relation("UserRole", fields: [roleId], references: [id])
@@ -42,6 +43,21 @@ model User {
   createdTeams    Team[]          @relation("TeamCreator")
 
   @@map("users")
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  type        String   // 'order', 'user', 'product', 'payment', 'revenue', 'system'
+  title       String
+  description String
+  metadata    Json?    // Additional data like order ID, user ID, etc.
+  userId      String?  // User who performed the action (if applicable)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("activities")
 }
 
 // RBAC System Tables

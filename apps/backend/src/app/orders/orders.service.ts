@@ -9,6 +9,7 @@ import { CartService } from '../cart/cart.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { ConfigService } from '../config/config.service';
+import { ActivityService } from '../activity/activity.service';
 import {
   CreateOrderDto,
   OrderDto,
@@ -25,7 +26,8 @@ export class OrdersService {
     private prisma: PrismaService,
     private cartService: CartService,
     private emailService: EmailService,
-    private configService: ConfigService
+    private configService: ConfigService,
+    private activityService: ActivityService
   ) {
     this.stripe = new Stripe(this.configService.stripeSecretKey, {
       apiVersion: '2025-07-30.basil',
@@ -338,6 +340,13 @@ export class OrdersService {
       include: { items: true },
     });
 
+    // Log order status update activity
+    await this.activityService.logOrderActivity(
+      orderId,
+      `status updated to ${status}`,
+      order.userId || 'system'
+    );
+
     return this.mapOrderToDto(updatedOrder);
   }
 
@@ -514,6 +523,13 @@ export class OrdersService {
           guestUserInfo: orderDetails.guestUserInfo,
           shippingAddress: orderDetails.shippingAddress,
         });
+
+        // Log order creation activity
+        await this.activityService.logOrderActivity(
+          order.id,
+          'created',
+          userId || 'guest'
+        );
 
         return {
           order: this.mapOrderToDto(order),

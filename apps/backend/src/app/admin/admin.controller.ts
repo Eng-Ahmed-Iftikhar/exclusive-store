@@ -41,4 +41,57 @@ export class AdminController {
   async getDashboardStats() {
     return this.adminService.getDashboardStats();
   }
+
+  @Get('dashboard/charts')
+  @ApiOperation({ 
+    summary: 'Get dashboard chart data',
+    description: 'Retrieve chart data for dashboard analytics including monthly revenue, orders, and category distribution' 
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Chart data retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        monthlyRevenue: { 
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', example: 'Jan' },
+              revenue: { type: 'number', example: 4000 }
+            }
+          }
+        },
+        monthlyOrders: { 
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', example: 'Jan' },
+              orders: { type: 'number', example: 24 }
+            }
+          }
+        },
+        categoryDistribution: { 
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', example: 'Electronics' },
+              value: { type: 'number', example: 400 },
+              color: { type: 'string', example: '#8884d8' }
+            }
+          }
+        }
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Unauthorized - Invalid or missing token' 
+  })
+  async getChartData() {
+    return this.adminService.getChartData();
+  }
 }
