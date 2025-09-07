@@ -23,14 +23,14 @@ const adminNavigations: NavigationItem[] = [
         icon: 'permissions',
       },
       {
+        name: 'Resources',
+        path: '/management/resources',
+        icon: 'resources',
+      },
+      {
         name: 'Roles',
         path: '/management/roles',
         icon: 'roles',
-      },
-      {
-        name: 'Users',
-        path: '/management/users',
-        icon: 'users',
       },
     ],
   },
@@ -48,11 +48,6 @@ const adminNavigations: NavigationItem[] = [
         name: 'Products',
         path: '/content/products',
         icon: 'products',
-      },
-      {
-        name: 'Orders',
-        path: '/content/orders',
-        icon: 'orders',
       },
     ],
   },

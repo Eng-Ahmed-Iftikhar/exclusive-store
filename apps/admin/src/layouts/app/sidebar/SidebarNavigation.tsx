@@ -1,25 +1,24 @@
 import React, { useState } from 'react';
+import {
+  FiBarChart2,
+  FiChevronDown,
+  FiChevronRight,
+  FiFolder,
+  FiHome,
+  FiPackage,
+  FiSettings,
+  FiShield,
+  FiShoppingCart,
+  FiUserCheck,
+  FiUsers,
+} from 'react-icons/fi';
+import { useDispatch, useSelector } from 'react-redux';
 import { NavLink } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../../store';
-import { toggleSidebar } from '../../../store/slices/uiSlice';
 import adminNavigations, {
   NavigationItem,
 } from '../../../navigations/admin.navigations';
-import {
-  FiHome,
-  FiPackage,
-  FiShoppingCart,
-  FiUsers,
-  FiBarChart2,
-  FiSettings,
-  FiShield,
-  FiUserCheck,
-  FiUser,
-  FiFolder,
-  FiChevronDown,
-  FiChevronRight,
-} from 'react-icons/fi';
+import { RootState } from '../../../store';
+import { toggleSidebar } from '../../../store/slices/uiSlice';
 
 const SidebarNavigation: React.FC = () => {
   const dispatch = useDispatch();
@@ -37,6 +36,7 @@ const SidebarNavigation: React.FC = () => {
     roles: FiUserCheck,
     categories: FiFolder,
     content: FiPackage,
+    resources: FiPackage,
   };
 
   const handleCloseSidebar = () => {

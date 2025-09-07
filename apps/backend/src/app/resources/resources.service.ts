@@ -103,8 +103,6 @@ export class ResourcesService {
   }
 
   async deleteResource(id: string) {
-    const existingResource = await this.getResourceById(id);
-
     // Check if resource is being used by any roles
     const roleResources = await this.prisma.roleResource.findMany({
       where: { resourceId: id },

@@ -55,7 +55,7 @@ const CreateResourceForm: React.FC<CreateResourceFormProps> = ({
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="w-full mx-auto">
       <div
         className={`rounded-2xl border shadow-xl ${
           theme === 'dark'
@@ -103,9 +103,9 @@ const CreateResourceForm: React.FC<CreateResourceFormProps> = ({
               required
               className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 ${
                 theme === 'dark'
-                  ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:bg-slate-600 focus:border-green-500'
-                  : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-green-500'
-              } focus:ring-4 focus:ring-green-500/20 focus:outline-none`}
+                  ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:bg-slate-600 focus:border-blue-500'
+                  : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-blue-500'
+              } focus:ring-4 focus:ring-blue-500/20 focus:outline-none`}
               placeholder="e.g., users, orders, products"
             />
             <p
@@ -133,9 +133,9 @@ const CreateResourceForm: React.FC<CreateResourceFormProps> = ({
               required
               className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 ${
                 theme === 'dark'
-                  ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:bg-slate-600 focus:border-green-500'
-                  : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-green-500'
-              } focus:ring-4 focus:ring-green-500/20 focus:outline-none`}
+                  ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:bg-slate-600 focus:border-blue-500'
+                  : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-blue-500'
+              } focus:ring-4 focus:ring-blue-500/20 focus:outline-none`}
               placeholder="e.g., Users, Orders, Products"
             />
           </div>
@@ -155,9 +155,9 @@ const CreateResourceForm: React.FC<CreateResourceFormProps> = ({
               rows={4}
               className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 resize-none ${
                 theme === 'dark'
-                  ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:bg-slate-600 focus:border-green-500'
-                  : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-green-500'
-              } focus:ring-4 focus:ring-green-500/20 focus:outline-none`}
+                  ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400 focus:bg-slate-600 focus:border-blue-500'
+                  : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-blue-500'
+              } focus:ring-4 focus:ring-blue-500/20 focus:outline-none`}
               placeholder="Describe what this resource represents..."
             />
           </div>
@@ -187,8 +187,8 @@ const CreateResourceForm: React.FC<CreateResourceFormProps> = ({
                 isSubmitting
                   ? 'bg-gray-400 text-white cursor-not-allowed'
                   : theme === 'dark'
-                  ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl'
-                  : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl'
+                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl'
+                  : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl'
               }`}
             >
               <FiSave
@@ -198,7 +198,7 @@ const CreateResourceForm: React.FC<CreateResourceFormProps> = ({
                     : 'group-hover:scale-110 transition-transform duration-200'
                 }`}
               />
-              {isSubmitting ? 'Creating...' : 'Create Resource'}
+              {isSubmitting ? 'Creating...' : 'Create'}
             </button>
           </div>
         </form>
