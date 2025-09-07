@@ -65,6 +65,23 @@ export const API_ROUTES = {
     LIST: '/auth/users',
     BY_ID: (id: string) => `/auth/users/${id}`,
   },
+
+  // Permissions Routes
+  PERMISSIONS: {
+    BASE: '/permissions',
+    LIST: '/permissions',
+    ACTIVE: '/permissions/active',
+    BY_ID: (id: string) => `/permissions/${id}`,
+  },
+
+  // Notifications Routes
+  NOTIFICATIONS: {
+    BASE: '/notifications',
+    LIST: '/notifications',
+    UNREAD_COUNT: '/notifications/unread-count',
+    MARK_ALL_READ: '/notifications/mark-all-read',
+    BY_ID: (id: string) => `/notifications/${id}`,
+  },
 } as const;
 
 // Base URL configuration

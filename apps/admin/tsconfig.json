@@ -10,6 +10,7 @@
       "@auth/*": ["./src/sections/*"],
       "@components/*": ["./src/components/*"],
       "@views/*": ["./src/views/*"],
+      "@sections/*": ["./src/sections/*"],
       "@hooks/*": ["./src/hooks/*"],
       "@pages/*": ["./src/pages/*"],
       "@store/*": ["./src/store/*"],
@@ -17,8 +18,7 @@
       "@types/*": ["./src/types/*"],
       "@apis/*": ["./src/apis/*"],
       "@layouts/*": ["./src/layouts/*"],
-      "@navigations/*": ["./src/navigations/*"],
-   
+      "@navigations/*": ["./src/navigations/*"]
     },
     "strict": true,
     "types": ["vite/client"]

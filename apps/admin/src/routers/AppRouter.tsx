@@ -2,6 +2,9 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AdminLayout from '../layouts/app/Layout';
 import Dashboard from '@/pages/app/DashboardPage';
+import PermissionPage from '@/pages/app/management/PermissionPage';
+import CreatePermissionPage from '@/pages/app/management/CreatePermissionPage';
+import EditPermissionPage from '@/pages/app/management/EditPermissionPage';
 import Login from '@/pages/auth/LoginPage';
 import { PUBLIC_ROUTES, ADMIN_ROUTES, ROUTES } from '@/routers/routes';
 import { ProtectedRoute, GuestRoute } from '@components/ProtectedRoute';
@@ -9,6 +12,9 @@ import { ProtectedRoute, GuestRoute } from '@components/ProtectedRoute';
 // Component mapping for dynamic route rendering
 const COMPONENT_MAP = {
   Dashboard: Dashboard,
+  Permissions: PermissionPage,
+  CreatePermission: CreatePermissionPage,
+  EditPermission: EditPermissionPage,
   Login: Login,
 };
 
@@ -25,7 +31,7 @@ const AppRouter: React.FC = () => {
             key={route.path}
             path={route.path}
             element={
-              <GuestRoute>
+              <GuestRoute redirectTo={ROUTES.ADMIN}>
                 <Component />
               </GuestRoute>
             }
@@ -33,30 +39,20 @@ const AppRouter: React.FC = () => {
         );
       })}
 
-      {/* Protected Admin Routes */}
-      <Route
-        path={ROUTES.ADMIN}
-        element={
-          <ProtectedRoute>
-            <AdminLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Dashboard />} />
-      </Route>
-
       {/* Individual Admin Pages */}
       {ADMIN_ROUTES.map((route) => {
-        if (route.path === ROUTES.ADMIN) return null; // Skip dashboard as it's handled above
         const Component =
           COMPONENT_MAP[route.element as keyof typeof COMPONENT_MAP];
+
         return (
           <Route
             key={route.path}
             path={route.path}
             element={
-              <ProtectedRoute>
-                <Component />
+              <ProtectedRoute requireAuth={true} redirectTo={ROUTES.LOGIN}>
+                <AdminLayout>
+                  <Component />
+                </AdminLayout>
               </ProtectedRoute>
             }
           />

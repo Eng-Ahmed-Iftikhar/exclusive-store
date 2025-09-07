@@ -4,6 +4,8 @@ import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import { adminApi } from '../apis/services/adminApi';
 import { authApi } from '../apis/services/authApi';
+import { permissionApi } from '../apis/services/permissionApi';
+import { notificationApi } from '../apis/services/notificationApi';
 import rootReducer from './slices';
 
 // Persist config
@@ -15,7 +17,12 @@ const persistConfig = {
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
-const apiMiddleware = [adminApi.middleware, authApi.middleware];
+const apiMiddleware = [
+  adminApi.middleware,
+  authApi.middleware,
+  permissionApi.middleware,
+  notificationApi.middleware,
+];
 
 export const store = configureStore({
   reducer: persistedReducer,

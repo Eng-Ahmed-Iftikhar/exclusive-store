@@ -19,17 +19,17 @@ const adminNavigations: NavigationItem[] = [
     children: [
       {
         name: 'Permissions',
-        path: '/permissions',
+        path: '/management/permissions',
         icon: 'permissions',
       },
       {
         name: 'Roles',
-        path: '/roles',
+        path: '/management/roles',
         icon: 'roles',
       },
       {
         name: 'Users',
-        path: '/users',
+        path: '/management/users',
         icon: 'users',
       },
     ],
@@ -41,17 +41,17 @@ const adminNavigations: NavigationItem[] = [
     children: [
       {
         name: 'Categories',
-        path: '/categories',
+        path: '/content/categories',
         icon: 'categories',
       },
       {
         name: 'Products',
-        path: '/products',
+        path: '/content/products',
         icon: 'products',
       },
       {
         name: 'Orders',
-        path: '/orders',
+        path: '/content/orders',
         icon: 'orders',
       },
     ],

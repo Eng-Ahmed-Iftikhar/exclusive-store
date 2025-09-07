@@ -1,3 +1,9 @@
+const MANAGEMENT_ROUTES = {
+  ADMIN_MANAGEMENT: '/management',
+  ADMIN_PERMISSIONS: '/permissions',
+  ADMIN_CREATE_PERMISSION: '/permissions/create',
+};
+
 // Route Paths
 export const ROUTES = {
   // Public Routes
@@ -8,6 +14,9 @@ export const ROUTES = {
   ADMIN_PRODUCTS: '/products',
   ADMIN_ORDERS: '/orders',
   ADMIN_CUSTOMERS: '/customers',
+  // management routes
+  ...MANAGEMENT_ROUTES,
+
   ADMIN_ANALYTICS: '/analytics',
   ADMIN_SETTINGS: '/settings',
 } as const;
@@ -19,8 +28,9 @@ export const ROUTE_NAMES = {
   PRODUCTS: 'Products',
   ORDERS: 'Orders',
   CUSTOMERS: 'Customers',
-  ANALYTICS: 'Analytics',
-  SETTINGS: 'Settings',
+  PERMISSIONS: 'Permissions',
+  CREATE_PERMISSION: 'Create Permission',
+  EDIT_PERMISSION: 'Edit Permission',
 } as const;
 
 // Public Routes Array
@@ -40,35 +50,18 @@ export const ADMIN_ROUTES = [
     element: 'Dashboard',
     icon: 'dashboard',
   },
+
   {
-    path: ROUTES.ADMIN_PRODUCTS,
-    name: ROUTE_NAMES.PRODUCTS,
-    element: 'Products',
-    icon: 'products',
+    path: ROUTES.ADMIN_MANAGEMENT + ROUTES.ADMIN_PERMISSIONS,
+    name: ROUTE_NAMES.PERMISSIONS,
+    element: 'Permissions',
+    icon: 'permissions',
   },
   {
-    path: ROUTES.ADMIN_ORDERS,
-    name: ROUTE_NAMES.ORDERS,
-    element: 'Orders',
-    icon: 'orders',
-  },
-  {
-    path: ROUTES.ADMIN_CUSTOMERS,
-    name: ROUTE_NAMES.CUSTOMERS,
-    element: 'Customers',
-    icon: 'customers',
-  },
-  {
-    path: ROUTES.ADMIN_ANALYTICS,
-    name: ROUTE_NAMES.ANALYTICS,
-    element: 'Analytics',
-    icon: 'analytics',
-  },
-  {
-    path: ROUTES.ADMIN_SETTINGS,
-    name: ROUTE_NAMES.SETTINGS,
-    element: 'Settings',
-    icon: 'settings',
+    path: ROUTES.ADMIN_MANAGEMENT + ROUTES.ADMIN_CREATE_PERMISSION,
+    name: ROUTE_NAMES.CREATE_PERMISSION,
+    element: 'CreatePermission',
+    icon: 'create-permission',
   },
 ];
 

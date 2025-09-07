@@ -1,11 +1,10 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
-import Header from './Header';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import { RootState } from '@/store';
+import Header from './Header';
 import Sidebar from './sidebar/Sidebar';
 
-const AdminLayout: React.FC = () => {
+const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { theme } = useSelector((state: RootState) => state.ui);
 
   return (
@@ -24,9 +23,7 @@ const AdminLayout: React.FC = () => {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto transition-colors duration-200">
-          <div className="container mx-auto px-8 py-8">
-            <Outlet />
-          </div>
+          <div className="container mx-auto px-8 py-8">{children}</div>
         </main>
       </div>
     </div>

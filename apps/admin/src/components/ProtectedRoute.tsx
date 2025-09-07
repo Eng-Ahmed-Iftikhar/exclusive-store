@@ -52,6 +52,7 @@ export const GuestRoute: React.FC<Omit<ProtectedRouteProps, 'requireAuth'>> = ({
   ...props
 }) => {
   const { user } = useSelector((state: RootState) => state.user);
+
   if (user) {
     return <Navigate to={props.redirectTo as string} />;
   }
