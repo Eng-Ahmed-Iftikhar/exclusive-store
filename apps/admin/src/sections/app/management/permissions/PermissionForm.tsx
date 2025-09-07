@@ -1,253 +1,285 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { RootState } from '@/store';
+import { FiSave, FiX } from 'react-icons/fi';
+import { z } from 'zod';
 import {
-  useCreatePermissionMutation,
-  useUpdatePermissionMutation,
-  Permission,
-} from '@/apis/services/permissionApi';
-import { FiX, FiSave } from 'react-icons/fi';
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+
+// Validation schema for permission form
+const permissionSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Permission name is required')
+    .regex(
+      /^[a-z_]+$/,
+      'Permission name must be lowercase with underscores only'
+    )
+    .max(50, 'Permission name must be less than 50 characters')
+    .optional(),
+  displayName: z
+    .string()
+    .min(1, 'Display name is required')
+    .max(100, 'Display name must be less than 100 characters'),
+  description: z
+    .string()
+    .max(500, 'Description must be less than 500 characters')
+    .optional(),
+  isActive: z.boolean().optional(),
+});
+
+type PermissionFormData = z.infer<typeof permissionSchema>;
 
 interface PermissionFormProps {
-  permission?: Permission;
-  onClose: () => void;
-  onSuccess: () => void;
+  mode: 'create' | 'edit';
+  initialData?: {
+    name?: string;
+    displayName?: string;
+    description?: string;
+    isActive?: boolean;
+  };
+  onSubmit: (data: PermissionFormData) => Promise<void>;
+  onCancel: () => void;
+  isSubmitting: boolean;
+  title: string;
+  description: string;
 }
 
 const PermissionForm: React.FC<PermissionFormProps> = ({
-  permission,
-  onClose,
-  onSuccess,
+  mode,
+  initialData,
+  onSubmit,
+  onCancel,
+  isSubmitting,
+  title,
+  description,
 }) => {
   const { theme } = useSelector((state: RootState) => state.ui);
-  const [formData, setFormData] = useState({
-    name: '',
-    displayName: '',
-    description: '',
-    isActive: true,
+
+  const form = useForm<PermissionFormData>({
+    resolver: zodResolver(permissionSchema),
+    defaultValues: {
+      name: initialData?.name || '',
+      displayName: initialData?.displayName || '',
+      description: initialData?.description || '',
+      isActive: initialData?.isActive ?? true,
+    },
   });
 
-  const [createPermission, { isLoading: isCreating }] =
-    useCreatePermissionMutation();
-  const [updatePermission, { isLoading: isUpdating }] =
-    useUpdatePermissionMutation();
-
-  const isEdit = !!permission;
-  const isLoading = isCreating || isUpdating;
-
+  // Update form when initialData changes (for edit mode)
   useEffect(() => {
-    if (permission) {
-      setFormData({
-        name: permission.name || '',
-        displayName: permission.displayName || '',
-        description: permission.description || '',
-        isActive: permission.isActive ?? true,
+    if (initialData) {
+      form.reset({
+        name: initialData.name || '',
+        displayName: initialData.displayName || '',
+        description: initialData.description || '',
+        isActive: initialData.isActive ?? true,
       });
     }
-  }, [permission]);
+  }, [initialData, form]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value, type } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
-        type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      if (isEdit) {
-        await updatePermission({
-          id: permission.id,
-          data: {
-            displayName: formData.displayName,
-            description: formData.description,
-            isActive: formData.isActive,
-          },
-        }).unwrap();
-      } else {
-        await createPermission({
-          name: formData.name,
-          displayName: formData.displayName,
-          description: formData.description,
-        }).unwrap();
-      }
-      onSuccess();
-    } catch (error) {
-      console.error('Failed to save permission:', error);
-    }
+  const handleSubmit = async (values: PermissionFormData) => {
+    await onSubmit(values);
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="w-full mx-auto space-y-8">
+      {/* Permission Details Form */}
       <div
-        className={`w-full max-w-md rounded-xl border ${
+        className={`rounded-2xl border shadow-xl ${
           theme === 'dark'
             ? 'bg-slate-800 border-slate-700'
             : 'bg-white border-gray-200'
         }`}
       >
-        {/* Header */}
+        {/* Form Header */}
         <div
-          className={`flex items-center justify-between p-6 border-b ${
+          className={`px-8 py-6 border-b ${
             theme === 'dark' ? 'border-slate-700' : 'border-gray-200'
           }`}
         >
-          <h3
-            className={`text-lg font-semibold ${
+          <h2
+            className={`text-xl font-semibold ${
               theme === 'dark' ? 'text-white' : 'text-gray-900'
             }`}
           >
-            {isEdit ? 'Edit Permission' : 'Create Permission'}
-          </h3>
-          <button
-            onClick={onClose}
-            className={`p-2 rounded-lg transition-colors ${
-              theme === 'dark'
-                ? 'text-gray-400 hover:bg-slate-700'
-                : 'text-gray-500 hover:bg-gray-100'
+            {title}
+          </h2>
+          <p
+            className={`text-sm mt-1 ${
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
             }`}
           >
-            <FiX className="w-5 h-5" />
-          </button>
+            {description}
+          </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {!isEdit && (
-            <div>
-              <label
-                className={`block text-sm font-medium mb-2 ${
-                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                }`}
-              >
-                Name *
-              </label>
-              <input
-                type="text"
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="p-8 space-y-8"
+          >
+            {/* Permission Name Field - Only show in edit mode */}
+            {mode === 'edit' && initialData?.name && (
+              <div className="space-y-2">
+                <FormLabel>Permission Name (Read-only)</FormLabel>
+                <Input
+                  value={initialData.name}
+                  disabled
+                  className={`${
+                    theme === 'dark'
+                      ? 'bg-slate-600 border-slate-500 text-gray-400'
+                      : 'bg-gray-100 border-gray-200 text-gray-500'
+                  }`}
+                />
+                <FormDescription>
+                  Permission name cannot be changed after creation
+                </FormDescription>
+              </div>
+            )}
+
+            {/* Permission Name Field - Only show in create mode */}
+            {mode === 'create' && (
+              <FormField
+                control={form.control}
                 name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-                className={`w-full px-3 py-2 rounded-lg border ${
-                  theme === 'dark'
-                    ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400'
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-                placeholder="e.g., view_users"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Permission Name *</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., view_users, create_orders"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Use lowercase with underscores (e.g., view_users,
+                      create_orders)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <p
-                className={`text-xs mt-1 ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}
-              >
-                Use lowercase with underscores (e.g., view_users, create_orders)
-              </p>
-            </div>
-          )}
+            )}
 
-          <div>
-            <label
-              className={`block text-sm font-medium mb-2 ${
-                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-              }`}
-            >
-              Display Name *
-            </label>
-            <input
-              type="text"
+            {/* Display Name Field */}
+            <FormField
+              control={form.control}
               name="displayName"
-              value={formData.displayName}
-              onChange={handleInputChange}
-              required
-              className={`w-full px-3 py-2 rounded-lg border ${
-                theme === 'dark'
-                  ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400'
-                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-              } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-              placeholder="e.g., View Users"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Display Name *</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., View Users, Create Orders"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div>
-            <label
-              className={`block text-sm font-medium mb-2 ${
-                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-              }`}
-            >
-              Description
-            </label>
-            <textarea
+            {/* Description Field */}
+            <FormField
+              control={form.control}
               name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              rows={3}
-              className={`w-full px-3 py-2 rounded-lg border ${
-                theme === 'dark'
-                  ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400'
-                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-              } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-              placeholder="Describe what this permission allows..."
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Describe what this permission allows..."
+                      className="resize-none"
+                      rows={4}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          {isEdit && (
-            <div className="flex items-center">
-              <input
-                type="checkbox"
+            {/* Active Checkbox - Only show in edit mode */}
+            {mode === 'edit' && (
+              <FormField
+                control={form.control}
                 name="isActive"
-                checked={formData.isActive}
-                onChange={handleInputChange}
-                className={`w-4 h-4 rounded ${
-                  theme === 'dark'
-                    ? 'bg-slate-700 border-slate-600 text-blue-600'
-                    : 'bg-white border-gray-300 text-blue-600'
-                } focus:ring-blue-500`}
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Active</FormLabel>
+                      <FormDescription>
+                        Inactive permissions cannot be assigned to roles
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
               />
-              <label
-                className={`ml-2 text-sm font-medium ${
-                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+            )}
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-4">
+              <button
+                type="button"
+                onClick={onCancel}
+                className={`group flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                  theme === 'dark'
+                    ? 'bg-slate-700 text-gray-300 hover:bg-slate-600 hover:text-white border border-slate-600 hover:border-slate-500'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 border border-gray-200 hover:border-gray-300'
                 }`}
               >
-                Active
-              </label>
+                <FiX className="w-4 h-4 group-hover:rotate-90 transition-transform duration-200" />
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`group flex items-center gap-2 px-8 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                  isSubmitting
+                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                    : theme === 'dark'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl'
+                    : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl'
+                }`}
+              >
+                <FiSave
+                  className={`w-4 h-4 ${
+                    isSubmitting
+                      ? 'animate-spin'
+                      : 'group-hover:scale-110 transition-transform duration-200'
+                  }`}
+                />
+                {isSubmitting
+                  ? mode === 'create'
+                    ? 'Creating...'
+                    : 'Updating...'
+                  : mode === 'create'
+                  ? 'Create'
+                  : 'Update'}
+              </button>
             </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                theme === 'dark'
-                  ? 'bg-slate-700 text-gray-300 hover:bg-slate-600'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                isLoading
-                  ? 'bg-gray-400 text-white cursor-not-allowed'
-                  : theme === 'dark'
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-              }`}
-            >
-              <FiSave className="w-4 h-4" />
-              {isLoading ? 'Saving...' : isEdit ? 'Update' : 'Create'}
-            </button>
-          </div>
-        </form>
+          </form>
+        </Form>
       </div>
     </div>
   );
