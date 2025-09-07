@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -37,10 +38,18 @@ export class ResourcesController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all active resources' })
+  @ApiOperation({ summary: 'Get all resources with pagination' })
   @ApiResponse({ status: 200, description: 'Resources retrieved successfully' })
-  async getAllResources() {
-    return this.resourcesService.getAllResources();
+  async getAllResources(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string
+  ) {
+    return this.resourcesService.getAllResources(
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 10,
+      search || ''
+    );
   }
 
   @Get('active')

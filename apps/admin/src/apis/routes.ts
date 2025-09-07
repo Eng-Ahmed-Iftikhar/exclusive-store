@@ -74,6 +74,14 @@ export const API_ROUTES = {
     BY_ID: (id: string) => `/permissions/${id}`,
   },
 
+  // Resources Routes
+  RESOURCES: {
+    BASE: '/resources',
+    LIST: '/resources',
+    ACTIVE: '/resources/active',
+    BY_ID: (id: string) => `/resources/${id}`,
+  },
+
   // Notifications Routes
   NOTIFICATIONS: {
     BASE: '/notifications',

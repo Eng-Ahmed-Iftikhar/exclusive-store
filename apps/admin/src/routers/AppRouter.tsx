@@ -5,6 +5,9 @@ import Dashboard from '@/pages/app/DashboardPage';
 import PermissionPage from '@/pages/app/management/PermissionPage';
 import CreatePermissionPage from '@/pages/app/management/CreatePermissionPage';
 import EditPermissionPage from '@/pages/app/management/EditPermissionPage';
+import ResourcePage from '@/pages/app/management/ResourcePage';
+import CreateResourcePage from '@/pages/app/management/CreateResourcePage';
+import EditResourcePage from '@/pages/app/management/EditResourcePage';
 import Login from '@/pages/auth/LoginPage';
 import { PUBLIC_ROUTES, ADMIN_ROUTES, ROUTES } from '@/routers/routes';
 import { ProtectedRoute, GuestRoute } from '@components/ProtectedRoute';
@@ -15,6 +18,9 @@ const COMPONENT_MAP = {
   Permissions: PermissionPage,
   CreatePermission: CreatePermissionPage,
   EditPermission: EditPermissionPage,
+  Resources: ResourcePage,
+  CreateResource: CreateResourcePage,
+  EditResource: EditResourcePage,
   Login: Login,
 };
 

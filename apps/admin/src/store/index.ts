@@ -5,6 +5,7 @@ import storage from 'redux-persist/lib/storage';
 import { adminApi } from '../apis/services/adminApi';
 import { authApi } from '../apis/services/authApi';
 import { permissionApi } from '../apis/services/permissionApi';
+import { resourceApi } from '../apis/services/resourceApi';
 import { notificationApi } from '../apis/services/notificationApi';
 import rootReducer from './slices';
 
@@ -21,6 +22,7 @@ const apiMiddleware = [
   adminApi.middleware,
   authApi.middleware,
   permissionApi.middleware,
+  resourceApi.middleware,
   notificationApi.middleware,
 ];
 
