@@ -1,16 +1,33 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
+import { persistStore, persistReducer } from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
 import { adminApi } from '../apis/services/adminApi';
 import { authApi } from '../apis/services/authApi';
 import rootReducer from './slices';
 
+// Persist config
+const persistConfig = {
+  key: 'root',
+  storage,
+  whitelist: ['auth', 'user'], // Only persist auth and user slices
+};
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
 const apiMiddleware = [adminApi.middleware, authApi.middleware];
 
 export const store = configureStore({
-  reducer: rootReducer,
+  reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(apiMiddleware),
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+      },
+    }).concat(apiMiddleware),
 });
+
+export const persistor = persistStore(store);
 
 setupListeners(store.dispatch);
 

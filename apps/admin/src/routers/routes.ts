@@ -4,8 +4,7 @@ export const ROUTES = {
   LOGIN: '/login',
 
   // Admin Routes
-  ADMIN: '/admin',
-  ADMIN_DASHBOARD: '/admin',
+  ADMIN: '/',
   ADMIN_PRODUCTS: '/products',
   ADMIN_ORDERS: '/orders',
   ADMIN_CUSTOMERS: '/customers',
@@ -36,7 +35,7 @@ export const PUBLIC_ROUTES = [
 // Admin Routes Array
 export const ADMIN_ROUTES = [
   {
-    path: ROUTES.ADMIN_DASHBOARD,
+    path: ROUTES.ADMIN,
     name: ROUTE_NAMES.DASHBOARD,
     element: 'Dashboard',
     icon: 'dashboard',
@@ -72,13 +71,6 @@ export const ADMIN_ROUTES = [
     icon: 'settings',
   },
 ];
-
-// Navigation Menu Items (for sidebar)
-export const NAVIGATION_ITEMS = ADMIN_ROUTES.map((route) => ({
-  path: route.path,
-  name: route.name,
-  icon: route.icon,
-}));
 
 // All Routes Array (for router configuration)
 export const ALL_ROUTES = [...PUBLIC_ROUTES, ...ADMIN_ROUTES];

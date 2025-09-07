@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import AdminLayout from '../layouts/app/AdminLayout';
+import AdminLayout from '../layouts/app/Layout';
 import Dashboard from '@/pages/DashboardPage';
 import Login from '@/pages/auth/LoginPage';
 import { PUBLIC_ROUTES, ADMIN_ROUTES, ROUTES } from '@/routers/routes';
@@ -47,7 +47,7 @@ const AppRouter: React.FC = () => {
 
       {/* Individual Admin Pages */}
       {ADMIN_ROUTES.map((route) => {
-        if (route.path === ROUTES.ADMIN_DASHBOARD) return null; // Skip dashboard as it's handled above
+        if (route.path === ROUTES.ADMIN) return null; // Skip dashboard as it's handled above
         const Component =
           COMPONENT_MAP[route.element as keyof typeof COMPONENT_MAP];
         return (

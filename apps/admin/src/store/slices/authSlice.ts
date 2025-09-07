@@ -1,20 +1,14 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { authApi, AuthResponse } from '@/apis/services/authApi';
 
-// User interface moved to userSlice - no longer needed here
-
 export interface AuthState {
   token: string | null;
-
   isAuthenticated: boolean;
-  isLoading: boolean;
 }
 
 const initialState: AuthState = {
   token: null,
-
   isAuthenticated: false,
-  isLoading: false,
 };
 
 const authSlice = createSlice({
@@ -27,14 +21,11 @@ const authSlice = createSlice({
     },
     logout: (state) => {
       state.token = null;
-
       state.isAuthenticated = false;
-    },
-    setLoading: (state, action: PayloadAction<boolean>) => {
-      state.isLoading = action.payload;
     },
     setToken: (state, action: PayloadAction<{ token: string }>) => {
       state.token = action.payload.token;
+      state.isAuthenticated = true;
     },
   },
   extraReducers: (builder) => {
@@ -42,13 +33,11 @@ const authSlice = createSlice({
       // Handle logout API response automatically
       .addMatcher(authApi.endpoints.logout.matchFulfilled, (state) => {
         state.token = null;
-
         state.isAuthenticated = false;
       })
       .addMatcher(authApi.endpoints.logout.matchRejected, (state) => {
         // Even if API fails, clear local auth state
         state.token = null;
-
         state.isAuthenticated = false;
       })
       .addMatcher(
@@ -65,6 +54,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, logout, setLoading, setToken } =
-  authSlice.actions;
+export const { setCredentials, logout, setToken } = authSlice.actions;
 export default authSlice.reducer;

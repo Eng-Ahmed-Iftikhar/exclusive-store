@@ -1,16 +1,12 @@
 import React from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
-import Sidebar from './Sidebar';
+import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
+import Sidebar from './sidebar/Sidebar';
 
 const AdminLayout: React.FC = () => {
-  const { sidebarOpen, theme } = useSelector((state: RootState) => state.ui);
-  const location = useLocation();
-
-  // Check if we're on a nested route (like /admin) or individual page (like /products)
-  const isNestedRoute = location.pathname === '/admin';
+  const { theme } = useSelector((state: RootState) => state.ui);
 
   return (
     <div
