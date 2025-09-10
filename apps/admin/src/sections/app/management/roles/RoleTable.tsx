@@ -6,6 +6,7 @@ import {
   useDeleteRoleMutation,
   Role,
 } from '@/apis/services/roleApi';
+import { useGetCurrentUserQuery } from '@/apis/services/authApi';
 import {
   FiEdit,
   FiTrash2,
@@ -25,6 +26,10 @@ const RoleTable: React.FC<RoleTableProps> = ({ onEdit, onCreate }) => {
   const { theme } = useSelector((state: RootState) => state.ui);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Get current user data
+  const { data: currentUserData } = useGetCurrentUserQuery();
+  const currentUser = currentUserData?.user;
   const [limit, setLimit] = useState(10);
 
   const queryParams = {
@@ -373,27 +378,46 @@ const RoleTable: React.FC<RoleTableProps> = ({ onEdit, onCreate }) => {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => onEdit(role)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          theme === 'dark'
-                            ? 'text-blue-400 hover:bg-blue-900/30'
-                            : 'text-blue-600 hover:bg-blue-50'
-                        }`}
-                      >
-                        <FiEdit className="w-4 h-4" />
-                      </button>
-                      {!role.isSystem && (
-                        <button
-                          onClick={() => handleDelete(role.id)}
-                          className={`p-2 rounded-lg transition-colors ${
+                      {/* Only show edit button if not system role and not current user's own role */}
+                      {!role.isSystem &&
+                        currentUser?.roleDetails?.id !== role.id && (
+                          <button
+                            onClick={() => onEdit(role)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              theme === 'dark'
+                                ? 'text-blue-400 hover:bg-blue-900/30'
+                                : 'text-blue-600 hover:bg-blue-50'
+                            }`}
+                          >
+                            <FiEdit className="w-4 h-4" />
+                          </button>
+                        )}
+                      {/* Only show delete button if not system role and not current user's own role */}
+                      {!role.isSystem &&
+                        currentUser?.roleDetails?.id !== role.id && (
+                          <button
+                            onClick={() => handleDelete(role.id)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              theme === 'dark'
+                                ? 'text-red-400 hover:bg-red-900/30'
+                                : 'text-red-600 hover:bg-red-50'
+                            }`}
+                          >
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      {/* Show indicator for current user's own role */}
+                      {currentUser?.roleDetails?.id === role.id && (
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${
                             theme === 'dark'
-                              ? 'text-red-400 hover:bg-red-900/30'
-                              : 'text-red-600 hover:bg-red-50'
+                              ? 'bg-yellow-900/30 text-yellow-400'
+                              : 'bg-yellow-100 text-yellow-800'
                           }`}
+                          title="Your current role - cannot be modified"
                         >
-                          <FiTrash2 className="w-4 h-4" />
-                        </button>
+                          Your Role
+                        </span>
                       )}
                     </div>
                   </td>

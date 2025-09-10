@@ -7,6 +7,7 @@ import { authApi } from '../apis/services/authApi';
 import { permissionApi } from '../apis/services/permissionApi';
 import { resourceApi } from '../apis/services/resourceApi';
 import { roleApi } from '../apis/services/roleApi';
+import { teamApi } from '../apis/services/teamApi';
 import { notificationApi } from '../apis/services/notificationApi';
 import { rbacApi } from '../apis/services/rbacApi';
 import rootReducer from './slices';
@@ -26,6 +27,7 @@ const apiMiddleware = [
   permissionApi.middleware,
   resourceApi.middleware,
   roleApi.middleware,
+  teamApi.middleware,
   notificationApi.middleware,
   rbacApi.middleware,
 ];

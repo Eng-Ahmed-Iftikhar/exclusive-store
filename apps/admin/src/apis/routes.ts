@@ -8,6 +8,7 @@ export const API_ROUTES = {
     LOGOUT: '/auth/logout',
     REFRESH: '/auth/refresh',
     ME: '/auth/me',
+    SETUP_PASSWORD: '/auth/setup-password',
   },
 
   // Admin Dashboard Routes
@@ -98,6 +99,35 @@ export const API_ROUTES = {
     UNREAD_COUNT: '/notifications/unread-count',
     MARK_ALL_READ: '/notifications/mark-all-read',
     BY_ID: (id: string) => `/notifications/${id}`,
+  },
+
+  // Teams Routes
+  TEAMS: {
+    BASE: '/teams',
+    LIST: '/teams',
+    BY_ID: (id: string) => `/teams/${id}`,
+    CREATE: '/teams',
+    CREATE_WITH_USERS: '/teams/create-with-users',
+    UPDATE: (id: string) => `/teams/${id}`,
+    DELETE: (id: string) => `/teams/${id}`,
+    ADD_USERS: (teamId: string) => `/teams/${teamId}/users/bulk`,
+    ADD_USERS_BY_EMAIL: (teamId: string) => `/teams/${teamId}/users/by-email`,
+    REMOVE_USER: (teamId: string, userId: string) =>
+      `/teams/${teamId}/users/${userId}`,
+    UPDATE_USER_ROLE: (teamId: string, userId: string) =>
+      `/teams/${teamId}/users/${userId}/role`,
+    ADD_MULTIPLE_ROLES: (teamId: string, userId: string) =>
+      `/teams/${teamId}/users/${userId}/roles`,
+    REMOVE_MULTIPLE_ROLES: (teamId: string, userId: string) =>
+      `/teams/${teamId}/users/${userId}/roles`,
+    GET_USER_ROLES: (teamId: string, userId: string) =>
+      `/teams/${teamId}/users/${userId}/roles`,
+    MEMBERS: (teamId: string) => `/teams/${teamId}/users`,
+    // Team Role Management
+    ADD_ROLES: (teamId: string) => `/teams/${teamId}/roles`,
+    GET_ROLES: (teamId: string) => `/teams/${teamId}/roles`,
+    REMOVE_ROLE: (teamId: string, roleId: string) =>
+      `/teams/${teamId}/roles/${roleId}`,
   },
 } as const;
 

@@ -20,6 +20,8 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RoleSelfModificationGuard } from '../auth/guards/role-self-modification.guard';
+import { CanManageRoles } from '../auth/decorators/access-control.decorator';
 import { RolesService } from './roles.service';
 import {
   CreateRoleDto,
@@ -38,20 +40,30 @@ export class RolesController {
   // ==================== ROLE MANAGEMENT ====================
 
   @Post()
-  @ApiOperation({ summary: 'Create a new role' })
+  @CanManageRoles('create')
+  @ApiOperation({
+    summary: 'Create a new role (Requires roles:create permission)',
+  })
   @ApiResponse({ status: 201, description: 'Role created successfully' })
   @ApiResponse({ status: 409, description: 'Role already exists' })
-  async createRole(@Body() createRoleDto: CreateRoleDto, @Request() req: any) {
+  async createRole(
+    @Body() createRoleDto: CreateRoleDto,
+    @Request() req: { user: { id: string } }
+  ) {
     return this.rolesService.createRole(createRoleDto, req.user.id);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all active roles with pagination' })
+  @CanManageRoles('view')
+  @ApiOperation({
+    summary:
+      'Get all active roles with pagination (Requires roles:view permission)',
+  })
   @ApiResponse({ status: 200, description: 'Roles retrieved successfully' })
   async getAllRoles(
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
-    @Query('search') search: string = ''
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+    @Query('search') search = ''
   ) {
     return this.rolesService.getAllRoles(
       parseInt(page),
@@ -61,7 +73,10 @@ export class RolesController {
   }
 
   @Get('system')
-  @ApiOperation({ summary: 'Get all system roles' })
+  @CanManageRoles('view')
+  @ApiOperation({
+    summary: 'Get all system roles (Requires roles:view permission)',
+  })
   @ApiResponse({
     status: 200,
     description: 'System roles retrieved successfully',
@@ -71,7 +86,10 @@ export class RolesController {
   }
 
   @Get('active')
-  @ApiOperation({ summary: 'Get all active roles' })
+  @CanManageRoles('view')
+  @ApiOperation({
+    summary: 'Get all active roles (Requires roles:view permission)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Active roles retrieved successfully',
@@ -81,7 +99,10 @@ export class RolesController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get role by ID with details' })
+  @CanManageRoles('view')
+  @ApiOperation({
+    summary: 'Get role by ID with details (Requires roles:view permission)',
+  })
   @ApiParam({ name: 'id', description: 'Role ID' })
   @ApiResponse({ status: 200, description: 'Role retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Role not found' })
@@ -90,11 +111,18 @@ export class RolesController {
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update role by ID' })
+  @CanManageRoles('edit')
+  @UseGuards(RoleSelfModificationGuard)
+  @ApiOperation({
+    summary: 'Update role by ID (Requires roles:edit permission)',
+  })
   @ApiParam({ name: 'id', description: 'Role ID' })
   @ApiResponse({ status: 200, description: 'Role updated successfully' })
   @ApiResponse({ status: 404, description: 'Role not found' })
-  @ApiResponse({ status: 403, description: 'Cannot modify system roles' })
+  @ApiResponse({
+    status: 403,
+    description: 'Cannot modify system roles or your own role',
+  })
   async updateRole(
     @Param('id') id: string,
     @Body() updateRoleDto: UpdateRoleDto
@@ -103,11 +131,18 @@ export class RolesController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete role by ID' })
+  @CanManageRoles('delete')
+  @UseGuards(RoleSelfModificationGuard)
+  @ApiOperation({
+    summary: 'Delete role by ID (Requires roles:delete permission)',
+  })
   @ApiParam({ name: 'id', description: 'Role ID' })
   @ApiResponse({ status: 200, description: 'Role deleted successfully' })
   @ApiResponse({ status: 404, description: 'Role not found' })
-  @ApiResponse({ status: 403, description: 'Cannot delete system roles' })
+  @ApiResponse({
+    status: 403,
+    description: 'Cannot delete system roles or your own role',
+  })
   @ApiResponse({ status: 409, description: 'Cannot delete role in use' })
   @HttpCode(HttpStatus.OK)
   async deleteRole(@Param('id') id: string) {
@@ -117,7 +152,10 @@ export class RolesController {
   // ==================== ROLE RESOURCE ASSIGNMENT ====================
 
   @Post(':roleId/resources')
-  @ApiOperation({ summary: 'Assign resource to role' })
+  @CanManageRoles('edit')
+  @ApiOperation({
+    summary: 'Assign resource to role (Requires roles:edit permission)',
+  })
   @ApiParam({ name: 'roleId', description: 'Role ID' })
   @ApiResponse({ status: 201, description: 'Resource assigned successfully' })
   @ApiResponse({ status: 409, description: 'Assignment already exists' })
@@ -130,7 +168,10 @@ export class RolesController {
   }
 
   @Post(':roleId/resources/bulk')
-  @ApiOperation({ summary: 'Bulk assign resources to role' })
+  @CanManageRoles('edit')
+  @ApiOperation({
+    summary: 'Bulk assign resources to role (Requires roles:edit permission)',
+  })
   @ApiParam({ name: 'roleId', description: 'Role ID' })
   @ApiResponse({ status: 201, description: 'Resources assigned successfully' })
   async bulkAssignResourcesToRole(
@@ -142,7 +183,11 @@ export class RolesController {
   }
 
   @Get(':roleId/resources')
-  @ApiOperation({ summary: 'Get all resources assigned to a role' })
+  @CanManageRoles('view')
+  @ApiOperation({
+    summary:
+      'Get all resources assigned to a role (Requires roles:view permission)',
+  })
   @ApiParam({ name: 'roleId', description: 'Role ID' })
   @ApiResponse({
     status: 200,
@@ -153,7 +198,10 @@ export class RolesController {
   }
 
   @Delete(':roleId/resources/:resourceId/permissions/:permissionId')
-  @ApiOperation({ summary: 'Remove resource from role' })
+  @CanManageRoles('edit')
+  @ApiOperation({
+    summary: 'Remove resource from role (Requires roles:edit permission)',
+  })
   @ApiParam({ name: 'roleId', description: 'Role ID' })
   @ApiParam({ name: 'resourceId', description: 'Resource ID' })
   @ApiParam({ name: 'permissionId', description: 'Permission ID' })

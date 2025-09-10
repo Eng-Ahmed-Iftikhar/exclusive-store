@@ -12,16 +12,24 @@ export class RbacService {
     resource: string,
     permission: string
   ): Promise<boolean> {
-    // Get all teams the user belongs to
+    // Get all teams the user belongs to with their team roles
     const userTeams = await this.prisma.userTeam.findMany({
       where: { userId },
       include: {
-        role: {
+        team: {
           include: {
-            roleResources: {
+            teamRoles: {
               include: {
-                resource: true,
-                permission: true,
+                role: {
+                  include: {
+                    roleResources: {
+                      include: {
+                        resource: true,
+                        permission: true,
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -29,17 +37,19 @@ export class RbacService {
       },
     });
 
-    // Check if any of the user's roles in any team have the required permission
+    // Check if any of the user's team roles have the required permission
     for (const userTeam of userTeams) {
-      for (const roleResource of userTeam.role.roleResources) {
-        if (
-          roleResource.resource.name === resource &&
-          roleResource.permission.name === permission &&
-          roleResource.resource.isActive &&
-          roleResource.permission.isActive &&
-          userTeam.role.isActive
-        ) {
-          return true;
+      for (const teamRole of userTeam.team.teamRoles) {
+        for (const roleResource of teamRole.role.roleResources) {
+          if (
+            roleResource.resource.name === resource &&
+            roleResource.permission.name === permission &&
+            roleResource.resource.isActive &&
+            roleResource.permission.isActive &&
+            teamRole.role.isActive
+          ) {
+            return true;
+          }
         }
       }
     }
@@ -57,13 +67,19 @@ export class RbacService {
             name: true,
             displayName: true,
           },
-        },
-        role: {
           include: {
-            roleResources: {
+            teamRoles: {
               include: {
-                resource: true,
-                permission: true,
+                role: {
+                  include: {
+                    roleResources: {
+                      include: {
+                        resource: true,
+                        permission: true,
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -74,24 +90,26 @@ export class RbacService {
     const permissions = new Map<string, Set<string>>();
 
     for (const userTeam of userTeams) {
-      if (!userTeam.role.isActive) continue;
+      for (const teamRole of userTeam.team.teamRoles) {
+        if (!teamRole.role.isActive) continue;
 
-      for (const roleResource of userTeam.role.roleResources) {
-        if (
-          !roleResource.resource.isActive ||
-          !roleResource.permission.isActive
-        )
-          continue;
+        for (const roleResource of teamRole.role.roleResources) {
+          if (
+            !roleResource.resource.isActive ||
+            !roleResource.permission.isActive
+          )
+            continue;
 
-        const resourceName = roleResource.resource.name;
-        const permissionName = roleResource.permission.name;
+          const resourceName = roleResource.resource.name;
+          const permissionName = roleResource.permission.name;
 
-        if (!permissions.has(resourceName)) {
-          permissions.set(resourceName, new Set());
-        }
-        const permissionSet = permissions.get(resourceName);
-        if (permissionSet) {
-          permissionSet.add(permissionName);
+          if (!permissions.has(resourceName)) {
+            permissions.set(resourceName, new Set());
+          }
+          const permissionSet = permissions.get(resourceName);
+          if (permissionSet) {
+            permissionSet.add(permissionName);
+          }
         }
       }
     }

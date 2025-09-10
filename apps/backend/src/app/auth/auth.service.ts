@@ -611,4 +611,69 @@ export class AuthService {
       console.error('Error revoking user tokens:', error);
     }
   }
+
+  async setupPassword(
+    token: string,
+    password: string
+  ): Promise<{ message: string; success: boolean }> {
+    try {
+      // Verify the magic link token
+      const tokenData = await this.redisService.get(`magic_link:${token}`);
+
+      if (!tokenData) {
+        throw new UnauthorizedException('Invalid or expired magic link token');
+      }
+
+      const { userId, email } = JSON.parse(tokenData);
+
+      // Find the user
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      // Verify the email matches
+      if (user.email !== email) {
+        throw new UnauthorizedException('Invalid magic link token');
+      }
+
+      // Hash the new password
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+      // Update user password and mark email as verified
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          password: hashedPassword,
+          isEmailVerified: true,
+        },
+      });
+
+      // Delete the magic link token (one-time use)
+      await this.redisService.del(`magic_link:${token}`);
+
+      // Log the activity
+      await this.activityService.createActivity({
+        type: 'user',
+        title: 'Password Setup',
+        description: 'User set up password via magic link',
+        userId,
+      });
+
+      return {
+        message: 'Password set successfully! You can now log in.',
+        success: true,
+      };
+    } catch (error) {
+      this.logger.error(
+        'Password setup failed',
+        error instanceof Error ? error.message : String(error)
+      );
+      throw error;
+    }
+  }
 }

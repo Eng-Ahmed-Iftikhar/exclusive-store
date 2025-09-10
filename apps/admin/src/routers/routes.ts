@@ -9,6 +9,13 @@ const MANAGEMENT_ROUTES = {
   ADMIN_ROLES: '/roles',
   ADMIN_CREATE_ROLE: '/roles/create',
   ADMIN_EDIT_ROLE: '/roles/edit/:id',
+  ADMIN_TEAMS: '/teams',
+  ADMIN_CREATE_TEAM: '/teams/create',
+  ADMIN_EDIT_TEAM: '/teams/edit/:id',
+};
+
+const AUTH_ROUTES = {
+  ADMIN_SETUP_PASSWORD: '/setup-password',
 };
 
 // Route Paths
@@ -23,6 +30,8 @@ export const ROUTES = {
   ADMIN_CUSTOMERS: '/customers',
   // management routes
   ...MANAGEMENT_ROUTES,
+  // auth routes
+  ...AUTH_ROUTES,
 
   ADMIN_ANALYTICS: '/analytics',
   ADMIN_SETTINGS: '/settings',
@@ -44,6 +53,10 @@ export const ROUTE_NAMES = {
   ROLES: 'Roles',
   CREATE_ROLE: 'Create Role',
   EDIT_ROLE: 'Edit Role',
+  TEAMS: 'Teams',
+  CREATE_TEAM: 'Create Team',
+  EDIT_TEAM: 'Edit Team',
+  SETUP_PASSWORD: 'Setup Password',
 } as const;
 
 // Public Routes Array
@@ -52,6 +65,11 @@ export const PUBLIC_ROUTES = [
     path: ROUTES.LOGIN,
     name: ROUTE_NAMES.LOGIN,
     element: 'Login',
+  },
+  {
+    path: ROUTES.ADMIN_SETUP_PASSWORD,
+    name: ROUTE_NAMES.SETUP_PASSWORD,
+    element: 'SetupPassword',
   },
 ];
 
@@ -117,6 +135,24 @@ export const ADMIN_ROUTES = [
     name: ROUTE_NAMES.EDIT_ROLE,
     element: 'EditRole',
     icon: 'edit-role',
+  },
+  {
+    path: ROUTES.ADMIN_MANAGEMENT + ROUTES.ADMIN_TEAMS,
+    name: ROUTE_NAMES.TEAMS,
+    element: 'Teams',
+    icon: 'teams',
+  },
+  {
+    path: ROUTES.ADMIN_MANAGEMENT + ROUTES.ADMIN_CREATE_TEAM,
+    name: ROUTE_NAMES.CREATE_TEAM,
+    element: 'CreateTeam',
+    icon: 'create-team',
+  },
+  {
+    path: ROUTES.ADMIN_MANAGEMENT + ROUTES.ADMIN_EDIT_TEAM,
+    name: ROUTE_NAMES.EDIT_TEAM,
+    element: 'EditTeam',
+    icon: 'edit-team',
   },
 ];
 

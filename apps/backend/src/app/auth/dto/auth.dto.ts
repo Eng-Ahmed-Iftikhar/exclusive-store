@@ -98,6 +98,27 @@ export class UserResponseDto {
   } | null;
 
   @ApiProperty({
+    description: 'Team roles (when main role is null)',
+    required: false,
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        displayName: { type: 'string' },
+        description: { type: 'string', nullable: true },
+      },
+    },
+  })
+  teamRoles?: {
+    id: string;
+    name: string;
+    displayName: string;
+    description: string | null;
+  }[];
+
+  @ApiProperty({
     description: 'User creation timestamp',
     example: '2024-01-15T10:30:00.000Z',
   })
@@ -213,6 +234,25 @@ export class MessageResponseDto {
     example: 'Operation completed successfully',
   })
   message!: string;
+}
+
+export class SetupPasswordDto {
+  @ApiProperty({
+    description: 'Magic link token from team invitation email',
+    example: 'abc123def456ghi789...',
+  })
+  @IsString()
+  token!: string;
+
+  @ApiProperty({
+    description:
+      'New password (minimum 8 characters with uppercase, lowercase, and number)',
+    example: 'SecurePass123',
+    minLength: 8,
+  })
+  @IsString()
+  @MinLength(8)
+  password!: string;
 }
 
 // Keep interfaces for internal use

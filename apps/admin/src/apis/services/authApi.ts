@@ -26,6 +26,16 @@ export interface CurrentUserResponse {
   user: User;
 }
 
+export interface SetupPasswordRequest {
+  token: string;
+  password: string;
+}
+
+export interface SetupPasswordResponse {
+  message: string;
+  success: boolean;
+}
+
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: baseQueryWithReauth,
@@ -58,6 +68,19 @@ export const authApi = createApi({
       }),
       invalidatesTags: ['Auth'],
     }),
+
+    // Setup password with magic link token
+    setupPassword: builder.mutation<
+      SetupPasswordResponse,
+      SetupPasswordRequest
+    >({
+      query: (data) => ({
+        url: API_ROUTES.AUTH.SETUP_PASSWORD,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Auth'],
+    }),
   }),
 });
 
@@ -66,4 +89,5 @@ export const {
   useGetCurrentUserQuery,
   useLogoutMutation,
   useLazyGetCurrentUserQuery,
+  useSetupPasswordMutation,
 } = authApi;

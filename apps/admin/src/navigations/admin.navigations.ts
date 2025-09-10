@@ -32,6 +32,11 @@ const adminNavigations: NavigationItem[] = [
         path: '/management/roles',
         icon: 'roles',
       },
+      {
+        name: 'Teams',
+        path: '/management/teams',
+        icon: 'teams',
+      },
     ],
   },
   {

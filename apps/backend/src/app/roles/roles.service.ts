@@ -68,7 +68,7 @@ export class RolesService {
     const skip = (page - 1) * limit;
 
     // Build where clause for search
-    const whereClause: any = { isActive: true };
+    const whereClause: Record<string, unknown> = { isActive: true };
     if (search) {
       whereClause.OR = [
         { name: { contains: search, mode: 'insensitive' } },
@@ -85,7 +85,7 @@ export class RolesService {
             select: { id: true, name: true, email: true },
           },
           _count: {
-            select: { roleResources: true, userTeams: true },
+            select: { roleResources: true, teamRoles: true },
           },
         },
         orderBy: { name: 'asc' },
@@ -171,14 +171,14 @@ export class RolesService {
       throw new ForbiddenException('Cannot delete system roles');
     }
 
-    // Check if role is being used by any users
-    const userTeams = await this.prisma.userTeam.findMany({
+    // Check if role is being used by any teams
+    const teamRoles = await this.prisma.teamRole.findMany({
       where: { roleId: id },
     });
 
-    if (userTeams.length > 0) {
+    if (teamRoles.length > 0) {
       throw new ConflictException(
-        'Cannot delete role that is assigned to users'
+        'Cannot delete role that is assigned to teams'
       );
     }
 

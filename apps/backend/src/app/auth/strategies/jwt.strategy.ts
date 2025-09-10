@@ -24,7 +24,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
 
     // Update the secret after super() call
-    (this as any).secretOrKey = this.configService.jwtSecret;
+    (this as unknown as { secretOrKey: string }).secretOrKey =
+      this.configService.jwtSecret;
   }
 
   async validate(payload: JwtPayload) {
@@ -44,12 +45,51 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
             description: true,
           },
         },
+        userTeams: {
+          include: {
+            team: {
+              include: {
+                teamRoles: {
+                  include: {
+                    role: {
+                      select: {
+                        id: true,
+                        name: true,
+                        displayName: true,
+                        description: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
         isEmailVerified: true,
       },
     });
 
     if (!user) {
       throw new UnauthorizedException('User not found');
+    }
+
+    // If user has no main role, get roles from team memberships
+    if (!user.role) {
+      const teamRoles = user.userTeams.flatMap((ut) =>
+        ut.team.teamRoles.map((tr) => tr.role)
+      );
+
+      // Add team roles to user object
+      (
+        user as {
+          teamRoles?: {
+            id: string;
+            name: string;
+            displayName: string;
+            description: string | null;
+          }[];
+        }
+      ).teamRoles = teamRoles;
     }
 
     return user;

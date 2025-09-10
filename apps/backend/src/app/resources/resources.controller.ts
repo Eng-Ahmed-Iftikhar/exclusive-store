@@ -19,6 +19,7 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CanManageResources } from '../auth/decorators/access-control.decorator';
 import { ResourcesService } from './resources.service';
 import { CreateResourceDto, UpdateResourceDto } from './dto/resources.dto';
 
@@ -30,7 +31,10 @@ export class ResourcesController {
   constructor(private readonly resourcesService: ResourcesService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new resource' })
+  @CanManageResources('create')
+  @ApiOperation({
+    summary: 'Create a new resource (Requires resources:create permission)',
+  })
   @ApiResponse({ status: 201, description: 'Resource created successfully' })
   @ApiResponse({ status: 409, description: 'Resource already exists' })
   async createResource(@Body() createResourceDto: CreateResourceDto) {
@@ -38,7 +42,11 @@ export class ResourcesController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all resources with pagination' })
+  @CanManageResources('view')
+  @ApiOperation({
+    summary:
+      'Get all resources with pagination (Requires resources:view permission)',
+  })
   @ApiResponse({ status: 200, description: 'Resources retrieved successfully' })
   async getAllResources(
     @Query('page') page?: string,
@@ -53,7 +61,10 @@ export class ResourcesController {
   }
 
   @Get('active')
-  @ApiOperation({ summary: 'Get all active resources' })
+  @CanManageResources('view')
+  @ApiOperation({
+    summary: 'Get all active resources (Requires resources:view permission)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Active resources retrieved successfully',
@@ -63,7 +74,10 @@ export class ResourcesController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get resource by ID' })
+  @CanManageResources('view')
+  @ApiOperation({
+    summary: 'Get resource by ID (Requires resources:view permission)',
+  })
   @ApiParam({ name: 'id', description: 'Resource ID' })
   @ApiResponse({ status: 200, description: 'Resource retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Resource not found' })
@@ -72,7 +86,10 @@ export class ResourcesController {
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update resource by ID' })
+  @CanManageResources('edit')
+  @ApiOperation({
+    summary: 'Update resource by ID (Requires resources:edit permission)',
+  })
   @ApiParam({ name: 'id', description: 'Resource ID' })
   @ApiResponse({ status: 200, description: 'Resource updated successfully' })
   @ApiResponse({ status: 404, description: 'Resource not found' })
@@ -84,7 +101,10 @@ export class ResourcesController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete resource by ID' })
+  @CanManageResources('delete')
+  @ApiOperation({
+    summary: 'Delete resource by ID (Requires resources:delete permission)',
+  })
   @ApiParam({ name: 'id', description: 'Resource ID' })
   @ApiResponse({ status: 200, description: 'Resource deleted successfully' })
   @ApiResponse({ status: 404, description: 'Resource not found' })

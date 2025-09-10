@@ -15,7 +15,7 @@ function CreatePermissionView() {
   };
 
   return (
-    <div className="min-h-screen p-6 ">
+    <div className="p-6">
       <CreatePermissionForm
         onSuccess={handleSuccess}
         onCancel={handleCancel}

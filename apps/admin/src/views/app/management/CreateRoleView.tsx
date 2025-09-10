@@ -32,7 +32,7 @@ const CreateRoleView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen p-6 ">
+    <div className="p-6">
       <RoleForm
         mode="create"
         onSubmit={handleSubmit}

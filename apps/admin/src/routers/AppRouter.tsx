@@ -11,7 +11,11 @@ import EditResourcePage from '@/pages/app/management/EditResourcePage';
 import RolePage from '@/pages/app/management/RolePage';
 import CreateRolePage from '@/pages/app/management/CreateRolePage';
 import EditRolePage from '@/pages/app/management/EditRolePage';
+import TeamsPage from '@/pages/app/management/TeamsPage';
+import CreateTeamPage from '@/pages/app/management/CreateTeamPage';
+import EditTeamPage from '@/pages/app/management/EditTeamPage';
 import Login from '@/pages/auth/LoginPage';
+import SetupPasswordPage from '@/pages/auth/SetupPasswordPage';
 import { PUBLIC_ROUTES, ADMIN_ROUTES, ROUTES } from '@/routers/routes';
 import { ProtectedRoute, GuestRoute } from '@components/ProtectedRoute';
 
@@ -27,7 +31,11 @@ const COMPONENT_MAP = {
   Roles: RolePage,
   CreateRole: CreateRolePage,
   EditRole: EditRolePage,
+  Teams: TeamsPage,
+  CreateTeam: CreateTeamPage,
+  EditTeam: EditTeamPage,
   Login: Login,
+  SetupPassword: SetupPasswordPage,
 };
 
 // Main Router Component

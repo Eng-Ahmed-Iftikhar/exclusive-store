@@ -9,6 +9,9 @@ import { RedisModule } from '../redis/redis.module';
 import { EmailModule } from '../email/email.module';
 import { LoggerModule } from '../logger/logger.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { RolesGuard } from './guards/roles.guard';
+import { PermissionsGuard } from './guards/permissions.guard';
+import { AccessControlService } from './services/access-control.service';
 import { ActivityModule } from '../activity/activity.module';
 
 @Module({
@@ -30,7 +33,13 @@ import { ActivityModule } from '../activity/activity.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [AuthService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    RolesGuard,
+    PermissionsGuard,
+    AccessControlService,
+  ],
+  exports: [AuthService, AccessControlService],
 })
 export class AuthModule {}

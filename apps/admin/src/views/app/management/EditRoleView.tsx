@@ -68,7 +68,7 @@ const EditRoleView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen p-6 ">
+    <div className="p-6">
       <RoleForm
         mode="edit"
         initialData={roleData}

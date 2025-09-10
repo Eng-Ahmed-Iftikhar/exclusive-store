@@ -37,6 +37,7 @@ const SidebarNavigation: React.FC = () => {
     categories: FiFolder,
     content: FiPackage,
     resources: FiPackage,
+    teams: FiUsers,
   };
 
   const handleCloseSidebar = () => {

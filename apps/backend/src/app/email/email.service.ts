@@ -41,20 +41,27 @@ export interface OrderConfirmationEmailData {
   shippingAddress: string;
 }
 
+export interface MagicLinkEmailData {
+  to: string;
+  teamName: string;
+  magicLink: string;
+  userName: string;
+}
+
 @Injectable()
 export class EmailService {
   private transporter!: nodemailer.Transporter;
 
   constructor(
     private logger: CustomLoggerService,
-    private configService: ConfigService,
+    private configService: ConfigService
   ) {
     this.createTransporter();
   }
 
   private createTransporter() {
     const emailProvider = this.configService.emailProvider;
-    
+
     // Check if email credentials are provided
     if (this.configService.emailUser && this.configService.emailPass) {
       // Use real email provider with credentials
@@ -69,7 +76,7 @@ export class EmailService {
     try {
       // Create test account for development
       const testAccount = await nodemailer.createTestAccount();
-      
+
       this.transporter = nodemailer.createTransport({
         host: this.configService.emailHost,
         port: this.configService.emailPort,
@@ -80,15 +87,22 @@ export class EmailService {
         },
       });
 
-      this.logger.log(`Development email transporter created with Ethereal Email using ${this.configService.emailHost}:${this.configService.emailPort} (secure: ${this.configService.emailSecure})`, 'EmailService');
+      this.logger.log(
+        `Development email transporter created with Ethereal Email using ${this.configService.emailHost}:${this.configService.emailPort} (secure: ${this.configService.emailSecure})`,
+        'EmailService'
+      );
     } catch (error) {
-      this.logger.error('Failed to create Ethereal email transporter', error instanceof Error ? error.stack : 'Unknown error', 'EmailService');
+      this.logger.error(
+        'Failed to create Ethereal email transporter',
+        error instanceof Error ? error.stack : 'Unknown error',
+        'EmailService'
+      );
       throw error;
     }
   }
 
   private createProductionTransporter(provider: string) {
-    const config: any = {
+    const config: Record<string, unknown> = {
       auth: {
         user: this.configService.emailUser,
         pass: this.configService.emailPass,
@@ -150,7 +164,10 @@ export class EmailService {
     }
 
     this.transporter = nodemailer.createTransport(config);
-    this.logger.log(`Production email transporter created for ${provider} using ${config.host}:${config.port} (secure: ${config.secure})`, 'EmailService');
+    this.logger.log(
+      `Production email transporter created for ${provider} using ${config.host}:${config.port} (secure: ${config.secure})`,
+      'EmailService'
+    );
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
@@ -164,17 +181,27 @@ export class EmailService {
       };
 
       const info = await this.transporter.sendMail(mailOptions);
-      
+
       if (this.configService.isDevelopment) {
         this.logger.log(`Email sent to ${options.to}`, 'EmailService');
-        this.logger.log(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`, 'EmailService');
+        this.logger.log(
+          `Preview URL: ${nodemailer.getTestMessageUrl(info)}`,
+          'EmailService'
+        );
       } else {
-        this.logger.log(`Email sent to ${options.to} - Message ID: ${info.messageId}`, 'EmailService');
+        this.logger.log(
+          `Email sent to ${options.to} - Message ID: ${info.messageId}`,
+          'EmailService'
+        );
       }
 
       return true;
     } catch (error) {
-      this.logger.error(`Failed to send email to ${options.to}`, error instanceof Error ? error.stack : 'Unknown error', 'EmailService');
+      this.logger.error(
+        `Failed to send email to ${options.to}`,
+        error instanceof Error ? error.stack : 'Unknown error',
+        'EmailService'
+      );
       return false;
     }
   }
@@ -191,7 +218,9 @@ export class EmailService {
     });
   }
 
-  async sendVerificationEmail(userData: VerificationEmailData): Promise<boolean> {
+  async sendVerificationEmail(
+    userData: VerificationEmailData
+  ): Promise<boolean> {
     const verificationHtml = this.generateVerificationEmailTemplate(userData);
     const verificationText = this.generateVerificationEmailText(userData);
 
@@ -203,7 +232,9 @@ export class EmailService {
     });
   }
 
-  async sendPasswordResetEmail(userData: PasswordResetEmailData): Promise<boolean> {
+  async sendPasswordResetEmail(
+    userData: PasswordResetEmailData
+  ): Promise<boolean> {
     const resetHtml = this.generatePasswordResetEmailTemplate(userData);
     const resetText = this.generatePasswordResetEmailText(userData);
 
@@ -215,7 +246,9 @@ export class EmailService {
     });
   }
 
-  async sendOrderConfirmationEmail(orderData: OrderConfirmationEmailData): Promise<boolean> {
+  async sendOrderConfirmationEmail(
+    orderData: OrderConfirmationEmailData
+  ): Promise<boolean> {
     const orderHtml = this.generateOrderConfirmationEmailTemplate(orderData);
     const orderText = this.generateOrderConfirmationEmailText(orderData);
 
@@ -224,6 +257,18 @@ export class EmailService {
       subject: `Order Confirmation #${orderData.orderId} 🛍️`,
       html: orderHtml,
       text: orderText,
+    });
+  }
+
+  async sendMagicLink(magicLinkData: MagicLinkEmailData): Promise<boolean> {
+    const magicLinkHtml = this.generateMagicLinkEmailTemplate(magicLinkData);
+    const magicLinkText = this.generateMagicLinkEmailText(magicLinkData);
+
+    return this.sendEmail({
+      to: magicLinkData.to,
+      subject: `You've been invited to join ${magicLinkData.teamName} team! 🎉`,
+      html: magicLinkHtml,
+      text: magicLinkText,
     });
   }
 
@@ -297,7 +342,9 @@ This email was sent to ${userData.email}
     `;
   }
 
-  private generateVerificationEmailTemplate(userData: VerificationEmailData): string {
+  private generateVerificationEmailTemplate(
+    userData: VerificationEmailData
+  ): string {
     return `
       <!DOCTYPE html>
       <html>
@@ -342,7 +389,9 @@ This email was sent to ${userData.email}
     `;
   }
 
-  private generateVerificationEmailText(userData: VerificationEmailData): string {
+  private generateVerificationEmailText(
+    userData: VerificationEmailData
+  ): string {
     return `
 Verify Your Email
 
@@ -364,7 +413,9 @@ This email was sent to ${userData.email}
     `;
   }
 
-  private generatePasswordResetEmailTemplate(userData: PasswordResetEmailData): string {
+  private generatePasswordResetEmailTemplate(
+    userData: PasswordResetEmailData
+  ): string {
     return `
       <!DOCTYPE html>
       <html>
@@ -410,7 +461,9 @@ This email was sent to ${userData.email}
     `;
   }
 
-  private generatePasswordResetEmailText(userData: PasswordResetEmailData): string {
+  private generatePasswordResetEmailText(
+    userData: PasswordResetEmailData
+  ): string {
     return `
 Reset Your Password
 
@@ -435,7 +488,9 @@ This email was sent to ${userData.email}
     `;
   }
 
-  private generateOrderConfirmationEmailTemplate(orderData: OrderConfirmationEmailData): string {
+  private generateOrderConfirmationEmailTemplate(
+    orderData: OrderConfirmationEmailData
+  ): string {
     return `
       <!DOCTYPE html>
       <html>
@@ -474,13 +529,17 @@ This email was sent to ${userData.email}
           </div>
           <h3>Order Items:</h3>
           <ul class="items-list">
-            ${orderData.items.map(item => `
+            ${orderData.items
+              .map(
+                (item) => `
               <li>
                 <span class="item-name">${item.name}</span>
                 <span class="item-quantity">x${item.quantity}</span>
                 <span class="item-price">$${item.price.toFixed(2)}</span>
               </li>
-            `).join('')}
+            `
+              )
+              .join('')}
           </ul>
           <div class="shipping-address">
             <h3>Shipping Address:</h3>
@@ -496,7 +555,9 @@ This email was sent to ${userData.email}
     `;
   }
 
-  private generateOrderConfirmationEmailText(orderData: OrderConfirmationEmailData): string {
+  private generateOrderConfirmationEmailText(
+    orderData: OrderConfirmationEmailData
+  ): string {
     return `
 Order Confirmation
 
@@ -509,7 +570,11 @@ Order Date: ${orderData.orderDate}
 Total: $${orderData.total.toFixed(2)}
 
 Order Items:
-${orderData.items.map(item => `- ${item.name} (x${item.quantity}) - $${item.price.toFixed(2)}`).join('\n')}
+${orderData.items
+  .map(
+    (item) => `- ${item.name} (x${item.quantity}) - $${item.price.toFixed(2)}`
+  )
+  .join('\n')}
 
 Shipping Address:
 ${orderData.shippingAddress}
@@ -522,11 +587,104 @@ This email was sent to ${orderData.email}
   async verifyConnection(): Promise<boolean> {
     try {
       await this.transporter.verify();
-      this.logger.log('Email service connection verified successfully', 'EmailService');
+      this.logger.log(
+        'Email service connection verified successfully',
+        'EmailService'
+      );
       return true;
     } catch (error) {
-      this.logger.error('Email service connection failed', error instanceof Error ? error.stack : 'Unknown error', 'EmailService');
+      this.logger.error(
+        'Email service connection failed',
+        error instanceof Error ? error.stack : 'Unknown error',
+        'EmailService'
+      );
       return false;
     }
+  }
+
+  private generateMagicLinkEmailTemplate(
+    magicLinkData: MagicLinkEmailData
+  ): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Team Invitation</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+          .button { display: inline-block; padding: 15px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
+          .team-info { background: #fff; padding: 20px; border: 1px solid #eee; border-radius: 8px; margin: 20px 0; }
+          .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Team Invitation</h1>
+          <p>You've been invited to join a team!</p>
+        </div>
+        <div class="content">
+          <h2>Hello ${magicLinkData.userName}! 👋</h2>
+          <p>You've been invited to join the <strong>${
+            magicLinkData.teamName
+          }</strong> team on our admin platform.</p>
+          
+          <div class="team-info">
+            <h3>What's next?</h3>
+            <p>To get started, you'll need to set up your password and complete your account setup. Click the button below to get started:</p>
+            
+            <div style="text-align: center;">
+              <a href="${
+                magicLinkData.magicLink
+              }" class="button">Set Up Your Account</a>
+            </div>
+          </div>
+          
+          <p><strong>Important:</strong> This invitation link will expire in 24 hours for security reasons.</p>
+          
+          <p>If you didn't expect this invitation, please ignore this email or contact your administrator.</p>
+          
+          <p>Best regards,<br>The Admin Team</p>
+        </div>
+        <div class="footer">
+          <p>This email was sent to ${magicLinkData.to}</p>
+          <p>© ${new Date().getFullYear()} Admin Platform. All rights reserved.</p>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
+  private generateMagicLinkEmailText(
+    magicLinkData: MagicLinkEmailData
+  ): string {
+    return `
+Team Invitation
+
+Hello ${magicLinkData.userName}!
+
+You've been invited to join the ${
+      magicLinkData.teamName
+    } team on our admin platform.
+
+What's next?
+To get started, you'll need to set up your password and complete your account setup. 
+
+Click the link below to get started:
+${magicLinkData.magicLink}
+
+Important: This invitation link will expire in 24 hours for security reasons.
+
+If you didn't expect this invitation, please ignore this email or contact your administrator.
+
+Best regards,
+The Admin Team
+
+This email was sent to ${magicLinkData.to}
+© ${new Date().getFullYear()} Admin Platform. All rights reserved.
+    `;
   }
 }

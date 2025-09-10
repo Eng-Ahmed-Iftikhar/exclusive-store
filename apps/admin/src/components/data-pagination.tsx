@@ -22,12 +22,12 @@ interface DataPaginationProps {
 
 const DataPagination: React.FC<DataPaginationProps> = React.memo(
   ({
-    currentPage,
-    totalPages,
+    currentPage = 1,
+    totalPages = 0,
     onPageChange,
     onItemsPerPageChange,
-    totalItems,
-    itemsPerPage,
+    totalItems = 0,
+    itemsPerPage = 10,
   }) => {
     const { theme } = useSelector((state: RootState) => state.ui);
     const { startItem, endItem } = useMemo(

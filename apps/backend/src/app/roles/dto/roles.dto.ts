@@ -4,7 +4,6 @@ import {
   IsOptional,
   IsNotEmpty,
   IsArray,
-  IsUUID,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -120,21 +119,21 @@ export class RoleResponseDto {
 
 export class AssignResourceToRoleDto {
   @ApiProperty({ description: 'Role ID' })
-  @IsUUID()
+  @IsString()
   roleId!: string;
 
   @ApiProperty({ description: 'Resource ID' })
-  @IsUUID()
+  @IsString()
   resourceId!: string;
 
   @ApiProperty({ description: 'Permission ID' })
-  @IsUUID()
+  @IsString()
   permissionId!: string;
 }
 
 export class BulkAssignResourcesDto {
   @ApiProperty({ description: 'Role ID' })
-  @IsUUID()
+  @IsString()
   roleId!: string;
 
   @ApiProperty({ description: 'Array of resource-permission assignments' })
