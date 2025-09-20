@@ -55,7 +55,9 @@ export const baseQueryWithReauth: BaseQueryFn<
   let result = await baseQuery(args, api, extraOptions);
 
   // If we get a 401 (Unauthorized) error, try to refresh the token
-  if (result.error && result.error.status === 401) {
+  // Skip token refresh for login endpoint
+  const url = typeof args === 'string' ? args : args.url;
+  if (result.error && result.error.status === 401 && !url?.includes('/login')) {
     const state = api.getState() as RootState;
     const accessToken = state.auth.token;
 

@@ -515,6 +515,25 @@ export class AuthService {
     };
   }
 
+  async adminForgotPassword(email: string): Promise<{ message: string }> {
+    // Check if user exists and has admin role
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      include: { role: true },
+    });
+
+    if (!user) {
+      // Return success message even if user doesn't exist for security
+      return {
+        message:
+          'If an admin account with this email exists, a password reset link has been sent.',
+      };
+    }
+
+    // Use the existing forgot password logic
+    return this.forgotPassword(email);
+  }
+
   async resetPassword(
     token: string,
     newPassword: string

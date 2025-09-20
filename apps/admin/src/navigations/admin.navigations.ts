@@ -4,6 +4,10 @@ export interface NavigationItem {
   icon: string;
   isParent?: boolean;
   children?: NavigationItem[];
+  permission?: {
+    action: string;
+    subject: string;
+  };
 }
 
 const adminNavigations: NavigationItem[] = [
@@ -21,21 +25,37 @@ const adminNavigations: NavigationItem[] = [
         name: 'Permissions',
         path: '/management/permissions',
         icon: 'permissions',
+        permission: {
+          action: 'view',
+          subject: 'permissions',
+        },
       },
       {
         name: 'Resources',
         path: '/management/resources',
         icon: 'resources',
+        permission: {
+          action: 'view',
+          subject: 'resources',
+        },
       },
       {
         name: 'Roles',
         path: '/management/roles',
         icon: 'roles',
+        permission: {
+          action: 'view',
+          subject: 'roles',
+        },
       },
       {
         name: 'Teams',
         path: '/management/teams',
         icon: 'teams',
+        permission: {
+          action: 'view',
+          subject: 'teams',
+        },
       },
     ],
   },

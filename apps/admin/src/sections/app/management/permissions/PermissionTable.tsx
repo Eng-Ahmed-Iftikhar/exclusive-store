@@ -8,6 +8,8 @@ import {
 } from '@/apis/services/permissionApi';
 import { FiEdit, FiTrash2, FiPlus, FiSearch, FiFilter } from 'react-icons/fi';
 import DataPagination from '@/components/data-pagination';
+import { PermissionGuard } from '@/components/PermissionGuard';
+import { PERMISSIONS } from '@/lib/abilities';
 
 interface PermissionTableProps {
   onEdit: (permission: Permission) => void;
@@ -175,17 +177,19 @@ const PermissionTable: React.FC<PermissionTableProps> = ({
               Manage system permissions and access controls
             </p>
           </div>
-          <button
-            onClick={onCreate}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              theme === 'dark'
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-          >
-            <FiPlus className="w-4 h-4" />
-            Create
-          </button>
+          <PermissionGuard action="create" subject="permissions">
+            <button
+              onClick={onCreate}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                theme === 'dark'
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
+            >
+              <FiPlus className="w-4 h-4" />
+              Create
+            </button>
+          </PermissionGuard>
         </div>
       </div>
 
@@ -326,26 +330,30 @@ const PermissionTable: React.FC<PermissionTableProps> = ({
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => onEdit(permission)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          theme === 'dark'
-                            ? 'text-blue-400 hover:bg-blue-900/30'
-                            : 'text-blue-600 hover:bg-blue-50'
-                        }`}
-                      >
-                        <FiEdit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(permission.id)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          theme === 'dark'
-                            ? 'text-red-400 hover:bg-red-900/30'
-                            : 'text-red-600 hover:bg-red-50'
-                        }`}
-                      >
-                        <FiTrash2 className="w-4 h-4" />
-                      </button>
+                      <PermissionGuard action="edit" subject="permissions">
+                        <button
+                          onClick={() => onEdit(permission)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            theme === 'dark'
+                              ? 'text-blue-400 hover:bg-blue-900/30'
+                              : 'text-blue-600 hover:bg-blue-50'
+                          }`}
+                        >
+                          <FiEdit className="w-4 h-4" />
+                        </button>
+                      </PermissionGuard>
+                      <PermissionGuard action="delete" subject="permissions">
+                        <button
+                          onClick={() => handleDelete(permission.id)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            theme === 'dark'
+                              ? 'text-red-400 hover:bg-red-900/30'
+                              : 'text-red-600 hover:bg-red-50'
+                          }`}
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
+                      </PermissionGuard>
                     </div>
                   </td>
                 </tr>

@@ -1,19 +1,16 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { API_ROUTES } from '../routes';
 import { baseQueryWithReauth } from './baseApi';
+import { Role } from './roleApi';
 
 // Types matching backend response
 export interface User {
   id: string;
   email: string;
   name: string;
-  role: string;
-  roleDetails?: {
-    id: string;
-    name: string;
-    displayName: string;
-    description: string | null;
-  } | null;
+  role: Role;
+  permissions: string[];
+  roles: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -34,6 +31,23 @@ export interface SetupPasswordRequest {
 export interface SetupPasswordResponse {
   message: string;
   success: boolean;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
 }
 
 export const authApi = createApi({
@@ -81,6 +95,30 @@ export const authApi = createApi({
       }),
       invalidatesTags: ['Auth'],
     }),
+
+    // Forgot password
+    forgotPassword: builder.mutation<
+      ForgotPasswordResponse,
+      ForgotPasswordRequest
+    >({
+      query: (data) => ({
+        url: API_ROUTES.AUTH.ADMIN_FORGOT_PASSWORD,
+        method: 'POST',
+        body: data,
+      }),
+    }),
+
+    // Reset password
+    resetPassword: builder.mutation<
+      ResetPasswordResponse,
+      ResetPasswordRequest
+    >({
+      query: (data) => ({
+        url: API_ROUTES.AUTH.RESET_PASSWORD,
+        method: 'POST',
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -90,4 +128,6 @@ export const {
   useLogoutMutation,
   useLazyGetCurrentUserQuery,
   useSetupPasswordMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
 } = authApi;

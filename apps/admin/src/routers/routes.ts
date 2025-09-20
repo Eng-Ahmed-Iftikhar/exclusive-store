@@ -16,6 +16,8 @@ const MANAGEMENT_ROUTES = {
 
 const AUTH_ROUTES = {
   ADMIN_SETUP_PASSWORD: '/setup-password',
+  ADMIN_FORGOT_PASSWORD: '/forgot-password',
+  ADMIN_RESET_PASSWORD: '/reset-password',
 };
 
 // Route Paths
@@ -57,6 +59,8 @@ export const ROUTE_NAMES = {
   CREATE_TEAM: 'Create Team',
   EDIT_TEAM: 'Edit Team',
   SETUP_PASSWORD: 'Setup Password',
+  FORGOT_PASSWORD: 'Forgot Password',
+  RESET_PASSWORD: 'Reset Password',
 } as const;
 
 // Public Routes Array
@@ -70,6 +74,16 @@ export const PUBLIC_ROUTES = [
     path: ROUTES.ADMIN_SETUP_PASSWORD,
     name: ROUTE_NAMES.SETUP_PASSWORD,
     element: 'SetupPassword',
+  },
+  {
+    path: ROUTES.ADMIN_FORGOT_PASSWORD,
+    name: ROUTE_NAMES.FORGOT_PASSWORD,
+    element: 'ForgotPassword',
+  },
+  {
+    path: ROUTES.ADMIN_RESET_PASSWORD,
+    name: ROUTE_NAMES.RESET_PASSWORD,
+    element: 'ResetPassword',
   },
 ];
 

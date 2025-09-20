@@ -329,7 +329,7 @@ const TeamsTable: React.FC<TeamsTableProps> = ({ onEdit, onCreate }) => {
                           theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
                         }`}
                       >
-                        {team.members?.length || 0} members
+                        {team._count?.userTeams || 0} members
                       </span>
                     </div>
                   </td>

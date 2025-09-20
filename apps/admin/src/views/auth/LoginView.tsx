@@ -12,7 +12,9 @@ const LoginView: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <div className="flex min-h-screen">
         {/* Left Side - Branding & Features (Desktop Only) */}
-        <LoginBranding />
+        <div className="hidden lg:flex lg:w-1/2">
+          <LoginBranding />
+        </div>
 
         {/* Right Side - Login Form Section */}
         <div className="w-full lg:w-1/2 flex items-center justify-center p-8">

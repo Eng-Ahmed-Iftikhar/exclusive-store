@@ -127,7 +127,7 @@ const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
                 {team?.displayName}
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                {team?.name} • {team?.members?.length || 0} members
+                {team?.name} • {team?.userTeams?.length || 0} members
               </p>
             </div>
             <button
@@ -156,9 +156,9 @@ const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
               </h3>
             </div>
 
-            {team?.members && team.members.length > 0 ? (
+            {team?.userTeams && team.userTeams.length > 0 ? (
               <div className="space-y-3">
-                {team.members.map(
+                {team.userTeams.map(
                   (member: {
                     id: string;
                     user: { id: string; name: string; email: string };

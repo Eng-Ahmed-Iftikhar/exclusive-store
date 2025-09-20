@@ -16,6 +16,8 @@ import CreateTeamPage from '@/pages/app/management/CreateTeamPage';
 import EditTeamPage from '@/pages/app/management/EditTeamPage';
 import Login from '@/pages/auth/LoginPage';
 import SetupPasswordPage from '@/pages/auth/SetupPasswordPage';
+import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
 import { PUBLIC_ROUTES, ADMIN_ROUTES, ROUTES } from '@/routers/routes';
 import { ProtectedRoute, GuestRoute } from '@components/ProtectedRoute';
 
@@ -36,6 +38,8 @@ const COMPONENT_MAP = {
   EditTeam: EditTeamPage,
   Login: Login,
   SetupPassword: SetupPasswordPage,
+  ForgotPassword: ForgotPasswordPage,
+  ResetPassword: ResetPasswordPage,
 };
 
 // Main Router Component

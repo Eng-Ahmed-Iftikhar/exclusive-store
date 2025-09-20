@@ -43,6 +43,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
             name: true,
             displayName: true,
             description: true,
+            roleResources: {
+              include: {
+                resource: {
+                  select: {
+                    name: true,
+                  },
+                },
+                permission: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
           },
         },
         userTeams: {
@@ -57,6 +71,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
                         name: true,
                         displayName: true,
                         description: true,
+                        roleResources: {
+                          include: {
+                            resource: {
+                              select: {
+                                name: true,
+                              },
+                            },
+                            permission: {
+                              select: {
+                                name: true,
+                              },
+                            },
+                          },
+                        },
                       },
                     },
                   },
@@ -73,24 +101,39 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('User not found');
     }
 
-    // If user has no main role, get roles from team memberships
-    if (!user.role) {
+    // Extract permissions and roles
+    let permissions: string[] = [];
+    let roles: any[] = [];
+
+    // If user has a main role, use it
+    if (user.role) {
+      roles.push(user.role);
+      if (user.role.roleResources) {
+        permissions = user.role.roleResources.map(
+          (rr) => `${rr.resource.name}:${rr.permission.name}`
+        );
+      }
+    } else {
+      // If no main role, get roles from team memberships
       const teamRoles = user.userTeams.flatMap((ut) =>
         ut.team.teamRoles.map((tr) => tr.role)
       );
 
-      // Add team roles to user object
-      (
-        user as {
-          teamRoles?: {
-            id: string;
-            name: string;
-            displayName: string;
-            description: string | null;
-          }[];
-        }
-      ).teamRoles = teamRoles;
+      roles = teamRoles;
+
+      // Extract permissions from team roles
+      const teamPermissions = teamRoles.flatMap((role) =>
+        role.roleResources.map(
+          (rr) => `${rr.resource.name}:${rr.permission.name}`
+        )
+      );
+      permissions = teamPermissions;
     }
+
+    // Add permissions and roles to user object, remove userTeams
+    (user as any).permissions = permissions;
+    (user as any).roles = roles.map((r) => r.name);
+    delete (user as any).userTeams;
 
     return user;
   }

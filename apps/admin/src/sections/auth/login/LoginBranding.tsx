@@ -4,7 +4,7 @@ import { FiTrendingUp, FiUsers, FiPackage } from 'react-icons/fi';
 // LoginBranding component for left side branding panel (desktop only)
 const LoginBranding: React.FC = () => {
   return (
-    <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white p-12 flex-col justify-between">
+    <div className="hidden lg:flex w-full bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white p-12 flex-col justify-between">
       {/* Company Logo and Brand */}
       <div className="mb-8">
         <div className="flex items-center space-x-3 mb-6">
@@ -20,7 +20,7 @@ const LoginBranding: React.FC = () => {
             </span>
           </div>
         </div>
-        
+
         {/* Main Value Proposition */}
         <h2 className="text-4xl font-bold mb-4 leading-tight">
           Manage Your E-commerce Empire
@@ -54,9 +54,7 @@ const LoginBranding: React.FC = () => {
           </div>
           <div>
             <h3 className="font-semibold text-lg">Inventory Management</h3>
-            <p className="text-blue-200">
-              Control stock levels effortlessly
-            </p>
+            <p className="text-blue-200">Control stock levels effortlessly</p>
           </div>
         </div>
 

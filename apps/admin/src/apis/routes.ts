@@ -9,6 +9,8 @@ export const API_ROUTES = {
     REFRESH: '/auth/refresh',
     ME: '/auth/me',
     SETUP_PASSWORD: '/auth/setup-password',
+    ADMIN_FORGOT_PASSWORD: '/auth/admin/forgot-password',
+    RESET_PASSWORD: '/auth/reset-password',
   },
 
   // Admin Dashboard Routes

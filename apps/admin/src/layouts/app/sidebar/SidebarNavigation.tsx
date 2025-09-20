@@ -19,10 +19,12 @@ import adminNavigations, {
 } from '../../../navigations/admin.navigations';
 import { RootState } from '../../../store';
 import { toggleSidebar } from '../../../store/slices/uiSlice';
+import { PermissionGuard } from '../../../components/PermissionGuard';
 
 const SidebarNavigation: React.FC = () => {
   const dispatch = useDispatch();
   const { sidebarOpen, theme } = useSelector((state: RootState) => state.ui);
+  const { user } = useSelector((state: RootState) => state.user);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   const iconMap = {
@@ -59,6 +61,15 @@ const SidebarNavigation: React.FC = () => {
     const isExpanded = expandedItems.includes(item.name);
 
     if (item.isParent && item.children) {
+      // Filter children based on permissions
+      const visibleChildren = item.children.filter((child) => {
+        if (!child.permission) return true; // Show if no permission required
+        return true; // We'll handle permission checking in the child rendering
+      });
+
+      // Don't show parent if no visible children
+      if (visibleChildren.length === 0) return null;
+
       return (
         <div key={item.name}>
           <button
@@ -88,9 +99,47 @@ const SidebarNavigation: React.FC = () => {
 
           {isExpanded && (
             <div className="ml-8 mt-1 space-y-1">
-              {item.children.map((child) => {
+              {visibleChildren.map((child) => {
                 const ChildIconComponent =
                   iconMap[child.icon as keyof typeof iconMap];
+
+                // If child has permission requirement, wrap with PermissionGuard
+                if (child.permission) {
+                  return (
+                    <PermissionGuard
+                      key={child.path}
+                      action={child.permission.action as any}
+                      subject={child.permission.subject as any}
+                    >
+                      <NavLink
+                        to={child.path!}
+                        onClick={handleCloseSidebar}
+                        className={({ isActive }) =>
+                          `group flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            isActive
+                              ? theme === 'dark'
+                                ? 'bg-slate-700 text-white border border-slate-600 shadow-sm'
+                                : 'bg-slate-50 text-slate-900 border border-slate-200 shadow-sm'
+                              : theme === 'dark'
+                              ? 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50/80'
+                          }`
+                        }
+                      >
+                        <ChildIconComponent
+                          className={`w-4 h-4 mr-3 transition-colors ${
+                            theme === 'dark'
+                              ? 'text-slate-500 group-hover:text-slate-300'
+                              : 'text-slate-400 group-hover:text-slate-600'
+                          }`}
+                        />
+                        {child.name}
+                      </NavLink>
+                    </PermissionGuard>
+                  );
+                }
+
+                // No permission required
                 return (
                   <NavLink
                     key={child.path}
@@ -125,6 +174,47 @@ const SidebarNavigation: React.FC = () => {
       );
     }
 
+    // If item has permission requirement, wrap with PermissionGuard
+    if (item.permission) {
+      return (
+        <PermissionGuard
+          key={item.path}
+          action={item.permission.action as any}
+          subject={item.permission.subject as any}
+        >
+          <NavLink
+            to={item.path!}
+            onClick={handleCloseSidebar}
+            className={({ isActive }) =>
+              `group flex items-center px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                isActive
+                  ? theme === 'dark'
+                    ? 'bg-slate-700 text-white border border-slate-600 shadow-sm'
+                    : 'bg-slate-50 text-slate-900 border border-slate-200 shadow-sm'
+                  : theme === 'dark'
+                  ? 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50/80'
+              }`
+            }
+          >
+            <IconComponent
+              className={`w-5 h-5 mr-3.5 transition-colors ${
+                sidebarOpen
+                  ? theme === 'dark'
+                    ? 'text-slate-400 group-hover:text-slate-200'
+                    : 'text-slate-500 group-hover:text-slate-700'
+                  : theme === 'dark'
+                  ? 'text-slate-500'
+                  : 'text-slate-400'
+              }`}
+            />
+            {item.name}
+          </NavLink>
+        </PermissionGuard>
+      );
+    }
+
+    // No permission required
     return (
       <NavLink
         key={item.path}

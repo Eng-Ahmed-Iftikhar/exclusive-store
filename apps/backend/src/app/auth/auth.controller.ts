@@ -299,4 +299,20 @@ export class AuthController {
       setupPasswordDto.password
     );
   }
+
+  @Post('admin/forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Request admin password reset',
+    description: 'Send password reset link to admin user email',
+  })
+  @ApiBody({ type: ForgotPasswordDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset email sent (if admin account exists)',
+    type: MessageResponseDto,
+  })
+  async adminForgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.adminForgotPassword(forgotPasswordDto.email);
+  }
 }

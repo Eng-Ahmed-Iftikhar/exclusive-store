@@ -30,20 +30,8 @@ export class PermissionsGuard implements CanActivate {
       throw new ForbiddenException('User not authenticated');
     }
 
-    // Get user roles (main role or team roles)
-    const userRoles: string[] = [];
-
-    // Add main role if exists
-    if (user.role) {
-      userRoles.push(user.role.name);
-    }
-
-    // Add team roles if main role is null
-    if (!user.role && user.teamRoles) {
-      user.teamRoles.forEach((teamRole: { name: string }) => {
-        userRoles.push(teamRole.name);
-      });
-    }
+    // Get user roles from the roles array (contains role names as strings)
+    const userRoles: string[] = user.roles || [];
 
     if (userRoles.length === 0) {
       throw new ForbiddenException('User has no roles assigned');

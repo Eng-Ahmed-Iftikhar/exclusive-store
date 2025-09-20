@@ -19,6 +19,9 @@ export interface Team {
     name: string;
     email: string;
   };
+  _count?: {
+    userTeams: number;
+  };
 }
 
 export interface TeamMember {
