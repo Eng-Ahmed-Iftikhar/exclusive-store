@@ -86,6 +86,16 @@ export function CanManagePermissions(permission: string) {
   });
 }
 
+export function CanManageCategories(permission: string) {
+  return AccessControl({
+    permissions: [
+      'categories:create',
+      'categories:view',
+      'categories:edit',
+      'categories:delete',
+    ].filter((p) => p.includes(permission)),
+  });
+}
 export function CanManageResources(permission: string) {
   return AccessControl({
     permissions: [

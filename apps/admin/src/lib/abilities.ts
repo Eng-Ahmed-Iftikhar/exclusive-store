@@ -8,6 +8,15 @@ export type Subjects =
   | 'teams'
   | 'users'
   | 'dashboard'
+  | 'categories'
+  | 'subcategories'
+  | 'products'
+  | 'orders'
+  | 'payments'
+  | 'reviews'
+  | 'favorites'
+  | 'ratings'
+  | 'cart'
   | 'all';
 
 // Define the actions that can be performed

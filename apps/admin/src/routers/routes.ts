@@ -14,6 +14,13 @@ const MANAGEMENT_ROUTES = {
   ADMIN_EDIT_TEAM: '/teams/edit/:id',
 };
 
+const CONTENT_ROUTES = {
+  ADMIN_CONTENT: '/content',
+  ADMIN_CATEGORIES: '/categories',
+  ADMIN_CREATE_CATEGORY: '/categories/create',
+  ADMIN_EDIT_CATEGORY: '/categories/edit/:id',
+};
+
 const AUTH_ROUTES = {
   ADMIN_SETUP_PASSWORD: '/setup-password',
   ADMIN_FORGOT_PASSWORD: '/forgot-password',
@@ -21,19 +28,19 @@ const AUTH_ROUTES = {
 };
 
 // Route Paths
+
 export const ROUTES = {
+  ADMIN: '/',
   // Public Routes
   LOGIN: '/login',
 
-  // Admin Routes
-  ADMIN: '/',
-  ADMIN_PRODUCTS: '/products',
-  ADMIN_ORDERS: '/orders',
-  ADMIN_CUSTOMERS: '/customers',
   // management routes
   ...MANAGEMENT_ROUTES,
   // auth routes
   ...AUTH_ROUTES,
+
+  // content routes
+  ...CONTENT_ROUTES,
 
   ADMIN_ANALYTICS: '/analytics',
   ADMIN_SETTINGS: '/settings',
@@ -58,6 +65,9 @@ export const ROUTE_NAMES = {
   TEAMS: 'Teams',
   CREATE_TEAM: 'Create Team',
   EDIT_TEAM: 'Edit Team',
+  CATEGORIES: 'Categories',
+  CREATE_CATEGORY: 'Create Category',
+  EDIT_CATEGORY: 'Edit Category',
   SETUP_PASSWORD: 'Setup Password',
   FORGOT_PASSWORD: 'Forgot Password',
   RESET_PASSWORD: 'Reset Password',
@@ -167,6 +177,24 @@ export const ADMIN_ROUTES = [
     name: ROUTE_NAMES.EDIT_TEAM,
     element: 'EditTeam',
     icon: 'edit-team',
+  },
+  {
+    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CATEGORIES,
+    name: ROUTE_NAMES.CATEGORIES,
+    element: 'Categories',
+    icon: 'categories',
+  },
+  {
+    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CREATE_CATEGORY,
+    name: ROUTE_NAMES.CREATE_CATEGORY,
+    element: 'CreateCategory',
+    icon: 'create-category',
+  },
+  {
+    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_EDIT_CATEGORY,
+    name: ROUTE_NAMES.EDIT_CATEGORY,
+    element: 'EditCategory',
+    icon: 'edit-category',
   },
 ];
 

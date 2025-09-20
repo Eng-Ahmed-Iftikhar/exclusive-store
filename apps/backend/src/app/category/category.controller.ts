@@ -21,6 +21,7 @@ import {
   SubcategoryResponseDto,
 } from './dto/category.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CanManageCategories } from '../auth/decorators/access-control.decorator';
 
 @Controller('categories')
 export class CategoryController {
@@ -30,14 +31,17 @@ export class CategoryController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
+  @CanManageCategories('create')
   @HttpCode(HttpStatus.CREATED)
-  async createCategory(@Body() createCategoryDto: CreateCategoryDto): Promise<CategoryResponseDto> {
+  async createCategory(
+    @Body() createCategoryDto: CreateCategoryDto
+  ): Promise<CategoryResponseDto> {
     return this.categoryService.createCategory(createCategoryDto);
   }
 
   @Get()
   async getAllCategories(
-    @Query('includeInactive') includeInactive?: string,
+    @Query('includeInactive') includeInactive?: string
   ): Promise<CategoryResponseDto[]> {
     const includeInactiveBool = includeInactive === 'true';
     return this.categoryService.getAllCategories(includeInactiveBool);
@@ -49,21 +53,25 @@ export class CategoryController {
   }
 
   @Get('slug/:slug')
-  async getCategoryBySlug(@Param('slug') slug: string): Promise<CategoryResponseDto> {
+  async getCategoryBySlug(
+    @Param('slug') slug: string
+  ): Promise<CategoryResponseDto> {
     return this.categoryService.getCategoryBySlug(slug);
   }
 
   @Put(':id')
   @UseGuards(JwtAuthGuard)
+  @CanManageCategories('edit')
   async updateCategory(
     @Param('id') id: string,
-    @Body() updateCategoryDto: UpdateCategoryDto,
+    @Body() updateCategoryDto: UpdateCategoryDto
   ): Promise<CategoryResponseDto> {
     return this.categoryService.updateCategory(id, updateCategoryDto);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
+  @CanManageCategories('delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteCategory(@Param('id') id: string): Promise<void> {
     return this.categoryService.deleteCategory(id);
@@ -73,39 +81,50 @@ export class CategoryController {
 
   @Post(':categoryId/subcategories')
   @UseGuards(JwtAuthGuard)
+  @CanManageCategories('create')
   @HttpCode(HttpStatus.CREATED)
   async createSubcategory(
     @Param('categoryId') categoryId: string,
-    @Body() createSubcategoryDto: CreateSubcategoryDto,
+    @Body() createSubcategoryDto: CreateSubcategoryDto
   ): Promise<SubcategoryResponseDto> {
-    return this.categoryService.createSubcategory(categoryId, createSubcategoryDto);
+    return this.categoryService.createSubcategory(
+      categoryId,
+      createSubcategoryDto
+    );
   }
 
   @Get(':categoryId/subcategories')
   async getSubcategoriesByCategory(
     @Param('categoryId') categoryId: string,
-    @Query('includeInactive') includeInactive?: string,
+    @Query('includeInactive') includeInactive?: string
   ): Promise<SubcategoryResponseDto[]> {
     const includeInactiveBool = includeInactive === 'true';
-    return this.categoryService.getSubcategoriesByCategory(categoryId, includeInactiveBool);
+    return this.categoryService.getSubcategoriesByCategory(
+      categoryId,
+      includeInactiveBool
+    );
   }
 
   @Get('subcategories/:id')
-  async getSubcategoryById(@Param('id') id: string): Promise<SubcategoryResponseDto> {
+  async getSubcategoryById(
+    @Param('id') id: string
+  ): Promise<SubcategoryResponseDto> {
     return this.categoryService.getSubcategoryById(id);
   }
 
   @Put('subcategories/:id')
   @UseGuards(JwtAuthGuard)
+  @CanManageCategories('edit')
   async updateSubcategory(
     @Param('id') id: string,
-    @Body() updateSubcategoryDto: UpdateSubcategoryDto,
+    @Body() updateSubcategoryDto: UpdateSubcategoryDto
   ): Promise<SubcategoryResponseDto> {
     return this.categoryService.updateSubcategory(id, updateSubcategoryDto);
   }
 
   @Delete('subcategories/:id')
   @UseGuards(JwtAuthGuard)
+  @CanManageCategories('delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteSubcategory(@Param('id') id: string): Promise<void> {
     return this.categoryService.deleteSubcategory(id);

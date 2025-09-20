@@ -14,6 +14,9 @@ import EditRolePage from '@/pages/app/management/EditRolePage';
 import TeamsPage from '@/pages/app/management/TeamsPage';
 import CreateTeamPage from '@/pages/app/management/CreateTeamPage';
 import EditTeamPage from '@/pages/app/management/EditTeamPage';
+import CategoryPage from '@/pages/app/contents/CategoryPage';
+import CreateCategoryPage from '@/pages/app/contents/CreateCategoryPage';
+import EditCategoryPage from '@/pages/app/contents/EditCategoryPage';
 import Login from '@/pages/auth/LoginPage';
 import SetupPasswordPage from '@/pages/auth/SetupPasswordPage';
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
@@ -36,6 +39,9 @@ const COMPONENT_MAP = {
   Teams: TeamsPage,
   CreateTeam: CreateTeamPage,
   EditTeam: EditTeamPage,
+  Categories: CategoryPage,
+  CreateCategory: CreateCategoryPage,
+  EditCategory: EditCategoryPage,
   Login: Login,
   SetupPassword: SetupPasswordPage,
   ForgotPassword: ForgotPasswordPage,

@@ -11,6 +11,7 @@ import { teamApi } from '../apis/services/teamApi';
 import { notificationApi } from '../apis/services/notificationApi';
 import { rbacApi } from '../apis/services/rbacApi';
 import rootReducer from './slices';
+import { categoryApi } from '@/apis/services/categoryApi';
 
 // Persist config
 const persistConfig = {
@@ -30,6 +31,7 @@ const apiMiddleware = [
   teamApi.middleware,
   notificationApi.middleware,
   rbacApi.middleware,
+  categoryApi.middleware,
 ];
 
 export const store = configureStore({

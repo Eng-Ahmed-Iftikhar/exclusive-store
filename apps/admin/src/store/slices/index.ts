@@ -11,6 +11,7 @@ import { roleApi } from '@/apis/services/roleApi';
 import { notificationApi } from '@/apis/services/notificationApi';
 import { rbacApi } from '@/apis/services/rbacApi';
 import { teamApi } from '@/apis/services/teamApi';
+import { categoryApi } from '@/apis/services/categoryApi';
 
 const apiReducers = {
   [adminApi.reducerPath]: adminApi.reducer,
@@ -21,6 +22,7 @@ const apiReducers = {
   [notificationApi.reducerPath]: notificationApi.reducer,
   [rbacApi.reducerPath]: rbacApi.reducer,
   [teamApi.reducerPath]: teamApi.reducer,
+  [categoryApi.reducerPath]: categoryApi.reducer,
 };
 
 const rootReducer = combineReducers({
