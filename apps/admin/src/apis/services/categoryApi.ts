@@ -8,8 +8,7 @@ export interface Category {
   name: string;
   slug: string;
   description?: string;
-  image?: string;
-  icon?: string;
+  iconFileId?: string;
   isActive: boolean;
   sortOrder: number;
   createdAt: string;
@@ -22,8 +21,7 @@ export interface Subcategory {
   name: string;
   slug: string;
   description?: string;
-  image?: string;
-  icon?: string;
+  iconFileId?: string;
   isActive: boolean;
   sortOrder: number;
   categoryId: string;
@@ -35,8 +33,7 @@ export interface CreateCategoryRequest {
   name: string;
   slug: string;
   description?: string;
-  image?: string;
-  icon?: string;
+  iconFileId?: string;
   isActive?: boolean;
   sortOrder?: number;
   subcategories?: CreateSubcategoryRequest[];
@@ -46,8 +43,7 @@ export interface CreateSubcategoryRequest {
   name: string;
   slug: string;
   description?: string;
-  image?: string;
-  icon?: string;
+  iconFileId?: string;
   isActive?: boolean;
   sortOrder?: number;
 }
@@ -56,8 +52,7 @@ export interface UpdateCategoryRequest {
   name?: string;
   slug?: string;
   description?: string;
-  image?: string;
-  icon?: string;
+  iconFileId?: string;
   isActive?: boolean;
   sortOrder?: number;
 }
@@ -66,8 +61,7 @@ export interface UpdateSubcategoryRequest {
   name?: string;
   slug?: string;
   description?: string;
-  image?: string;
-  icon?: string;
+  iconFileId?: string;
   isActive?: boolean;
   sortOrder?: number;
 }

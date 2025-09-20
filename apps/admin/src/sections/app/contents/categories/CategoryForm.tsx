@@ -2,9 +2,9 @@ import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { RootState } from '@/store';
 import { FiSave, FiX } from 'react-icons/fi';
-import { categorySchema, CategoryFormValues } from './types';
 import {
   Form,
   FormControl,
@@ -17,6 +17,39 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { FileUpload } from '@/components/FileUpload';
+import {
+  useGetFileByIdQuery,
+  useDeleteFileMutation,
+} from '@/apis/services/fileApi';
+import { CategoryFormValues } from '@/types/categories';
+
+// Validation schema for category form
+const categorySchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Category name is required')
+    .max(100, 'Category name must be less than 100 characters'),
+  slug: z
+    .string()
+    .min(1, 'Slug is required')
+    .max(100, 'Slug must be less than 100 characters')
+    .regex(
+      /^[a-z0-9-]+$/,
+      'Slug must contain only lowercase letters, numbers, and hyphens'
+    ),
+  description: z
+    .string()
+    .max(500, 'Description must be less than 500 characters')
+    .optional(),
+  iconFileId: z.string().optional().or(z.literal('')),
+  isActive: z.boolean().optional(),
+  sortOrder: z
+    .number()
+    .int('Sort order must be an integer')
+    .min(0, 'Sort order must be 0 or greater')
+    .optional(),
+});
 
 interface CategoryFormProps {
   mode: 'create' | 'edit';
@@ -24,8 +57,7 @@ interface CategoryFormProps {
     name?: string;
     slug?: string;
     description?: string;
-    image?: string;
-    icon?: string;
+    iconFileId?: string;
     isActive?: boolean;
     sortOrder?: number;
   };
@@ -53,12 +85,32 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
       name: initialData?.name || '',
       slug: initialData?.slug || '',
       description: initialData?.description || '',
-      image: initialData?.image || '',
-      icon: initialData?.icon || '',
+      iconFileId: initialData?.iconFileId || '',
       isActive: initialData?.isActive ?? true,
       sortOrder: initialData?.sortOrder || 0,
     },
   });
+  const iconFileId = form.watch('iconFileId') || '';
+
+  const { data: iconFile } = useGetFileByIdQuery(iconFileId, {
+    skip: !iconFileId,
+  });
+
+  const [deleteFile] = useDeleteFileMutation();
+
+  // Handle file deletion
+  const handleRemoveIcon = async () => {
+    if (iconFileId) {
+      try {
+        await deleteFile(iconFileId).unwrap();
+        form.setValue('iconFileId', '');
+      } catch (error) {
+        console.error('Failed to delete file:', error);
+        // Still clear the form field even if deletion fails
+        form.setValue('iconFileId', '');
+      }
+    }
+  };
 
   // Update form when initialData changes (for edit mode)
   useEffect(() => {
@@ -67,8 +119,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
         name: initialData.name || '',
         slug: initialData.slug || '',
         description: initialData.description || '',
-        image: initialData.image || '',
-        icon: initialData.icon || '',
+        iconFileId: initialData.iconFileId || '',
         isActive: initialData.isActive ?? true,
         sortOrder: initialData.sortOrder || 0,
       });
@@ -154,7 +205,6 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
               )}
             />
 
-            {/* Slug Field */}
             <FormField
               control={form.control}
               name="slug"
@@ -198,39 +248,56 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
               )}
             />
 
-            {/* Image Field */}
+            {/* Icon Upload Field */}
             <FormField
               control={form.control}
-              name="image"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Image URL</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="https://example.com/image.jpg"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Optional image URL for the category
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Icon Field */}
-            <FormField
-              control={form.control}
-              name="icon"
+              name="iconFileId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Icon</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., 📱, 🎮, 📚" {...field} />
+                    <div className="space-y-4">
+                      {/* Show existing icon if available */}
+                      {field.value && iconFile && (
+                        <div className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                          <img
+                            src={iconFile.secureUrl}
+                            alt="Category icon"
+                            className="w-16 h-16 object-cover rounded"
+                          />
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">
+                              {iconFile.originalName}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {iconFile.format.toUpperCase()} •{' '}
+                              {Math.round(iconFile.bytes / 1024)} KB
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleRemoveIcon}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <FiX className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+
+                      {!iconFileId && (
+                        <FileUpload
+                          accept="image/*"
+                          maxSize={5}
+                          onFileUploaded={(file) => {
+                            field.onChange(file.id);
+                            form.setValue('iconFileId', file.id);
+                          }}
+                        />
+                      )}
+                    </div>
                   </FormControl>
                   <FormDescription>
-                    Optional emoji or icon for the category
+                    Upload an icon image for the category
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

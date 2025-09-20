@@ -1,9 +1,26 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useResetPasswordMutation } from '@/apis/services/authApi';
-import { ResetPasswordFormValues } from './types';
-import { resetPasswordSchema } from './validation';
+import { ResetPasswordFormValues } from '@/types/auth';
+
+// Reset password validation schema
+const resetPasswordSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+      ),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 import ErrorDisplay from '../login/ErrorDisplay';
 import {
   Form,

@@ -131,6 +131,22 @@ export const API_ROUTES = {
     REMOVE_ROLE: (teamId: string, roleId: string) =>
       `/teams/${teamId}/roles/${roleId}`,
   },
+
+  // Files Routes
+  FILES: {
+    UPLOAD: '/files/upload',
+    LIST: '/files',
+    BY_ID: (id: string) => `/files/${id}`,
+    UPDATE: (id: string) => `/files/${id}`,
+    DELETE: (id: string) => `/files/${id}`,
+    BULK_DELETE: '/files/bulk-delete',
+    TRANSFORM: (id: string) => `/files/${id}/transform`,
+    FOLDERS: '/files/folders/list',
+    TAGS: '/files/tags/list',
+    STATS: '/files/stats/overview',
+    CLOUDINARY_USAGE: '/files/cloudinary/usage',
+    CLOUDINARY_SEARCH: '/files/cloudinary/search',
+  },
 } as const;
 
 // Base URL configuration

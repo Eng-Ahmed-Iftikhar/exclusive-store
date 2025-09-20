@@ -10,6 +10,7 @@ import { roleApi } from '../apis/services/roleApi';
 import { teamApi } from '../apis/services/teamApi';
 import { notificationApi } from '../apis/services/notificationApi';
 import { rbacApi } from '../apis/services/rbacApi';
+import { fileApi } from '../apis/services/fileApi';
 import rootReducer from './slices';
 import { categoryApi } from '@/apis/services/categoryApi';
 
@@ -17,7 +18,7 @@ import { categoryApi } from '@/apis/services/categoryApi';
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['auth', 'user'], // Only persist auth and user slices
+  whitelist: ['auth'], // Only persist auth and user slices
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -31,6 +32,7 @@ const apiMiddleware = [
   teamApi.middleware,
   notificationApi.middleware,
   rbacApi.middleware,
+  fileApi.middleware,
   categoryApi.middleware,
 ];
 

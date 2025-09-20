@@ -25,8 +25,7 @@ const CreateCategoryForm: React.FC<CreateCategoryFormProps> = ({
         name: data.name,
         slug: data.slug,
         description: data.description,
-        image: data.image,
-        icon: data.icon,
+        iconFileId: data.iconFileId,
         isActive: data.isActive,
         sortOrder: data.sortOrder,
       }).unwrap();

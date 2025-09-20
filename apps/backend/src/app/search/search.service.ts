@@ -30,7 +30,7 @@ export class SearchService {
               id: true,
               name: true,
               slug: true,
-              icon: true,
+              iconFileId: true,
             },
           },
         },
@@ -63,7 +63,7 @@ export class SearchService {
               id: true,
               name: true,
               slug: true,
-              icon: true,
+              iconFileId: true,
             },
           },
           subcategory: {
@@ -77,7 +77,7 @@ export class SearchService {
             where: { isPrimary: true },
             take: 1,
             select: {
-              url: true,
+              fileId: true,
               altText: true,
             },
           },
@@ -117,7 +117,7 @@ export class SearchService {
           isOnSale:
             product.prices[0]?.salePrice &&
             product.prices[0]?.salePrice < product.prices[0]?.price,
-          primaryImage: product.images[0]?.url || null,
+          primaryImage: product.images[0]?.fileId || null,
         };
       });
     }
@@ -144,7 +144,7 @@ export class SearchService {
           id: true,
           name: true,
           slug: true,
-          icon: true,
+          iconFileId: true,
         },
         take: 3,
       }),
@@ -172,7 +172,7 @@ export class SearchService {
         id: cat.id,
         name: cat.name,
         slug: cat.slug,
-        icon: cat.icon,
+        iconFileId: cat.iconFileId,
       })),
       ...products.map((prod) => ({
         type: 'product' as const,

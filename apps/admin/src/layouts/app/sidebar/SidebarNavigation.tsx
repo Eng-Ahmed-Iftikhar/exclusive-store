@@ -249,7 +249,7 @@ const SidebarNavigation: React.FC = () => {
   };
 
   return (
-    <nav className="flex-1 px-6 py-8">
+    <nav className="flex-1 px-6 py-8 overflow-y-auto sidebar-scroll">
       <div className="space-y-1">
         {adminNavigations.map(renderNavigationItem)}
       </div>

@@ -1,4 +1,12 @@
-import { IsBoolean, IsInt, IsNumber, IsOptional, IsString, IsUrl, Max, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 
 // ===== ITEM DTOs =====
@@ -188,8 +196,8 @@ export class CreateItemImageDto {
   @IsString()
   itemId!: string;
 
-  @IsUrl()
-  url!: string;
+  @IsString()
+  fileId!: string;
 
   @IsOptional()
   @IsString()
@@ -206,8 +214,8 @@ export class CreateItemImageDto {
 
 export class UpdateItemImageDto {
   @IsOptional()
-  @IsUrl()
-  url?: string;
+  @IsString()
+  fileId?: string;
 
   @IsOptional()
   @IsString()
@@ -319,7 +327,7 @@ export class StockResponseDto {
 export class ItemImageResponseDto {
   id!: string;
   itemId!: string;
-  url!: string;
+  fileId!: string;
   altText?: string;
   isPrimary!: boolean;
   sortOrder!: number;
@@ -382,7 +390,7 @@ export class ItemResponseDto {
   subcategoryId?: string;
   createdAt!: Date;
   updatedAt!: Date;
-  
+
   // Relations
   category?: {
     id: string;
@@ -400,7 +408,7 @@ export class ItemResponseDto {
   reviews?: ReviewResponseDto[];
   ratings?: RatingResponseDto[];
   favorites?: FavoriteResponseDto[];
-  
+
   // Computed fields
   averageRating?: number;
   totalReviews?: number;

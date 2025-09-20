@@ -8,11 +8,11 @@ function CreateCategoryView() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSuccess = () => {
-    navigate('/management/categories');
+    navigate('/content/categories');
   };
 
   const handleCancel = () => {
-    navigate('/management/categories');
+    navigate('/content/categories');
   };
 
   return (

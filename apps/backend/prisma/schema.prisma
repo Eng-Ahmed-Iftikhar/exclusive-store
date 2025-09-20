@@ -209,7 +209,7 @@ model Category {
   name        String
   slug        String   @unique
   description String?
-  icon        String?  // Icon field for categories
+  iconFileId  String?  // Reference to File model
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
@@ -218,6 +218,7 @@ model Category {
   // Relations
   subcategories Subcategory[]
   items         Item[]
+  iconFile      File?   @relation("CategoryIcon", fields: [iconFileId], references: [id])
 
   @@map("categories")
 }
@@ -227,7 +228,7 @@ model Subcategory {
   name        String
   slug        String   @unique
   description String?
-  icon        String?  // Icon field for subcategories
+  iconFileId  String?  // Reference to File model
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
   categoryId  String
@@ -237,6 +238,7 @@ model Subcategory {
   // Relations
   category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   items    Item[]
+  iconFile File?   @relation("SubcategoryIcon", fields: [iconFileId], references: [id])
 
   @@map("subcategories")
 }
@@ -396,7 +398,7 @@ model Stock {
 model ItemImage {
   id        String   @id @default(cuid())
   itemId    String
-  url       String
+  fileId    String   // Reference to File model
   altText   String?
   isPrimary Boolean  @default(false)
   sortOrder Int      @default(0)
@@ -405,6 +407,7 @@ model ItemImage {
 
   // Relations
   item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  file File @relation("ItemImage", fields: [fileId], references: [id])
 
   @@map("item_images")
 }
@@ -510,6 +513,11 @@ model File {
   metadata    Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // Relations
+  categoryIcons     Category[]     @relation("CategoryIcon")
+  subcategoryIcons  Subcategory[]  @relation("SubcategoryIcon")
+  itemImages        ItemImage[]    @relation("ItemImage")
 
   @@map("files")
 }

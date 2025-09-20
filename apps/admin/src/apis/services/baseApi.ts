@@ -11,14 +11,13 @@ const BASE_URL = import.meta.env.VITE_APP_BACKEND_URL;
 // Custom base query with authentication and refresh token logic
 const baseQuery = fetchBaseQuery({
   baseUrl: BASE_URL,
-  prepareHeaders: (headers, { getState }) => {
+  prepareHeaders: (headers, { getState, endpoint }) => {
     // Get token from auth state
     const token = (getState() as RootState).auth.token;
     if (token) {
       headers.set('authorization', `Bearer ${token}`);
     }
-    // Add content type for JSON requests
-    headers.set('Content-Type', 'application/json');
+
     return headers;
   },
   credentials: 'include', // Include cookies for session management

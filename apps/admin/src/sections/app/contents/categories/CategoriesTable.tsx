@@ -6,6 +6,7 @@ import {
   useDeleteCategoryMutation,
   Category,
 } from '@/apis/services/categoryApi';
+import { useGetFileByIdQuery } from '@/apis/services/fileApi';
 import {
   FiEdit,
   FiTrash2,
@@ -22,6 +23,37 @@ interface CategoriesTableProps {
   onCreate: () => void;
   onView: (category: Category) => void;
 }
+
+// Component to display category icon
+const CategoryIcon: React.FC<{ iconFileId: string }> = ({ iconFileId }) => {
+  const { data: iconFile, isLoading } = useGetFileByIdQuery(iconFileId, {
+    skip: !iconFileId,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="w-8 h-8 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center">
+        <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!iconFile) {
+    return (
+      <div className="w-8 h-8 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center">
+        <span className="text-xs text-gray-400">?</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={iconFile.secureUrl}
+      alt={iconFile.originalName}
+      className="w-8 h-8 object-cover rounded-lg"
+    />
+  );
+};
 
 const CategoriesTable: React.FC<CategoriesTableProps> = ({
   onEdit,
@@ -319,10 +351,8 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({
                 >
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
-                      {category.icon && (
-                        <div className="w-8 h-8 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center">
-                          <span className="text-sm">{category.icon}</span>
-                        </div>
+                      {category.iconFileId && (
+                        <CategoryIcon iconFileId={category.iconFileId} />
                       )}
                       <div>
                         <span

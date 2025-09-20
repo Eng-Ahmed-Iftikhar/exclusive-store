@@ -6,22 +6,36 @@ import { z } from 'zod';
 import { RootState } from '@/store';
 import { useSetupPasswordMutation } from '@/apis/services/authApi';
 import { FiEye, FiEyeOff, FiLock, FiMail, FiCheck, FiX } from 'react-icons/fi';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { SetupPasswordFormValues } from '@/types/auth';
 
-const setupPasswordSchema = z.object({
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+// Setup password validation schema
+const setupPasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+      ),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
-type SetupPasswordFormData = z.infer<typeof setupPasswordSchema>;
+type SetupPasswordFormData = SetupPasswordFormValues;
 
 interface SetupPasswordFormProps {
   email: string;
@@ -65,13 +79,15 @@ const SetupPasswordForm: React.FC<SetupPasswordFormProps> = ({
         token,
         password: values.password,
       }).unwrap();
-      
+
       setSuccess('Password set successfully! You can now log in.');
       setTimeout(() => {
         onSuccess();
       }, 2000);
     } catch (err: any) {
-      setError(err?.data?.message || 'Failed to set password. Please try again.');
+      setError(
+        err?.data?.message || 'Failed to set password. Please try again.'
+      );
       console.error('Password setup error:', err);
     } finally {
       setIsSubmitting(false);
@@ -88,7 +104,8 @@ const SetupPasswordForm: React.FC<SetupPasswordFormProps> = ({
     { text: 'One number', met: /\d/.test(password) },
   ];
 
-  const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
+  const passwordsMatch =
+    password === confirmPassword && confirmPassword.length > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -98,26 +115,47 @@ const SetupPasswordForm: React.FC<SetupPasswordFormProps> = ({
           <div className="mx-auto w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-4">
             <FiLock className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Set Your Password</h1>
-          <p className="text-gray-600 mt-2">Create a secure password for your account</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Set Your Password
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Create a secure password for your account
+          </p>
         </div>
 
         {/* Form Card */}
-        <div className={`rounded-2xl border shadow-xl ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+        <div
+          className={`rounded-2xl border shadow-xl ${
+            theme === 'dark'
+              ? 'bg-slate-800 border-slate-700'
+              : 'bg-white border-gray-200'
+          }`}
+        >
           <div className="p-8">
             {/* Email Display */}
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-2">
                 <FiMail className="w-5 h-5 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">Account</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Account
+                </span>
               </div>
-              <div className={`px-3 py-2 rounded-lg ${theme === 'dark' ? 'bg-slate-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+              <div
+                className={`px-3 py-2 rounded-lg ${
+                  theme === 'dark'
+                    ? 'bg-slate-700 text-gray-300'
+                    : 'bg-gray-100 text-gray-600'
+                }`}
+              >
                 {email}
               </div>
             </div>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+              <form
+                onSubmit={form.handleSubmit(handleSubmit)}
+                className="space-y-6"
+              >
                 {/* Password Field */}
                 <FormField
                   control={form.control}
@@ -131,14 +169,22 @@ const SetupPasswordForm: React.FC<SetupPasswordFormProps> = ({
                             {...field}
                             type={showPassword ? 'text' : 'password'}
                             placeholder="Enter your new password"
-                            className={`pr-10 ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                            className={`pr-10 ${
+                              theme === 'dark'
+                                ? 'bg-slate-700 border-slate-600 text-white'
+                                : 'bg-white border-gray-300 text-gray-900'
+                            }`}
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
                             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                           >
-                            {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                            {showPassword ? (
+                              <FiEyeOff className="w-5 h-5" />
+                            ) : (
+                              <FiEye className="w-5 h-5" />
+                            )}
                           </button>
                         </div>
                       </FormControl>
@@ -149,16 +195,26 @@ const SetupPasswordForm: React.FC<SetupPasswordFormProps> = ({
 
                 {/* Password Requirements */}
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-gray-700">Password Requirements:</p>
+                  <p className="text-sm font-medium text-gray-700">
+                    Password Requirements:
+                  </p>
                   <div className="space-y-1">
                     {passwordRequirements.map((req, index) => (
                       <div key={index} className="flex items-center gap-2">
-                        <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                          req.met ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
-                        }`}>
+                        <div
+                          className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                            req.met
+                              ? 'bg-green-100 text-green-600'
+                              : 'bg-gray-100 text-gray-400'
+                          }`}
+                        >
                           {req.met && <FiCheck className="w-3 h-3" />}
                         </div>
-                        <span className={`text-sm ${req.met ? 'text-green-600' : 'text-gray-500'}`}>
+                        <span
+                          className={`text-sm ${
+                            req.met ? 'text-green-600' : 'text-gray-500'
+                          }`}
+                        >
                           {req.text}
                         </span>
                       </div>
@@ -179,14 +235,24 @@ const SetupPasswordForm: React.FC<SetupPasswordFormProps> = ({
                             {...field}
                             type={showConfirmPassword ? 'text' : 'password'}
                             placeholder="Confirm your new password"
-                            className={`pr-10 ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                            className={`pr-10 ${
+                              theme === 'dark'
+                                ? 'bg-slate-700 border-slate-600 text-white'
+                                : 'bg-white border-gray-300 text-gray-900'
+                            }`}
                           />
                           <button
                             type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            onClick={() =>
+                              setShowConfirmPassword(!showConfirmPassword)
+                            }
                             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                           >
-                            {showConfirmPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                            {showConfirmPassword ? (
+                              <FiEyeOff className="w-5 h-5" />
+                            ) : (
+                              <FiEye className="w-5 h-5" />
+                            )}
                           </button>
                         </div>
                       </FormControl>
@@ -198,13 +264,27 @@ const SetupPasswordForm: React.FC<SetupPasswordFormProps> = ({
                 {/* Password Match Indicator */}
                 {confirmPassword.length > 0 && (
                   <div className="flex items-center gap-2">
-                    <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                      passwordsMatch ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                    }`}>
-                      {passwordsMatch ? <FiCheck className="w-3 h-3" /> : <FiX className="w-3 h-3" />}
+                    <div
+                      className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                        passwordsMatch
+                          ? 'bg-green-100 text-green-600'
+                          : 'bg-red-100 text-red-600'
+                      }`}
+                    >
+                      {passwordsMatch ? (
+                        <FiCheck className="w-3 h-3" />
+                      ) : (
+                        <FiX className="w-3 h-3" />
+                      )}
                     </div>
-                    <span className={`text-sm ${passwordsMatch ? 'text-green-600' : 'text-red-600'}`}>
-                      {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
+                    <span
+                      className={`text-sm ${
+                        passwordsMatch ? 'text-green-600' : 'text-red-600'
+                      }`}
+                    >
+                      {passwordsMatch
+                        ? 'Passwords match'
+                        : 'Passwords do not match'}
                     </span>
                   </div>
                 )}
@@ -236,7 +316,11 @@ const SetupPasswordForm: React.FC<SetupPasswordFormProps> = ({
                   </Button>
                   <Button
                     type="submit"
-                    disabled={isSubmitting || !passwordsMatch || passwordRequirements.some(req => !req.met)}
+                    disabled={
+                      isSubmitting ||
+                      !passwordsMatch ||
+                      passwordRequirements.some((req) => !req.met)
+                    }
                     className="flex-1"
                   >
                     {isSubmitting ? 'Setting Password...' : 'Set Password'}
@@ -248,7 +332,8 @@ const SetupPasswordForm: React.FC<SetupPasswordFormProps> = ({
             {/* Help Text */}
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-500">
-                This link can only be used once. If you need help, contact your administrator.
+                This link can only be used once. If you need help, contact your
+                administrator.
               </p>
             </div>
           </div>

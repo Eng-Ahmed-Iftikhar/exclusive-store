@@ -9,16 +9,16 @@ function EditCategoryView() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!id) {
-    navigate('/management/categories');
+    navigate('/content/categories');
     return null;
   }
 
   const handleSuccess = () => {
-    navigate('/management/categories');
+    navigate('/content/categories');
   };
 
   const handleCancel = () => {
-    navigate('/management/categories');
+    navigate('/content/categories');
   };
 
   return (

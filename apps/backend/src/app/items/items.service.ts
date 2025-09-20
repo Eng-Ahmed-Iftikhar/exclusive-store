@@ -1055,7 +1055,7 @@ export class ItemsService {
     return {
       id: image.id,
       itemId: image.itemId,
-      url: image.url,
+      fileId: image.fileId,
       altText: image.altText,
       isPrimary: image.isPrimary,
       sortOrder: image.sortOrder,

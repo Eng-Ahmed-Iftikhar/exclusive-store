@@ -21,7 +21,7 @@ export class CreateSubcategoryDto {
 
   @IsOptional()
   @IsString()
-  icon?: string;
+  iconFileId?: string;
 
   @IsOptional()
   @IsBoolean()
@@ -45,7 +45,7 @@ export class CreateCategoryDto {
 
   @IsOptional()
   @IsString()
-  icon?: string;
+  iconFileId?: string;
 
   @IsOptional()
   @IsBoolean()
@@ -77,7 +77,7 @@ export class UpdateCategoryDto {
 
   @IsOptional()
   @IsString()
-  icon?: string;
+  iconFileId?: string;
 
   @IsOptional()
   @IsBoolean()
@@ -103,7 +103,7 @@ export class UpdateSubcategoryDto {
 
   @IsOptional()
   @IsString()
-  icon?: string;
+  iconFileId?: string;
 
   @IsOptional()
   @IsBoolean()
@@ -119,7 +119,7 @@ export class CategoryResponseDto {
   name!: string;
   slug!: string;
   description?: string;
-  icon?: string;
+  iconFileId?: string;
   isActive!: boolean;
   sortOrder!: number;
   createdAt!: Date;
@@ -132,7 +132,7 @@ export class SubcategoryResponseDto {
   name!: string;
   slug!: string;
   description?: string;
-  icon?: string;
+  iconFileId?: string;
   isActive!: boolean;
   sortOrder!: number;
   categoryId!: string;

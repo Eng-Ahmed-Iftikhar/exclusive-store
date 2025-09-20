@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useForgotPasswordMutation } from '@/apis/services/authApi';
-import { ForgotPasswordFormValues } from './types';
-import { forgotPasswordSchema } from './validation';
+import { ForgotPasswordFormValues } from '@/types/auth';
+
+// Forgot password validation schema
+const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .min(1, 'Email is required')
+    .email('Please enter a valid email address'),
+});
 import ErrorDisplay from '../login/ErrorDisplay';
 import {
   Form,

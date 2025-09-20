@@ -8,7 +8,6 @@ import { CustomLoggerService } from '../logger/logger.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { v2 as cloudinary } from 'cloudinary';
 import {
-  UploadFileDto,
   UpdateFileDto,
   FileQueryDto,
   FileResponseDto,
@@ -37,7 +36,6 @@ export class FilesService {
 
   async uploadFile(
     file: Express.Multer.File,
-    uploadOptions: UploadFileDto = {},
     userId?: string
   ): Promise<FileResponseDto> {
     try {
@@ -52,7 +50,7 @@ export class FilesService {
       // Prepare upload options
       const uploadConfig: any = {
         resource_type: 'auto',
-        folder: uploadOptions.folder || this.configService.cloudinaryFolder,
+        folder: this.configService.cloudinaryFolder,
         use_filename: true,
         unique_filename: true,
       };

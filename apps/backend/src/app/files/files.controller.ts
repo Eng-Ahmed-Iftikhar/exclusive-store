@@ -27,7 +27,6 @@ import { FilesService } from './files.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CanManageFiles } from '../auth/decorators/access-control.decorator';
 import {
-  UploadFileDto,
   UpdateFileDto,
   FileQueryDto,
   FileResponseDto,
@@ -48,12 +47,11 @@ export class FilesController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({
     summary: 'Upload a file',
-    description:
-      'Upload a file to Cloudinary with optional folder organization',
+    description: 'Upload a file to Cloudinary using configured folder',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
-    description: 'File upload with optional folder',
+    description: 'File upload',
     type: 'multipart/form-data',
     schema: {
       type: 'object',
@@ -62,11 +60,6 @@ export class FilesController {
           type: 'string',
           format: 'binary',
           description: 'File to upload',
-        },
-        folder: {
-          type: 'string',
-          description: 'File folder/path in Cloudinary',
-          example: 'products',
         },
       },
       required: ['file'],
@@ -115,14 +108,9 @@ export class FilesController {
   @CanManageFiles('create')
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
-    @Body() uploadOptions: UploadFileDto,
     @Request() req: any
   ): Promise<FileUploadResponseDto> {
-    const uploadedFile = await this.filesService.uploadFile(
-      file,
-      uploadOptions,
-      req.user?.id
-    );
+    const uploadedFile = await this.filesService.uploadFile(file, req.user?.id);
     return {
       file: uploadedFile,
       message: 'File uploaded successfully',

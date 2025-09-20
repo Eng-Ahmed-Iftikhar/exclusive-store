@@ -24,14 +24,7 @@ export enum FileStatus {
 }
 
 export class UploadFileDto {
-  @ApiProperty({
-    description: 'File folder/path in Cloudinary',
-    example: 'products',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  folder?: string;
+  // No additional options needed - folder comes from environment config
 }
 
 export class FileResponseDto {
