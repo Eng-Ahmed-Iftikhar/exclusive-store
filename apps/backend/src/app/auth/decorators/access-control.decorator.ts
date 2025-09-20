@@ -106,3 +106,14 @@ export function CanManageResources(permission: string) {
     ].filter((p) => p.includes(permission)),
   });
 }
+
+export function CanManageFiles(permission: string) {
+  return AccessControl({
+    permissions: [
+      'files:create',
+      'files:view',
+      'files:edit',
+      'files:delete',
+    ].filter((p) => p.includes(permission)),
+  });
+}

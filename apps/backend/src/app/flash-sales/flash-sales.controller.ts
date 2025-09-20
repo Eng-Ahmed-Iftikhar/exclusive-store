@@ -20,10 +20,19 @@ import {
   FlashSaleItemResponseDto,
 } from './dto/flash-sale.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { FlashSaleItemDto } from './dto/flash-sale.dto';
 
 @Controller('flash-sales')
+@ApiTags('FlashSales')
+@ApiBearerAuth('JWT-auth')
+@UseGuards(JwtAuthGuard)
 export class FlashSalesController {
   constructor(private readonly flashSalesService: FlashSalesService) {}
 
@@ -35,39 +44,46 @@ export class FlashSalesController {
   }
 
   @Get(':id')
-  async getFlashSaleById(@Param('id') id: string): Promise<FlashSaleResponseDto> {
+  async getFlashSaleById(
+    @Param('id') id: string
+  ): Promise<FlashSaleResponseDto> {
     return this.flashSalesService.getFlashSaleById(id);
   }
 
   @Get(':id/items')
   @ApiOperation({ summary: 'Get flash sale items in items API format' })
   @ApiParam({ name: 'id', description: 'Flash sale ID' })
-  @ApiResponse({ status: 200, description: 'Flash sale items retrieved successfully', type: [FlashSaleItemDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Flash sale items retrieved successfully',
+    type: [FlashSaleItemDto],
+  })
   @ApiResponse({ status: 404, description: 'Flash sale not found' })
-  async getFlashSaleItems(@Param('id') id: string): Promise<FlashSaleItemDto[]> {
+  async getFlashSaleItems(
+    @Param('id') id: string
+  ): Promise<FlashSaleItemDto[]> {
     return this.flashSalesService.getFlashSaleItems(id);
   }
 
   // ===== ADMIN ENDPOINTS =====
 
   @Post()
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async createFlashSale(@Body() createFlashSaleDto: CreateFlashSaleDto): Promise<FlashSaleResponseDto> {
+  async createFlashSale(
+    @Body() createFlashSaleDto: CreateFlashSaleDto
+  ): Promise<FlashSaleResponseDto> {
     return this.flashSalesService.createFlashSale(createFlashSaleDto);
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard)
   async updateFlashSale(
     @Param('id') id: string,
-    @Body() updateFlashSaleDto: UpdateFlashSaleDto,
+    @Body() updateFlashSaleDto: UpdateFlashSaleDto
   ): Promise<FlashSaleResponseDto> {
     return this.flashSalesService.updateFlashSale(id, updateFlashSaleDto);
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteFlashSale(@Param('id') id: string): Promise<void> {
     return this.flashSalesService.deleteFlashSale(id);
@@ -76,26 +92,29 @@ export class FlashSalesController {
   // ===== FLASH SALE ITEMS =====
 
   @Post(':id/items')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async addItemToFlashSale(
     @Param('id') flashSaleId: string,
-    @Body() createFlashSaleItemDto: CreateFlashSaleItemDto,
+    @Body() createFlashSaleItemDto: CreateFlashSaleItemDto
   ): Promise<FlashSaleItemResponseDto> {
-    return this.flashSalesService.addItemToFlashSale(flashSaleId, createFlashSaleItemDto);
+    return this.flashSalesService.addItemToFlashSale(
+      flashSaleId,
+      createFlashSaleItemDto
+    );
   }
 
   @Put('items/:id')
-  @UseGuards(JwtAuthGuard)
   async updateFlashSaleItem(
     @Param('id') id: string,
-    @Body() updateFlashSaleItemDto: UpdateFlashSaleItemDto,
+    @Body() updateFlashSaleItemDto: UpdateFlashSaleItemDto
   ): Promise<FlashSaleItemResponseDto> {
-    return this.flashSalesService.updateFlashSaleItem(id, updateFlashSaleItemDto);
+    return this.flashSalesService.updateFlashSaleItem(
+      id,
+      updateFlashSaleItemDto
+    );
   }
 
   @Delete('items/:id')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeItemFromFlashSale(@Param('id') id: string): Promise<void> {
     return this.flashSalesService.removeItemFromFlashSale(id);

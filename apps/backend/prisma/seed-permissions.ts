@@ -42,6 +42,16 @@ async function seedPermissionsAndRoles() {
       displayName: 'Orders Management',
       description: 'Manage orders and transactions',
     },
+    {
+      name: 'files',
+      displayName: 'Files Management',
+      description: 'Manage files and media uploads',
+    },
+    {
+      name: 'categories',
+      displayName: 'Categories Management',
+      description: 'Manage product categories and subcategories',
+    },
   ];
 
   for (const resource of resources) {

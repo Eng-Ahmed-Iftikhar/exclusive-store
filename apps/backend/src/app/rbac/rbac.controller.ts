@@ -16,7 +16,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RbacService } from './rbac.service';
 import { CheckPermissionDto } from './dto/rbac.dto';
 
-@ApiTags('RBAC - Permission Checking')
+@ApiTags('RBAC')
 @Controller('rbac')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')

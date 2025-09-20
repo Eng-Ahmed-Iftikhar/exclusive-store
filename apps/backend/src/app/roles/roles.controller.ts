@@ -30,7 +30,7 @@ import {
   BulkAssignResourcesDto,
 } from './dto/roles.dto';
 
-@ApiTags('Roles - System Roles Management')
+@ApiTags('Roles')
 @Controller('roles')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')

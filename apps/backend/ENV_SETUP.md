@@ -56,6 +56,13 @@ LOG_TO_FILE=false
 LOG_DIR="./logs"
 ```
 
+### Cloudinary Configuration
+```env
+CLOUDINARY_CLOUD_NAME="your-cloud-name"
+CLOUDINARY_API_KEY="your-api-key"
+CLOUDINARY_API_SECRET="your-api-secret"
+```
+
 ## Environment Validation
 
 The application uses Joi validation to ensure all required environment variables are present and valid before starting. If any required variables are missing or invalid, the server will not start and will display detailed error messages.
@@ -79,6 +86,9 @@ The application uses Joi validation to ensure all required environment variables
 - **LOG_LEVEL**: Must be one of: 'error', 'warn', 'info', 'debug', 'verbose'
 - **LOG_TO_FILE**: Must be a boolean value
 - **LOG_DIR**: Must be a valid directory path
+- **CLOUDINARY_CLOUD_NAME**: Required, must be a valid Cloudinary cloud name
+- **CLOUDINARY_API_KEY**: Required, must be a valid Cloudinary API key
+- **CLOUDINARY_API_SECRET**: Required, must be a valid Cloudinary API secret
 
 ## Example .env File
 
@@ -116,6 +126,11 @@ FRONTEND_URL="http://localhost:5173"
 LOG_LEVEL="info"
 LOG_TO_FILE=false
 LOG_DIR="./logs"
+
+# Cloudinary Configuration
+CLOUDINARY_CLOUD_NAME="your-cloud-name"
+CLOUDINARY_API_KEY="your-api-key"
+CLOUDINARY_API_SECRET="your-api-secret"
 ```
 
 ## Development vs Production

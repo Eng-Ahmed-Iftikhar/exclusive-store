@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsBoolean, IsInt, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsInt,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateSubcategoryDto {
@@ -11,10 +18,6 @@ export class CreateSubcategoryDto {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @IsOptional()
-  @IsString()
-  image?: string;
 
   @IsOptional()
   @IsString()
@@ -39,10 +42,6 @@ export class CreateCategoryDto {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @IsOptional()
-  @IsString()
-  image?: string;
 
   @IsOptional()
   @IsString()
@@ -78,10 +77,6 @@ export class UpdateCategoryDto {
 
   @IsOptional()
   @IsString()
-  image?: string;
-
-  @IsOptional()
-  @IsString()
   icon?: string;
 
   @IsOptional()
@@ -108,10 +103,6 @@ export class UpdateSubcategoryDto {
 
   @IsOptional()
   @IsString()
-  image?: string;
-
-  @IsOptional()
-  @IsString()
   icon?: string;
 
   @IsOptional()
@@ -128,7 +119,6 @@ export class CategoryResponseDto {
   name!: string;
   slug!: string;
   description?: string;
-  image?: string;
   icon?: string;
   isActive!: boolean;
   sortOrder!: number;
@@ -142,7 +132,6 @@ export class SubcategoryResponseDto {
   name!: string;
   slug!: string;
   description?: string;
-  image?: string;
   icon?: string;
   isActive!: boolean;
   sortOrder!: number;

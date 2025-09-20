@@ -209,7 +209,6 @@ model Category {
   name        String
   slug        String   @unique
   description String?
-  image       String?
   icon        String?  // Icon field for categories
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
@@ -228,7 +227,6 @@ model Subcategory {
   name        String
   slug        String   @unique
   description String?
-  image       String?
   icon        String?  // Icon field for subcategories
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
@@ -493,4 +491,25 @@ model FlashSaleItem {
 
   @@unique([flashSaleId, itemId])
   @@map("flash_sale_items")
+}
+
+model File {
+  id          String   @id @default(cuid())
+  originalName String
+  publicId    String   @unique
+  url         String
+  secureUrl   String
+  format      String
+  bytes       Int
+  width       Int?
+  height      Int?
+  type        String   // image, video, document, audio, other
+  status      String   // uploading, processing, ready, error, deleted
+  folder      String?
+  tags        String[]
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("files")
 }

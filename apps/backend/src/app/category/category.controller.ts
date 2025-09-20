@@ -22,15 +22,18 @@ import {
 } from './dto/category.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CanManageCategories } from '../auth/decorators/access-control.decorator';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @Controller('categories')
+@ApiTags('Categories')
+@ApiBearerAuth('JWT-auth')
+@UseGuards(JwtAuthGuard)
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   // ===== CATEGORY ENDPOINTS =====
 
   @Post()
-  @UseGuards(JwtAuthGuard)
   @CanManageCategories('create')
   @HttpCode(HttpStatus.CREATED)
   async createCategory(
@@ -60,7 +63,6 @@ export class CategoryController {
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard)
   @CanManageCategories('edit')
   async updateCategory(
     @Param('id') id: string,
@@ -70,7 +72,6 @@ export class CategoryController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
   @CanManageCategories('delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteCategory(@Param('id') id: string): Promise<void> {
@@ -80,7 +81,6 @@ export class CategoryController {
   // ===== SUBCATEGORY ENDPOINTS =====
 
   @Post(':categoryId/subcategories')
-  @UseGuards(JwtAuthGuard)
   @CanManageCategories('create')
   @HttpCode(HttpStatus.CREATED)
   async createSubcategory(
@@ -113,7 +113,6 @@ export class CategoryController {
   }
 
   @Put('subcategories/:id')
-  @UseGuards(JwtAuthGuard)
   @CanManageCategories('edit')
   async updateSubcategory(
     @Param('id') id: string,
@@ -123,7 +122,6 @@ export class CategoryController {
   }
 
   @Delete('subcategories/:id')
-  @UseGuards(JwtAuthGuard)
   @CanManageCategories('delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteSubcategory(@Param('id') id: string): Promise<void> {

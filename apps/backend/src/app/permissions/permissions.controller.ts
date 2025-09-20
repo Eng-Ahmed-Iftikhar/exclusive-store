@@ -26,7 +26,7 @@ import {
   UpdatePermissionDto,
 } from './dto/permissions.dto';
 
-@ApiTags('Permissions - System Permissions Management')
+@ApiTags('Permissions')
 @Controller('permissions')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')

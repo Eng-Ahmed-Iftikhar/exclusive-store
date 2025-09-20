@@ -39,6 +39,12 @@ export interface EnvironmentConfig {
   LOG_LEVEL: string;
   LOG_TO_FILE: boolean;
   LOG_DIR: string;
+
+  // Cloudinary Configuration
+  CLOUDINARY_CLOUD_NAME: string;
+  CLOUDINARY_API_KEY: string;
+  CLOUDINARY_API_SECRET: string;
+  CLOUDINARY_FOLDER: string;
 }
 
 export const envValidationSchema = Joi.object({
@@ -95,6 +101,12 @@ export const envValidationSchema = Joi.object({
     .default('info'),
   LOG_TO_FILE: Joi.boolean().default(false),
   LOG_DIR: Joi.string().default('./logs'),
+
+  // Cloudinary Configuration
+  CLOUDINARY_CLOUD_NAME: Joi.string().required(),
+  CLOUDINARY_API_KEY: Joi.string().required(),
+  CLOUDINARY_API_SECRET: Joi.string().required(),
+  CLOUDINARY_FOLDER: Joi.string().default('uploads'),
 });
 
 export const getEnvironmentConfig = (): EnvironmentConfig => {
@@ -125,6 +137,7 @@ export const getEnvironmentConfig = (): EnvironmentConfig => {
     FREE_SHIPPING_THRESHOLD:
       parseFloat(value.FREE_SHIPPING_THRESHOLD as string) || 50,
     TAX_RATE: parseFloat(value.TAX_RATE as string) || 0.085,
+    CLOUDINARY_FOLDER: (value.CLOUDINARY_FOLDER as string) || 'uploads',
   };
 
   console.log('✅ Environment validation passed');

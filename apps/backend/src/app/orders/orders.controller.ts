@@ -29,6 +29,8 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('Orders')
 @Controller('orders')
+@ApiBearerAuth('JWT-auth')
+@UseGuards(JwtAuthGuard)
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
@@ -240,8 +242,6 @@ export class OrdersController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get user orders (authenticated users only)' })
   @ApiResponse({
     status: 200,
@@ -254,8 +254,6 @@ export class OrdersController {
   }
 
   @Get('user')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get user orders (authenticated users only)' })
   @ApiResponse({
     status: 200,

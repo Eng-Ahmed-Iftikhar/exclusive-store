@@ -104,6 +104,27 @@ export class ConfigService {
     return this.nestConfigService.get<string>('LOG_DIR', './logs');
   }
 
+  // Cloudinary Configuration
+  get cloudinaryCloudName(): string {
+    return this.nestConfigService.get<string>(
+      'CLOUDINARY_CLOUD_NAME'
+    ) as string;
+  }
+
+  get cloudinaryApiKey(): string {
+    return this.nestConfigService.get<string>('CLOUDINARY_API_KEY') as string;
+  }
+
+  get cloudinaryApiSecret(): string {
+    return this.nestConfigService.get<string>(
+      'CLOUDINARY_API_SECRET'
+    ) as string;
+  }
+
+  get cloudinaryFolder(): string {
+    return this.nestConfigService.get<string>('CLOUDINARY_FOLDER') as string;
+  }
+
   // Utility methods
   get isDevelopment(): boolean {
     return this.nodeEnv === 'development';
@@ -141,6 +162,10 @@ export class ConfigService {
       LOG_LEVEL: this.logLevel,
       LOG_TO_FILE: this.logToFile,
       LOG_DIR: this.logDir,
+      CLOUDINARY_CLOUD_NAME: this.cloudinaryCloudName,
+      CLOUDINARY_API_KEY: this.cloudinaryApiKey,
+      CLOUDINARY_API_SECRET: this.cloudinaryApiSecret,
+      CLOUDINARY_FOLDER: this.cloudinaryFolder,
     };
   }
 }

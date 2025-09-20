@@ -23,7 +23,7 @@ import { CanManageResources } from '../auth/decorators/access-control.decorator'
 import { ResourcesService } from './resources.service';
 import { CreateResourceDto, UpdateResourceDto } from './dto/resources.dto';
 
-@ApiTags('Resources - System Resources Management')
+@ApiTags('Resources')
 @Controller('resources')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')

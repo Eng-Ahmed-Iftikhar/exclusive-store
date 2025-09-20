@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateCategoryDto,
@@ -14,7 +18,9 @@ export class CategoryService {
   constructor(private readonly prisma: PrismaService) {}
 
   // Create a new category
-  async createCategory(createCategoryDto: CreateCategoryDto): Promise<CategoryResponseDto> {
+  async createCategory(
+    createCategoryDto: CreateCategoryDto
+  ): Promise<CategoryResponseDto> {
     const { subcategories, ...categoryData } = createCategoryDto;
 
     // Check if slug already exists
@@ -23,7 +29,9 @@ export class CategoryService {
     });
 
     if (existingCategory) {
-      throw new ConflictException(`Category with slug '${categoryData.slug}' already exists`);
+      throw new ConflictException(
+        `Category with slug '${categoryData.slug}' already exists`
+      );
     }
 
     // Create category with subcategories if provided
@@ -50,7 +58,9 @@ export class CategoryService {
   }
 
   // Get all categories with optional filtering
-  async getAllCategories(includeInactive = false): Promise<CategoryResponseDto[]> {
+  async getAllCategories(
+    includeInactive = false
+  ): Promise<CategoryResponseDto[]> {
     const categories = await this.prisma.category.findMany({
       where: includeInactive ? {} : { isActive: true },
       include: {
@@ -102,7 +112,10 @@ export class CategoryService {
   }
 
   // Update category
-  async updateCategory(id: string, updateCategoryDto: UpdateCategoryDto): Promise<CategoryResponseDto> {
+  async updateCategory(
+    id: string,
+    updateCategoryDto: UpdateCategoryDto
+  ): Promise<CategoryResponseDto> {
     // Check if category exists
     const existingCategory = await this.prisma.category.findUnique({
       where: { id },
@@ -113,13 +126,18 @@ export class CategoryService {
     }
 
     // Check if new slug conflicts with existing ones
-    if (updateCategoryDto.slug && updateCategoryDto.slug !== existingCategory.slug) {
+    if (
+      updateCategoryDto.slug &&
+      updateCategoryDto.slug !== existingCategory.slug
+    ) {
       const slugConflict = await this.prisma.category.findUnique({
         where: { slug: updateCategoryDto.slug },
       });
 
       if (slugConflict) {
-        throw new ConflictException(`Category with slug '${updateCategoryDto.slug}' already exists`);
+        throw new ConflictException(
+          `Category with slug '${updateCategoryDto.slug}' already exists`
+        );
       }
     }
 
@@ -154,7 +172,10 @@ export class CategoryService {
   }
 
   // Create subcategory
-  async createSubcategory(categoryId: string, createSubcategoryDto: CreateSubcategoryDto): Promise<SubcategoryResponseDto> {
+  async createSubcategory(
+    categoryId: string,
+    createSubcategoryDto: CreateSubcategoryDto
+  ): Promise<SubcategoryResponseDto> {
     // Check if category exists
     const category = await this.prisma.category.findUnique({
       where: { id: categoryId },
@@ -170,7 +191,9 @@ export class CategoryService {
     });
 
     if (existingSubcategory) {
-      throw new ConflictException(`Subcategory with slug '${createSubcategoryDto.slug}' already exists`);
+      throw new ConflictException(
+        `Subcategory with slug '${createSubcategoryDto.slug}' already exists`
+      );
     }
 
     const subcategory = await this.prisma.subcategory.create({
@@ -184,7 +207,10 @@ export class CategoryService {
   }
 
   // Update subcategory
-  async updateSubcategory(id: string, updateSubcategoryDto: UpdateSubcategoryDto): Promise<SubcategoryResponseDto> {
+  async updateSubcategory(
+    id: string,
+    updateSubcategoryDto: UpdateSubcategoryDto
+  ): Promise<SubcategoryResponseDto> {
     // Check if subcategory exists
     const existingSubcategory = await this.prisma.subcategory.findUnique({
       where: { id },
@@ -195,13 +221,18 @@ export class CategoryService {
     }
 
     // Check if new slug conflicts with existing ones
-    if (updateSubcategoryDto.slug && updateSubcategoryDto.slug !== existingSubcategory.slug) {
+    if (
+      updateSubcategoryDto.slug &&
+      updateSubcategoryDto.slug !== existingSubcategory.slug
+    ) {
       const slugConflict = await this.prisma.subcategory.findUnique({
         where: { slug: updateSubcategoryDto.slug },
       });
 
       if (slugConflict) {
-        throw new ConflictException(`Subcategory with slug '${updateSubcategoryDto.slug}' already exists`);
+        throw new ConflictException(
+          `Subcategory with slug '${updateSubcategoryDto.slug}' already exists`
+        );
       }
     }
 
@@ -243,7 +274,10 @@ export class CategoryService {
   }
 
   // Get all subcategories for a category
-  async getSubcategoriesByCategory(categoryId: string, includeInactive = false): Promise<SubcategoryResponseDto[]> {
+  async getSubcategoriesByCategory(
+    categoryId: string,
+    includeInactive = false
+  ): Promise<SubcategoryResponseDto[]> {
     // Check if category exists
     const category = await this.prisma.category.findUnique({
       where: { id: categoryId },
@@ -261,7 +295,9 @@ export class CategoryService {
       orderBy: { sortOrder: 'asc' },
     });
 
-    return subcategories.map((subcategory) => this.mapToSubcategoryResponse(subcategory));
+    return subcategories.map((subcategory) =>
+      this.mapToSubcategoryResponse(subcategory)
+    );
   }
 
   // Helper method to generate slug from name
@@ -279,12 +315,14 @@ export class CategoryService {
       name: category.name,
       slug: category.slug,
       description: category.description,
-      image: category.image,
+      icon: category.icon,
       isActive: category.isActive,
       sortOrder: category.sortOrder,
       createdAt: category.createdAt,
       updatedAt: category.updatedAt,
-      subcategories: category.subcategories?.map((sub: any) => this.mapToSubcategoryResponse(sub)),
+      subcategories: category.subcategories?.map((sub: any) =>
+        this.mapToSubcategoryResponse(sub)
+      ),
     };
   }
 
@@ -295,7 +333,7 @@ export class CategoryService {
       name: subcategory.name,
       slug: subcategory.slug,
       description: subcategory.description,
-      image: subcategory.image,
+      icon: subcategory.icon,
       isActive: subcategory.isActive,
       sortOrder: subcategory.sortOrder,
       categoryId: subcategory.categoryId,

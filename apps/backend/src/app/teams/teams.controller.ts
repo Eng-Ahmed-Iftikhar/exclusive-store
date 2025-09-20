@@ -33,7 +33,7 @@ import {
   TeamQueryDto,
 } from './dto/teams.dto';
 
-@ApiTags('Teams - Team Management')
+@ApiTags('Teams')
 @Controller('teams')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')

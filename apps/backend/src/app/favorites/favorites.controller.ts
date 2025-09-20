@@ -17,7 +17,7 @@ import {
 import { FavoritesService } from './favorites.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-@ApiTags('favorites')
+@ApiTags('Favorites')
 @Controller('favorites')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')

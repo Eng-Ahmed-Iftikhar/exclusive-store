@@ -31,6 +31,8 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('Cart')
 @Controller('cart')
+@ApiBearerAuth('JWT-auth')
+@UseGuards(JwtAuthGuard)
 export class CartController {
   constructor(
     private readonly cartService: CartService,
@@ -38,8 +40,6 @@ export class CartController {
   ) {}
 
   @Get()
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get user cart (authenticated users)' })
   @ApiResponse({
     status: 200,
@@ -181,8 +181,6 @@ export class CartController {
   }
 
   @Post('cleanup')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Clean up orphaned carts and items (Admin only)' })
   @ApiResponse({ status: 200, description: 'Cleanup completed successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
