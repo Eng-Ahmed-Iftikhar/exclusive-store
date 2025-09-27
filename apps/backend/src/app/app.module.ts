@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
 import { CartModule } from './cart/cart.module';
 import { CategoryModule } from './category/category.module';
+import { SubcategoryModule } from './subcategory/subcategory.module';
 import { EmailModule } from './email/email.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { FlashSalesModule } from './flash-sales/flash-sales.module';
@@ -38,6 +39,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     AuthModule,
     AdminModule,
     CategoryModule,
+    SubcategoryModule,
     ItemsModule,
     CartModule,
     FavoritesModule,

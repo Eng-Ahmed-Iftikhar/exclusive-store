@@ -21,7 +21,8 @@
     "prisma:migrate-deploy": "nx run backend:prisma:migrate-deploy",
     "prisma:migrate-reset": "nx run backend:prisma:migrate-reset",
     "prisma:seed": "nx run backend:prisma:seed",
-    "prisma:studio": "nx run backend:prisma:studio"
+    "prisma:studio": "nx run backend:prisma:studio",
+    "admin:dev": "npx nx run admin:dev"
   },
   "private": true,
   "dependencies": {
