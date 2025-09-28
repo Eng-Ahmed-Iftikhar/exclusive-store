@@ -19,6 +19,10 @@ const CONTENT_ROUTES = {
   ADMIN_CATEGORIES: '/categories',
   ADMIN_CREATE_CATEGORY: '/categories/create',
   ADMIN_EDIT_CATEGORY: '/categories/edit/:id',
+  ADMIN_SUBCATEGORIES: '/subcategories',
+  ADMIN_SUBCATEGORY_DETAIL: '/subcategories/:id',
+  ADMIN_CREATE_SUBCATEGORY: '/subcategories/create',
+  ADMIN_EDIT_SUBCATEGORY: '/subcategories/edit/:id',
 };
 
 const AUTH_ROUTES = {
@@ -68,6 +72,10 @@ export const ROUTE_NAMES = {
   CATEGORIES: 'Categories',
   CREATE_CATEGORY: 'Create Category',
   EDIT_CATEGORY: 'Edit Category',
+  SUBCATEGORIES: 'Subcategories',
+  SUBCATEGORY_DETAIL: 'Subcategory Detail',
+  CREATE_SUBCATEGORY: 'Create Subcategory',
+  EDIT_SUBCATEGORY: 'Edit Subcategory',
   SETUP_PASSWORD: 'Setup Password',
   FORGOT_PASSWORD: 'Forgot Password',
   RESET_PASSWORD: 'Reset Password',
@@ -195,6 +203,30 @@ export const ADMIN_ROUTES = [
     name: ROUTE_NAMES.EDIT_CATEGORY,
     element: 'EditCategory',
     icon: 'edit-category',
+  },
+  {
+    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_SUBCATEGORIES,
+    name: ROUTE_NAMES.SUBCATEGORIES,
+    element: 'Subcategories',
+    icon: 'subcategories',
+  },
+  {
+    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_SUBCATEGORY_DETAIL,
+    name: ROUTE_NAMES.SUBCATEGORY_DETAIL,
+    element: 'SubcategoryDetail',
+    icon: 'subcategory-detail',
+  },
+  {
+    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CREATE_SUBCATEGORY,
+    name: ROUTE_NAMES.CREATE_SUBCATEGORY,
+    element: 'CreateSubcategory',
+    icon: 'create-subcategory',
+  },
+  {
+    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_EDIT_SUBCATEGORY,
+    name: ROUTE_NAMES.EDIT_SUBCATEGORY,
+    element: 'EditSubcategory',
+    icon: 'edit-subcategory',
   },
 ];
 

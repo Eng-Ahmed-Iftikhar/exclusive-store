@@ -54,6 +54,18 @@ export const API_ROUTES = {
     DELETE: (id: string) => `/categories/${id}`,
   },
 
+  // Subcategories Routes
+  SUBCATEGORIES: {
+    LIST: '/subcategories',
+    BY_ID: (id: string) => `/subcategories/${id}`,
+    CREATE: '/subcategories',
+    UPDATE: (id: string) => `/subcategories/${id}`,
+    DELETE: (id: string) => `/subcategories/${id}`,
+    BY_SLUG: (slug: string) => `/subcategories/slug/${slug}`,
+    BY_CATEGORY: (categoryId: string) =>
+      `/subcategories/category/${categoryId}`,
+  },
+
   // Flash Sales Routes
   FLASH_SALES: {
     LIST: '/flash-sales',

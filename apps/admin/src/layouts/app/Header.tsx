@@ -27,6 +27,9 @@ const Header: React.FC = () => {
   const [showNotifications, setShowNotifications] = useState(false);
 
   const handleThemeToggle = () => {
+    //change in perfers-color scheme media query
+    document.documentElement.classList.toggle('dark', theme !== 'dark');
+
     dispatch(toggleTheme());
   };
 

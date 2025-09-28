@@ -33,7 +33,7 @@ import {
 } from './dto/subcategory.dto';
 
 @ApiTags('Subcategories')
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 @Controller('subcategories')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class SubcategoryController {

@@ -15,10 +15,7 @@ import { CategoryService } from './category.service';
 import {
   CreateCategoryDto,
   UpdateCategoryDto,
-  CreateSubcategoryDto,
-  UpdateSubcategoryDto,
   CategoryResponseDto,
-  SubcategoryResponseDto,
 } from './dto/category.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CanManageCategories } from '../auth/decorators/access-control.decorator';
@@ -76,55 +73,5 @@ export class CategoryController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteCategory(@Param('id') id: string): Promise<void> {
     return this.categoryService.deleteCategory(id);
-  }
-
-  // ===== SUBCATEGORY ENDPOINTS =====
-
-  @Post(':categoryId/subcategories')
-  @CanManageCategories('create')
-  @HttpCode(HttpStatus.CREATED)
-  async createSubcategory(
-    @Param('categoryId') categoryId: string,
-    @Body() createSubcategoryDto: CreateSubcategoryDto
-  ): Promise<SubcategoryResponseDto> {
-    return this.categoryService.createSubcategory(
-      categoryId,
-      createSubcategoryDto
-    );
-  }
-
-  @Get(':categoryId/subcategories')
-  async getSubcategoriesByCategory(
-    @Param('categoryId') categoryId: string,
-    @Query('includeInactive') includeInactive?: string
-  ): Promise<SubcategoryResponseDto[]> {
-    const includeInactiveBool = includeInactive === 'true';
-    return this.categoryService.getSubcategoriesByCategory(
-      categoryId,
-      includeInactiveBool
-    );
-  }
-
-  @Get('subcategories/:id')
-  async getSubcategoryById(
-    @Param('id') id: string
-  ): Promise<SubcategoryResponseDto> {
-    return this.categoryService.getSubcategoryById(id);
-  }
-
-  @Put('subcategories/:id')
-  @CanManageCategories('edit')
-  async updateSubcategory(
-    @Param('id') id: string,
-    @Body() updateSubcategoryDto: UpdateSubcategoryDto
-  ): Promise<SubcategoryResponseDto> {
-    return this.categoryService.updateSubcategory(id, updateSubcategoryDto);
-  }
-
-  @Delete('subcategories/:id')
-  @CanManageCategories('delete')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteSubcategory(@Param('id') id: string): Promise<void> {
-    return this.categoryService.deleteSubcategory(id);
   }
 }

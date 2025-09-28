@@ -9,15 +9,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        default:
+          'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700 shadow-sm dark:shadow-slate-900/20 dark:ring-offset-slate-900',
         destructive:
-          'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+          'bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:text-white dark:hover:bg-red-700 shadow-sm dark:shadow-slate-900/20 dark:ring-offset-slate-900',
         outline:
-          'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+          'border border-gray-300 bg-white hover:bg-gray-50 hover:text-gray-900 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100 dark:hover:text-white shadow-sm dark:shadow-slate-900/20 dark:ring-offset-slate-900',
         secondary:
-          'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'text-primary underline-offset-4 hover:underline',
+          'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600 shadow-sm dark:shadow-slate-900/20 dark:ring-offset-slate-900',
+        ghost:
+          'hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-slate-700 dark:text-slate-100 dark:hover:text-white dark:ring-offset-slate-900',
+        link: 'text-blue-600 underline-offset-4 hover:underline dark:text-blue-400 dark:hover:text-blue-300',
       },
       size: {
         default: 'h-10 px-4 py-2',

@@ -17,6 +17,10 @@ import EditTeamPage from '@/pages/app/management/EditTeamPage';
 import CategoryPage from '@/pages/app/contents/CategoryPage';
 import CreateCategoryPage from '@/pages/app/contents/CreateCategoryPage';
 import EditCategoryPage from '@/pages/app/contents/EditCategoryPage';
+import SubcategoryPage from '@/pages/app/contents/SubcategoryPage';
+import SubcategoryDetailPage from '@/pages/app/contents/SubcategoryDetailPage';
+import CreateSubcategoryPage from '@/pages/app/contents/CreateSubcategoryPage';
+import EditSubcategoryPage from '@/pages/app/contents/EditSubcategoryPage';
 import Login from '@/pages/auth/LoginPage';
 import SetupPasswordPage from '@/pages/auth/SetupPasswordPage';
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
@@ -42,6 +46,10 @@ const COMPONENT_MAP = {
   Categories: CategoryPage,
   CreateCategory: CreateCategoryPage,
   EditCategory: EditCategoryPage,
+  Subcategories: SubcategoryPage,
+  SubcategoryDetail: SubcategoryDetailPage,
+  CreateSubcategory: CreateSubcategoryPage,
+  EditSubcategory: EditSubcategoryPage,
   Login: Login,
   SetupPassword: SetupPasswordPage,
   ForgotPassword: ForgotPasswordPage,

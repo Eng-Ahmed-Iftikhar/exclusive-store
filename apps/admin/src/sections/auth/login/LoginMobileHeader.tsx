@@ -13,10 +13,10 @@ const LoginMobileHeader: React.FC = () => {
         
         {/* Company Name and Tagline */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             AdminPanel
           </h1>
-          <span className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">
             E-commerce Admin
           </span>
         </div>

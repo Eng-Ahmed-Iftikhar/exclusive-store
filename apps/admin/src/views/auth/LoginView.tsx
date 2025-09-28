@@ -9,7 +9,7 @@ import React from 'react';
 // Main login page component with professional admin login experience
 const LoginView: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <div className="flex min-h-screen">
         {/* Left Side - Branding & Features (Desktop Only) */}
         <div className="hidden lg:flex lg:w-1/2">
@@ -23,7 +23,7 @@ const LoginView: React.FC = () => {
             <LoginMobileHeader />
 
             {/* Login Form Container */}
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 p-8">
               {/* Welcome Header */}
               <LoginHeader />
 

@@ -13,6 +13,7 @@ import { rbacApi } from '../apis/services/rbacApi';
 import { fileApi } from '../apis/services/fileApi';
 import rootReducer from './slices';
 import { categoryApi } from '@/apis/services/categoryApi';
+import { subcategoryApi } from '@/apis/services/subcategoryApi';
 
 // Persist config
 const persistConfig = {
@@ -34,6 +35,7 @@ const apiMiddleware = [
   rbacApi.middleware,
   fileApi.middleware,
   categoryApi.middleware,
+  subcategoryApi.middleware,
 ];
 
 export const store = configureStore({

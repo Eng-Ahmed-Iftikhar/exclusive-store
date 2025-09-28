@@ -7,8 +7,8 @@ import {
   IsNotEmpty,
   Min,
   Max,
-  IsUUID,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateSubcategoryDto {
   @ApiProperty({
@@ -43,7 +43,6 @@ export class CreateSubcategoryDto {
   })
   @IsOptional()
   @IsString()
-  @IsUUID()
   iconFileId?: string;
 
   @ApiProperty({
@@ -72,7 +71,6 @@ export class CreateSubcategoryDto {
   })
   @IsString()
   @IsNotEmpty()
-  @IsUUID()
   categoryId!: string;
 }
 
@@ -113,7 +111,6 @@ export class UpdateSubcategoryDto {
   })
   @IsOptional()
   @IsString()
-  @IsUUID()
   iconFileId?: string;
 
   @ApiProperty({
@@ -238,7 +235,6 @@ export class SubcategoryQueryDto {
   })
   @IsOptional()
   @IsString()
-  @IsUUID()
   categoryId?: string;
 
   @ApiProperty({
@@ -247,6 +243,11 @@ export class SubcategoryQueryDto {
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
   @IsBoolean()
   includeInactive?: boolean;
 
@@ -257,6 +258,7 @@ export class SubcategoryQueryDto {
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
   @IsInt()
   @Min(1)
   page?: number;
@@ -269,6 +271,7 @@ export class SubcategoryQueryDto {
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
   @IsInt()
   @Min(1)
   @Max(100)

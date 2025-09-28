@@ -1,6 +1,4 @@
 import React, { useMemo } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store';
 import {
   Pagination,
   PaginationContent,
@@ -29,7 +27,6 @@ const DataPagination: React.FC<DataPaginationProps> = React.memo(
     totalItems = 0,
     itemsPerPage = 10,
   }) => {
-    const { theme } = useSelector((state: RootState) => state.ui);
     const { startItem, endItem } = useMemo(
       () => ({
         startItem: (currentPage - 1) * itemsPerPage + 1,
@@ -81,11 +78,7 @@ const DataPagination: React.FC<DataPaginationProps> = React.memo(
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4">
           {/* Left side - Results info and items per page */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div
-              className={`text-sm font-medium ${
-                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-              }`}
-            >
+            <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Showing {startItem} to {endItem} of {totalItems} results
             </div>
 
@@ -93,9 +86,7 @@ const DataPagination: React.FC<DataPaginationProps> = React.memo(
               <div className="flex items-center gap-2">
                 <label
                   htmlFor="items-per-page"
-                  className={`text-sm font-medium ${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                  }`}
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
                   Show:
                 </label>
@@ -103,22 +94,14 @@ const DataPagination: React.FC<DataPaginationProps> = React.memo(
                   id="items-per-page"
                   value={itemsPerPage}
                   onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-                  className={`px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                    theme === 'dark'
-                      ? 'bg-slate-700 border-slate-600 text-white hover:bg-slate-600'
-                      : 'bg-white border-gray-300 text-gray-900 hover:bg-gray-50'
-                  }`}
+                  className="px-3 py-1.5 text-sm border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors hover:bg-gray-50 dark:hover:bg-slate-600"
                 >
                   <option value={5}>5</option>
                   <option value={10}>10</option>
                   <option value={15}>15</option>
                   <option value={20}>20</option>
                 </select>
-                <span
-                  className={`text-sm ${
-                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                  }`}
-                >
+                <span className="text-sm text-gray-500 dark:text-gray-400">
                   per page
                 </span>
               </div>
@@ -150,7 +133,7 @@ const DataPagination: React.FC<DataPaginationProps> = React.memo(
                         isActive={currentPage === page}
                         className={`transition-colors ${
                           currentPage === page
-                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            ? 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700'
                             : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700'
                         }`}
                       >

@@ -81,9 +81,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   const getFileIcon = (file: globalThis.File) => {
     if (file.type.startsWith('image/')) {
-      return <FiImage className="w-8 h-8 text-blue-500" />;
+      return <FiImage className="w-8 h-8 text-blue-500 dark:text-blue-400" />;
     }
-    return <FiFile className="w-8 h-8 text-gray-500" />;
+    return <FiFile className="w-8 h-8 text-gray-500 dark:text-gray-400" />;
   };
 
   const formatFileSize = (bytes: number) => {
@@ -97,7 +97,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   return (
     <div className={`space-y-4 ${className}`}>
       <div>
-        <Label htmlFor="file-upload" className="text-sm font-medium">
+        <Label
+          htmlFor="file-upload"
+          className="text-sm font-medium text-gray-700 dark:text-slate-100"
+        >
           Upload File
         </Label>
         <div className="mt-2">
@@ -120,26 +123,30 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             Choose File
           </Button>
         </div>
-        <p className="text-xs text-gray-500 mt-1">Max size: {maxSize}MB</p>
+        <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+          Max size: {maxSize}MB
+        </p>
       </div>
 
       {selectedFile && (
-        <div className="border border-gray-200 rounded-lg p-4 bg-white">
+        <div className="border border-gray-200 dark:border-slate-600 rounded-lg p-4 bg-white dark:bg-slate-800 shadow-sm dark:shadow-slate-900/20">
           <div className="flex items-center space-x-4">
             {preview ? (
               <img
                 src={preview}
                 alt="Preview"
-                className="w-16 h-16 object-cover rounded"
+                className="w-16 h-16 object-cover rounded border border-gray-200 dark:border-slate-600"
               />
             ) : (
-              <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
+              <div className="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded flex items-center justify-center border border-gray-200 dark:border-slate-600">
                 {getFileIcon(selectedFile)}
               </div>
             )}
             <div className="flex-1">
-              <p className="font-medium text-sm">{selectedFile.name}</p>
-              <p className="text-xs text-gray-500">
+              <p className="font-medium text-sm text-gray-900 dark:text-slate-100">
+                {selectedFile.name}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-slate-400">
                 {formatFileSize(selectedFile.size)}
               </p>
             </div>
@@ -166,9 +173,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             {isLoading ? 'Uploading...' : 'Upload File'}
           </Button>
           {isLoading && (
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-gray-200 dark:bg-slate-600 rounded-full h-2 overflow-hidden">
               <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all duration-300 shadow-sm"
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>
@@ -177,8 +184,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-3">
-          <p className="text-sm text-red-600">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3 shadow-sm dark:shadow-slate-900/20">
+          <p className="text-sm text-red-600 dark:text-red-400 font-medium">
             Upload failed. Please try again.
           </p>
         </div>

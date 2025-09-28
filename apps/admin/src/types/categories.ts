@@ -15,6 +15,7 @@ export interface SubcategoryFormData {
   iconFileId?: string;
   isActive?: boolean;
   sortOrder?: number;
+  categoryId: string;
 }
 
 // Form values types
