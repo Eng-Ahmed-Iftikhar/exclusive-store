@@ -12,7 +12,7 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { ItemsService } from './items.service';
+import { ProductsService } from './products.service';
 import {
   CreateItemDto,
   UpdateItemDto,
@@ -40,54 +40,65 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-@Controller('items')
-@ApiTags('Items')
+@Controller('products')
+@ApiTags('Products')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
-export class ItemsController {
-  constructor(private readonly itemsService: ItemsService) {}
+export class ProductsController {
+  constructor(private readonly productsService: ProductsService) {}
 
-  // ===== ITEM ENDPOINTS =====
+  // ===== PRODUCT ENDPOINTS =====
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createItem(
-    @Body() createItemDto: CreateItemDto
+  async createProduct(
+    @Body() createItemDto: CreateItemDto,
+    @Request() req: any
   ): Promise<ItemResponseDto> {
-    return this.itemsService.createItem(createItemDto);
+    const userId = req.user?.id;
+    return this.productsService.createItem(createItemDto, userId);
   }
 
   @Get()
-  async getAllItems(
+  async getAllProducts(
     @Query() query: ItemQueryDto,
     @Request() req: any
   ): Promise<{
-    items: ItemResponseDto[];
+    products: ItemResponseDto[];
     total: number;
     page: number;
     limit: number;
     totalPages: number;
   }> {
     const userId = req.user?.id;
-    return this.itemsService.getAllItems(query, userId);
+    const result = await this.productsService.getAllItems(query, userId);
+    return {
+      products: result.items,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages,
+    };
   }
 
-  // ===== FEATURED ITEMS =====
+  // ===== FEATURED PRODUCTS =====
 
   @Get('featured')
-  async getFeaturedItems(@Request() req: any): Promise<ItemResponseDto[]> {
+  async getFeaturedProducts(@Request() req: any): Promise<ItemResponseDto[]> {
     const userId = req.user?.id;
-    return this.itemsService.getFeaturedItems(userId, 10);
+    return this.productsService.getFeaturedItems(userId, 10);
   }
 
   @Get('best-selling')
-  async getBestSellingItems(@Request() req: any): Promise<ItemResponseDto[]> {
+  async getBestSellingProducts(
+    @Request() req: any
+  ): Promise<ItemResponseDto[]> {
     const userId = req.user?.id;
-    return this.itemsService.getBestSellingItems(userId, 10);
+    return this.productsService.getBestSellingItems(userId, 10);
   }
 
   @Get('top-rated')
-  async getTopRatedItems(
+  async getTopRatedProducts(
     @Request() req: any,
     @Query('minRating') minRating?: string,
     @Query('limit') limit?: string
@@ -95,91 +106,122 @@ export class ItemsController {
     const userId = req.user?.id;
     const minRatingNum = minRating ? parseInt(minRating) : 4;
     const limitNum = limit ? parseInt(limit) : 10;
-    return this.itemsService.getItemsByRating(userId, minRatingNum, limitNum);
+    return this.productsService.getItemsByRating(
+      userId,
+      minRatingNum,
+      limitNum
+    );
   }
 
   @Get('new-arrivals')
-  async getNewArrivalItems(
+  async getNewArrivalProducts(
     @Request() req: any,
     @Query('limit') limit?: string
   ): Promise<ItemResponseDto[]> {
     const userId = req.user?.id;
     const limitNum = limit ? parseInt(limit) : 8;
-    return this.itemsService.getNewArrivalItems(userId, limitNum);
+    return this.productsService.getNewArrivalItems(userId, limitNum);
   }
 
-  // ===== CATEGORY ITEMS =====
+  // ===== CATEGORY PRODUCTS =====
 
   @Get('category/:categoryId')
-  async getItemsByCategory(
+  async getProductsByCategory(
     @Param('categoryId') categoryId: string,
     @Query() query: Omit<ItemQueryDto, 'categoryId'>,
     @Request() req: any
   ): Promise<{
-    items: ItemResponseDto[];
+    products: ItemResponseDto[];
     total: number;
     page: number;
     limit: number;
     totalPages: number;
   }> {
     const userId = req.user?.id;
-    return this.itemsService.getAllItems({ ...query, categoryId }, userId);
+    const result = await this.productsService.getAllItems(
+      { ...query, categoryId },
+      userId
+    );
+    return {
+      products: result.items,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages,
+    };
   }
 
   @Get('subcategory/:subcategoryId')
-  async getItemsBySubcategory(
+  async getProductsBySubcategory(
     @Param('subcategoryId') subcategoryId: string,
     @Query() query: Omit<ItemQueryDto, 'subcategoryId'>,
     @Request() req: any
   ): Promise<{
-    items: ItemResponseDto[];
+    products: ItemResponseDto[];
     total: number;
     page: number;
     limit: number;
     totalPages: number;
   }> {
     const userId = req.user?.id;
-    return this.itemsService.getAllItems({ ...query, subcategoryId }, userId);
+    const result = await this.productsService.getAllItems(
+      { ...query, subcategoryId },
+      userId
+    );
+    return {
+      products: result.items,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages,
+    };
   }
 
-  // ===== SEARCH ITEMS =====
+  // ===== SEARCH PRODUCTS =====
 
-  @Get('search/search')
-  async searchItems(
+  @Get('search')
+  async searchProducts(
     @Query() query: ItemQueryDto,
     @Request() req: any
   ): Promise<{
-    items: ItemResponseDto[];
+    products: ItemResponseDto[];
     total: number;
     page: number;
     limit: number;
     totalPages: number;
   }> {
     const userId = req.user?.id;
-    return this.itemsService.getAllItems(query, userId);
+    const result = await this.productsService.getAllItems(query, userId);
+    return {
+      products: result.items,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages,
+    };
   }
 
   @Get(':id')
-  async getItemById(
+  async getProductById(
     @Param('id') id: string,
     @Request() req: any
   ): Promise<ItemResponseDto> {
     const userId = req.user?.id;
-    return this.itemsService.getItemById(id, userId);
+    return this.productsService.getItemById(id, userId);
   }
 
   @Put(':id')
-  async updateItem(
+  async updateProduct(
     @Param('id') id: string,
     @Body() updateItemDto: UpdateItemDto
   ): Promise<ItemResponseDto> {
-    return this.itemsService.updateItem(id, updateItemDto);
+    return this.productsService.updateItem(id, updateItemDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteItem(@Param('id') id: string): Promise<void> {
-    return this.itemsService.deleteItem(id);
+  async deleteProduct(@Param('id') id: string): Promise<void> {
+    return this.productsService.deleteItem(id);
   }
 
   // ===== PRICE ENDPOINTS =====
@@ -189,7 +231,7 @@ export class ItemsController {
   async createPrice(
     @Body() createPriceDto: CreatePriceDto
   ): Promise<PriceResponseDto> {
-    return this.itemsService.createPrice(createPriceDto);
+    return this.productsService.createPrice(createPriceDto);
   }
 
   @Put('prices/:id')
@@ -197,13 +239,13 @@ export class ItemsController {
     @Param('id') id: string,
     @Body() updatePriceDto: UpdatePriceDto
   ): Promise<PriceResponseDto> {
-    return this.itemsService.updatePrice(id, updatePriceDto);
+    return this.productsService.updatePrice(id, updatePriceDto);
   }
 
   @Delete('prices/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deletePrice(@Param('id') id: string): Promise<void> {
-    return this.itemsService.deletePrice(id);
+    return this.productsService.deletePrice(id);
   }
 
   // ===== STOCK ENDPOINTS =====
@@ -213,7 +255,7 @@ export class ItemsController {
   async createStock(
     @Body() createStockDto: CreateStockDto
   ): Promise<StockResponseDto> {
-    return this.itemsService.createStock(createStockDto);
+    return this.productsService.createStock(createStockDto);
   }
 
   @Put('stock/:id')
@@ -221,37 +263,37 @@ export class ItemsController {
     @Param('id') id: string,
     @Body() updateStockDto: UpdateStockDto
   ): Promise<StockResponseDto> {
-    return this.itemsService.updateStock(id, updateStockDto);
+    return this.productsService.updateStock(id, updateStockDto);
   }
 
   @Delete('stock/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteStock(@Param('id') id: string): Promise<void> {
-    return this.itemsService.deleteStock(id);
+    return this.productsService.deleteStock(id);
   }
 
   // ===== IMAGE ENDPOINTS =====
 
   @Post('images')
   @HttpCode(HttpStatus.CREATED)
-  async createItemImage(
+  async createProductImage(
     @Body() createItemImageDto: CreateItemImageDto
   ): Promise<ItemImageResponseDto> {
-    return this.itemsService.createItemImage(createItemImageDto);
+    return this.productsService.createItemImage(createItemImageDto);
   }
 
   @Put('images/:id')
-  async updateItemImage(
+  async updateProductImage(
     @Param('id') id: string,
     @Body() updateItemImageDto: UpdateItemImageDto
   ): Promise<ItemImageResponseDto> {
-    return this.itemsService.updateItemImage(id, updateItemImageDto);
+    return this.productsService.updateItemImage(id, updateItemImageDto);
   }
 
   @Delete('images/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteItemImage(@Param('id') id: string): Promise<void> {
-    return this.itemsService.deleteItemImage(id);
+  async deleteProductImage(@Param('id') id: string): Promise<void> {
+    return this.productsService.deleteItemImage(id);
   }
 
   // ===== REVIEW ENDPOINTS =====
@@ -263,7 +305,7 @@ export class ItemsController {
     @Body() createReviewDto: CreateReviewDto
   ): Promise<ReviewResponseDto> {
     const userId = req.user.id;
-    return this.itemsService.createReview(userId, createReviewDto);
+    return this.productsService.createReview(userId, createReviewDto);
   }
 
   @Put('reviews/:id')
@@ -273,7 +315,7 @@ export class ItemsController {
     @Body() updateReviewDto: UpdateReviewDto
   ): Promise<ReviewResponseDto> {
     const userId = req.user.id;
-    return this.itemsService.updateReview(id, userId, updateReviewDto);
+    return this.productsService.updateReview(id, userId, updateReviewDto);
   }
 
   @Put('reviews/:id/admin')
@@ -281,7 +323,7 @@ export class ItemsController {
     @Param('id') id: string,
     @Body() updateReviewDto: AdminUpdateReviewDto
   ): Promise<ReviewResponseDto> {
-    return this.itemsService.adminUpdateReview(id, updateReviewDto);
+    return this.productsService.adminUpdateReview(id, updateReviewDto);
   }
 
   @Delete('reviews/:id')
@@ -291,7 +333,7 @@ export class ItemsController {
     @Request() req: any
   ): Promise<void> {
     const userId = req.user.id;
-    return this.itemsService.deleteReview(id, userId);
+    return this.productsService.deleteReview(id, userId);
   }
 
   // ===== RATING ENDPOINTS =====
@@ -303,7 +345,7 @@ export class ItemsController {
     @Body() createRatingDto: CreateRatingDto
   ): Promise<RatingResponseDto> {
     const userId = req.user.id;
-    return this.itemsService.createRating(userId, createRatingDto);
+    return this.productsService.createRating(userId, createRatingDto);
   }
 
   @Put('ratings/:id')
@@ -313,7 +355,7 @@ export class ItemsController {
     @Body() updateRatingDto: UpdateRatingDto
   ): Promise<RatingResponseDto> {
     const userId = req.user.id;
-    return this.itemsService.updateRating(id, userId, updateRatingDto);
+    return this.productsService.updateRating(id, userId, updateRatingDto);
   }
 
   @Delete('ratings/:id')
@@ -323,7 +365,7 @@ export class ItemsController {
     @Request() req: any
   ): Promise<void> {
     const userId = req.user.id;
-    return this.itemsService.deleteRating(id, userId);
+    return this.productsService.deleteRating(id, userId);
   }
 
   // ===== FAVORITE ENDPOINTS =====
@@ -335,7 +377,7 @@ export class ItemsController {
     @Body() createFavoriteDto: CreateFavoriteDto
   ): Promise<FavoriteResponseDto> {
     const userId = req.user.id;
-    return this.itemsService.addToFavorites(userId, createFavoriteDto);
+    return this.productsService.addToFavorites(userId, createFavoriteDto);
   }
 
   @Delete('favorites/:itemId')
@@ -345,12 +387,12 @@ export class ItemsController {
     @Request() req: any
   ): Promise<void> {
     const userId = req.user.id;
-    return this.itemsService.removeFromFavorites(userId, itemId);
+    return this.productsService.removeFromFavorites(userId, itemId);
   }
 
   @Get('favorites/user')
   async getUserFavorites(@Request() req: any): Promise<FavoriteResponseDto[]> {
     const userId = req.user.id;
-    return this.itemsService.getUserFavorites(userId);
+    return this.productsService.getUserFavorites(userId);
   }
 }

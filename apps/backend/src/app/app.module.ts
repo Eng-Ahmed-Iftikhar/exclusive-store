@@ -11,7 +11,7 @@ import { SubcategoryModule } from './subcategory/subcategory.module';
 import { EmailModule } from './email/email.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { FlashSalesModule } from './flash-sales/flash-sales.module';
-import { ItemsModule } from './items/items.module';
+import { ProductsModule } from './products/products.module';
 import { LoggerModule } from './logger/logger.module';
 import { OrdersModule } from './orders/orders.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -40,7 +40,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     AdminModule,
     CategoryModule,
     SubcategoryModule,
-    ItemsModule,
+    ProductsModule,
     CartModule,
     FavoritesModule,
     FlashSalesModule,

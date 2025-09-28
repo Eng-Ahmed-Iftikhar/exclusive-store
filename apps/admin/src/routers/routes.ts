@@ -24,6 +24,10 @@ const CONTENT_ROUTES = {
   ADMIN_SUBCATEGORY_DETAIL: '/subcategories/:id',
   ADMIN_CREATE_SUBCATEGORY: '/subcategories/create',
   ADMIN_EDIT_SUBCATEGORY: '/subcategories/edit/:id',
+  ADMIN_PRODUCTS: '/products',
+  ADMIN_PRODUCT_DETAIL: '/products/:id',
+  ADMIN_CREATE_PRODUCT: '/products/create',
+  ADMIN_EDIT_PRODUCT: '/products/edit/:id',
 };
 
 const AUTH_ROUTES = {
@@ -78,6 +82,9 @@ export const ROUTE_NAMES = {
   SUBCATEGORY_DETAIL: 'Subcategory Detail',
   CREATE_SUBCATEGORY: 'Create Subcategory',
   EDIT_SUBCATEGORY: 'Edit Subcategory',
+  PRODUCT_DETAIL: 'Product Detail',
+  CREATE_PRODUCT: 'Create Product',
+  EDIT_PRODUCT: 'Edit Product',
   SETUP_PASSWORD: 'Setup Password',
   FORGOT_PASSWORD: 'Forgot Password',
   RESET_PASSWORD: 'Reset Password',
@@ -235,6 +242,30 @@ export const ADMIN_ROUTES = [
     name: ROUTE_NAMES.EDIT_SUBCATEGORY,
     element: 'EditSubcategory',
     icon: 'edit-subcategory',
+  },
+  {
+    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_PRODUCTS,
+    name: ROUTE_NAMES.PRODUCTS,
+    element: 'Products',
+    icon: 'products',
+  },
+  {
+    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_PRODUCT_DETAIL,
+    name: ROUTE_NAMES.PRODUCT_DETAIL,
+    element: 'ProductDetail',
+    icon: 'product-detail',
+  },
+  {
+    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CREATE_PRODUCT,
+    name: ROUTE_NAMES.CREATE_PRODUCT,
+    element: 'CreateProduct',
+    icon: 'create-product',
+  },
+  {
+    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_EDIT_PRODUCT,
+    name: ROUTE_NAMES.EDIT_PRODUCT,
+    element: 'EditProduct',
+    icon: 'edit-product',
   },
 ];
 

@@ -22,6 +22,10 @@ import SubcategoryPage from '@/pages/app/contents/SubcategoryPage';
 import SubcategoryDetailPage from '@/pages/app/contents/SubcategoryDetailPage';
 import CreateSubcategoryPage from '@/pages/app/contents/CreateSubcategoryPage';
 import EditSubcategoryPage from '@/pages/app/contents/EditSubcategoryPage';
+import ProductPage from '@/pages/app/contents/ProductPage';
+import ProductDetailPage from '@/pages/app/contents/ProductDetailPage';
+import CreateProductPage from '@/pages/app/contents/CreateProductPage';
+import EditProductPage from '@/pages/app/contents/EditProductPage';
 import Login from '@/pages/auth/LoginPage';
 import SetupPasswordPage from '@/pages/auth/SetupPasswordPage';
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
@@ -52,6 +56,10 @@ const COMPONENT_MAP = {
   SubcategoryDetail: SubcategoryDetailPage,
   CreateSubcategory: CreateSubcategoryPage,
   EditSubcategory: EditSubcategoryPage,
+  Products: ProductPage,
+  ProductDetail: ProductDetailPage,
+  CreateProduct: CreateProductPage,
+  EditProduct: EditProductPage,
   Login: Login,
   SetupPassword: SetupPasswordPage,
   ForgotPassword: ForgotPasswordPage,

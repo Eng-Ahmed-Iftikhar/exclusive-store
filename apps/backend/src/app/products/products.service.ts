@@ -32,15 +32,18 @@ import {
 } from './dto/item.dto';
 
 @Injectable()
-export class ItemsService {
+export class ProductsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly activityService: ActivityService
   ) {}
 
-  // ===== ITEM OPERATIONS =====
+  // ===== PRODUCT OPERATIONS =====
 
-  async createItem(createItemDto: CreateItemDto): Promise<ItemResponseDto> {
+  async createItem(
+    createItemDto: CreateItemDto,
+    userId?: string
+  ): Promise<ItemResponseDto> {
     // Check if SKU already exists
     if (createItemDto.sku) {
       const existingItem = await this.prisma.item.findUnique({
@@ -73,7 +76,9 @@ export class ItemsService {
     });
 
     // Log product creation activity
-    await this.activityService.logProductActivity(item.id, 'created', 'admin');
+    if (userId) {
+      await this.activityService.logProductActivity(item.id, 'created', userId);
+    }
 
     return this.mapToItemResponse(item);
   }

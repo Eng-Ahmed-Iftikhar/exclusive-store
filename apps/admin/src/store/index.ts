@@ -14,6 +14,7 @@ import { fileApi } from '../apis/services/fileApi';
 import rootReducer from './slices';
 import { categoryApi } from '@/apis/services/categoryApi';
 import { subcategoryApi } from '@/apis/services/subcategoryApi';
+import { productApi } from '@/apis/services/productApi';
 
 // Persist config
 const persistConfig = {
@@ -36,6 +37,7 @@ const apiMiddleware = [
   fileApi.middleware,
   categoryApi.middleware,
   subcategoryApi.middleware,
+  productApi.middleware,
 ];
 
 export const store = configureStore({
