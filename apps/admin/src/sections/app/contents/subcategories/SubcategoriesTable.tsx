@@ -419,7 +419,7 @@ const SubcategoriesTable: React.FC<SubcategoriesTableProps> = ({
                               ? 'text-blue-400 hover:bg-blue-900/30'
                               : 'text-blue-600 hover:bg-blue-50'
                           }`}
-                          title="Edit Subcategory"
+                          title="Edit"
                         >
                           <FiEdit className="w-4 h-4" />
                         </button>

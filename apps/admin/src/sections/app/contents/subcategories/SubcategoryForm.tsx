@@ -409,8 +409,8 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
                     ? 'Creating...'
                     : 'Updating...'
                   : mode === 'create'
-                  ? 'Create Subcategory'
-                  : 'Update Subcategory'}
+                  ? 'Create'
+                  : 'Update'}
               </button>
             </div>
           </form>

@@ -115,8 +115,8 @@ const EditSubcategoryForm: React.FC<EditSubcategoryFormProps> = ({
       onSubmit={handleSubmit}
       onCancel={onCancel}
       isSubmitting={isSubmitting}
-      title="Edit Subcategory"
-      description="Update subcategory information"
+      title={`Edit: ${subcategory.name}`}
+      description="Update the subcategory details"
     />
   );
 };

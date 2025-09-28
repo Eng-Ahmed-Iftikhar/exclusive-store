@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store';
 import {
   useGetCategoriesQuery,
   useDeleteCategoryMutation,
@@ -60,7 +58,6 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({
   onCreate,
   onView,
 }) => {
-  const { theme } = useSelector((state: RootState) => state.ui);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [limit, setLimit] = useState(10);
@@ -141,11 +138,7 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({
   if (isLoading) {
     return (
       <div
-        className={`p-6 rounded-xl border ${
-          theme === 'dark'
-            ? 'bg-slate-800 border-slate-700'
-            : 'bg-white border-gray-200'
-        }`}
+        className={`p-6 rounded-xl border bg-white border-gray-200 dark:bg-slate-800 dark:border-slate-700`}
       >
         <div className="animate-pulse">
           <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded mb-4"></div>
@@ -165,11 +158,7 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({
   if (error) {
     return (
       <div
-        className={`p-6 rounded-xl border ${
-          theme === 'dark'
-            ? 'bg-red-900/20 border-red-700 text-red-300'
-            : 'bg-red-50 border-red-200 text-red-600'
-        }`}
+        className={`p-6 rounded-xl border bg-red-900/20 border-red-700 text-red-300`}
       >
         <div className="flex items-center gap-3">
           <div className="text-red-500">
@@ -200,43 +189,25 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({
   }
 
   return (
-    <div
-      className={`rounded-xl border ${
-        theme === 'dark'
-          ? 'bg-slate-800 border-slate-700'
-          : 'bg-white border-gray-200'
-      }`}
-    >
+    <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm dark:shadow-slate-900/20">
       {/* Header */}
       <div className="p-6 pb-0">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h2
-              className={`text-xl font-semibold ${
-                theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}
-            >
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               Categories
             </h2>
-            <p
-              className={`text-sm mt-1 ${
-                theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-              }`}
-            >
-              Manage product categories and subcategories
+            <p className="text-sm mt-1 text-gray-600 dark:text-gray-400">
+              Manage categories and subcategories
             </p>
           </div>
           <PermissionGuard action="create" subject="categories">
             <button
               onClick={onCreate}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                theme === 'dark'
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-              }`}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors bg-blue-600 hover:bg-blue-700 text-white shadow-sm dark:shadow-slate-900/20"
             >
               <FiPlus className="w-4 h-4" />
-              Create Category
+              Create
             </button>
           </PermissionGuard>
         </div>
@@ -247,21 +218,13 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <form onSubmit={handleSearch} className="flex-1">
             <div className="relative">
-              <FiSearch
-                className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                }`}
-              />
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
               <input
                 type="text"
                 placeholder="Search categories..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full pl-10 pr-4 py-2 rounded-lg border ${
-                  theme === 'dark'
-                    ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-400'
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
               />
             </div>
           </form>
@@ -270,12 +233,8 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({
               onClick={() => setIncludeInactive(!includeInactive)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
                 includeInactive
-                  ? theme === 'dark'
-                    ? 'bg-blue-600 border-blue-500 text-white'
-                    : 'bg-blue-600 border-blue-500 text-white'
-                  : theme === 'dark'
-                  ? 'bg-slate-700 border-slate-600 text-gray-300 hover:bg-slate-600'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  ? 'bg-blue-600 border-blue-500 text-white'
+                  : 'bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-600'
               }`}
             >
               <FiFilter className="w-4 h-4" />
@@ -290,86 +249,41 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr
-                className={`border-b ${
-                  theme === 'dark' ? 'border-slate-600' : 'border-gray-200'
-                }`}
-              >
-                <th
-                  className={`text-left py-3 px-4 font-medium ${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                  }`}
-                >
+              <tr className="border-b border-gray-200 dark:border-slate-600">
+                <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
                   Name
                 </th>
-                <th
-                  className={`text-left py-3 px-4 font-medium ${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                  }`}
-                >
+                <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
                   Slug
                 </th>
-                <th
-                  className={`text-left py-3 px-4 font-medium ${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                  }`}
-                >
+                <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
                   Subcategories
                 </th>
-                <th
-                  className={`text-left py-3 px-4 font-medium ${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                  }`}
-                >
+                <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
                   Status
                 </th>
-                <th
-                  className={`text-left py-3 px-4 font-medium ${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                  }`}
-                >
+                <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
                   Sort Order
                 </th>
-                <th
-                  className={`text-left py-3 px-4 font-medium ${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                  }`}
-                >
+                <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody>
               {paginatedCategories.map((category: Category) => (
-                <tr
-                  key={category.id}
-                  className={`border-b ${
-                    theme === 'dark'
-                      ? 'border-slate-700 hover:bg-slate-700/50'
-                      : 'border-gray-100 hover:bg-gray-50'
-                  } transition-colors`}
-                >
+                <tr className="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       {category.iconFileId && (
                         <CategoryIcon iconFileId={category.iconFileId} />
                       )}
                       <div>
-                        <span
-                          className={`font-medium ${
-                            theme === 'dark' ? 'text-white' : 'text-gray-900'
-                          }`}
-                        >
+                        <span className="font-medium text-gray-900 dark:text-white">
                           {category.name}
                         </span>
                         {category.description && (
-                          <p
-                            className={`text-sm ${
-                              theme === 'dark'
-                                ? 'text-gray-400'
-                                : 'text-gray-600'
-                            }`}
-                          >
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
                             {category.description}
                           </p>
                         )}
@@ -377,44 +291,29 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({
                     </div>
                   </td>
                   <td className="py-3 px-4">
-                    <span
-                      className={`text-sm font-mono ${
-                        theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                      }`}
-                    >
+                    <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
                       {category.slug}
                     </span>
                   </td>
                   <td className="py-3 px-4">
-                    <span
-                      className={`text-sm ${
-                        theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                      }`}
-                    >
-                      {category.subcategories?.length || 0} subcategories
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {category.subcategoryCount} subcategor
+                      {category.subcategoryCount === 1 ? 'y' : 'ies'}
                     </span>
                   </td>
                   <td className="py-3 px-4">
                     <span
                       className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                         category.isActive
-                          ? theme === 'dark'
-                            ? 'bg-green-900/30 text-green-300'
-                            : 'bg-green-100 text-green-800'
-                          : theme === 'dark'
-                          ? 'bg-red-900/30 text-red-300'
-                          : 'bg-red-100 text-red-800'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                          : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                       }`}
                     >
                       {category.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="py-3 px-4">
-                    <span
-                      className={`text-sm ${
-                        theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                      }`}
-                    >
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {category.sortOrder}
                     </span>
                   </td>
@@ -423,12 +322,8 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({
                       <PermissionGuard action="view" subject="categories">
                         <button
                           onClick={() => onView(category)}
-                          className={`p-2 rounded-lg transition-colors ${
-                            theme === 'dark'
-                              ? 'text-green-400 hover:bg-green-900/30'
-                              : 'text-green-600 hover:bg-green-50'
-                          }`}
-                          title="View Details"
+                          className="p-2 rounded-lg transition-colors text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/30"
+                          title="View"
                         >
                           <FiEye className="w-4 h-4" />
                         </button>
@@ -436,12 +331,8 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({
                       <PermissionGuard action="edit" subject="categories">
                         <button
                           onClick={() => onEdit(category)}
-                          className={`p-2 rounded-lg transition-colors ${
-                            theme === 'dark'
-                              ? 'text-blue-400 hover:bg-blue-900/30'
-                              : 'text-blue-600 hover:bg-blue-50'
-                          }`}
-                          title="Edit Category"
+                          className="p-2 rounded-lg transition-colors text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30"
+                          title="Edit"
                         >
                           <FiEdit className="w-4 h-4" />
                         </button>
@@ -449,12 +340,8 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({
                       <PermissionGuard action="delete" subject="categories">
                         <button
                           onClick={() => handleDelete(category.id)}
-                          className={`p-2 rounded-lg transition-colors ${
-                            theme === 'dark'
-                              ? 'text-red-400 hover:bg-red-900/30'
-                              : 'text-red-600 hover:bg-red-50'
-                          }`}
-                          title="Delete Category"
+                          className="p-2 rounded-lg transition-colors text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
+                          title="Delete"
                         >
                           <FiTrash2 className="w-4 h-4" />
                         </button>

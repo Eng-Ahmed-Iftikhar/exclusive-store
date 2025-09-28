@@ -88,7 +88,7 @@ function EditSubcategoryView() {
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isSubmitting={isSubmitting}
-          title="Edit Subcategory"
+          title={`Edit : ${subcategory.name}`}
           description="Update the subcategory details"
         />
       </div>

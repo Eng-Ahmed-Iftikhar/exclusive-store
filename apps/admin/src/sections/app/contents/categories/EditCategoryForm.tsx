@@ -146,8 +146,8 @@ const EditCategoryForm: React.FC<EditCategoryFormProps> = ({
       onSubmit={handleSubmit}
       onCancel={onCancel}
       isSubmitting={isSubmitting}
-      title={`Edit Category: ${categoryData.name}`}
-      description="Update the category details below"
+      title={`Edit: ${categoryData.name}`}
+      description="Update the category details"
     />
   );
 };

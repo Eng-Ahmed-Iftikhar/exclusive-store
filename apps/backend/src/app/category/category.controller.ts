@@ -12,11 +12,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
+import { SubcategoryService } from '../subcategory/subcategory.service';
 import {
   CreateCategoryDto,
   UpdateCategoryDto,
   CategoryResponseDto,
 } from './dto/category.dto';
+import { SubcategoryResponseDto } from '../subcategory/dto/subcategory.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CanManageCategories } from '../auth/decorators/access-control.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -26,7 +28,10 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
 export class CategoryController {
-  constructor(private readonly categoryService: CategoryService) {}
+  constructor(
+    private readonly categoryService: CategoryService,
+    private readonly subcategoryService: SubcategoryService
+  ) {}
 
   // ===== CATEGORY ENDPOINTS =====
 
@@ -57,6 +62,18 @@ export class CategoryController {
     @Param('slug') slug: string
   ): Promise<CategoryResponseDto> {
     return this.categoryService.getCategoryBySlug(slug);
+  }
+
+  @Get(':id/subcategories')
+  async getSubcategoriesByCategory(
+    @Param('id') id: string,
+    @Query('includeInactive') includeInactive?: string
+  ): Promise<SubcategoryResponseDto[]> {
+    const includeInactiveBool = includeInactive === 'true';
+    return this.subcategoryService.getSubcategoriesByCategory(
+      id,
+      includeInactiveBool
+    );
   }
 
   @Put(':id')

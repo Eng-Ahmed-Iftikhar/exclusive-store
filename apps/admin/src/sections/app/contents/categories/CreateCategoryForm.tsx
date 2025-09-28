@@ -43,7 +43,7 @@ const CreateCategoryForm: React.FC<CreateCategoryFormProps> = ({
       onSubmit={handleSubmit}
       onCancel={onCancel}
       isSubmitting={isSubmitting}
-      title="Category Details"
+      title="Create Category"
       description="Fill in the details below to create a new category"
     />
   );

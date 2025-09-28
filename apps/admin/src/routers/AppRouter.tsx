@@ -15,6 +15,7 @@ import TeamsPage from '@/pages/app/management/TeamsPage';
 import CreateTeamPage from '@/pages/app/management/CreateTeamPage';
 import EditTeamPage from '@/pages/app/management/EditTeamPage';
 import CategoryPage from '@/pages/app/contents/CategoryPage';
+import CategoryDetailPage from '@/pages/app/contents/CategoryDetailPage';
 import CreateCategoryPage from '@/pages/app/contents/CreateCategoryPage';
 import EditCategoryPage from '@/pages/app/contents/EditCategoryPage';
 import SubcategoryPage from '@/pages/app/contents/SubcategoryPage';
@@ -44,6 +45,7 @@ const COMPONENT_MAP = {
   CreateTeam: CreateTeamPage,
   EditTeam: EditTeamPage,
   Categories: CategoryPage,
+  CategoryDetail: CategoryDetailPage,
   CreateCategory: CreateCategoryPage,
   EditCategory: EditCategoryPage,
   Subcategories: SubcategoryPage,

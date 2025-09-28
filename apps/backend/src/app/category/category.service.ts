@@ -32,6 +32,13 @@ export class CategoryService {
     // Create category
     const category = await this.prisma.category.create({
       data: createCategoryDto,
+      include: {
+        _count: {
+          select: {
+            subcategories: true,
+          },
+        },
+      },
     });
 
     return this.mapToCategoryResponse(category);
@@ -44,6 +51,13 @@ export class CategoryService {
     const categories = await this.prisma.category.findMany({
       where: includeInactive ? {} : { isActive: true },
       orderBy: { sortOrder: 'asc' },
+      include: {
+        _count: {
+          select: {
+            subcategories: true,
+          },
+        },
+      },
     });
 
     return categories.map((category) => this.mapToCategoryResponse(category));
@@ -53,6 +67,13 @@ export class CategoryService {
   async getCategoryById(id: string): Promise<CategoryResponseDto> {
     const category = await this.prisma.category.findUnique({
       where: { id },
+      include: {
+        _count: {
+          select: {
+            subcategories: true,
+          },
+        },
+      },
     });
 
     if (!category) {
@@ -66,6 +87,13 @@ export class CategoryService {
   async getCategoryBySlug(slug: string): Promise<CategoryResponseDto> {
     const category = await this.prisma.category.findUnique({
       where: { slug },
+      include: {
+        _count: {
+          select: {
+            subcategories: true,
+          },
+        },
+      },
     });
 
     if (!category) {
@@ -108,6 +136,13 @@ export class CategoryService {
     const updatedCategory = await this.prisma.category.update({
       where: { id },
       data: updateCategoryDto,
+      include: {
+        _count: {
+          select: {
+            subcategories: true,
+          },
+        },
+      },
     });
 
     return this.mapToCategoryResponse(updatedCategory);
@@ -140,6 +175,7 @@ export class CategoryService {
       iconFileId: category.iconFileId,
       isActive: category.isActive,
       sortOrder: category.sortOrder,
+      subcategoryCount: category._count?.subcategories || 0,
       createdAt: category.createdAt,
       updatedAt: category.updatedAt,
     };

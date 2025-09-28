@@ -11,6 +11,7 @@ export interface Category {
   iconFileId?: string;
   isActive: boolean;
   sortOrder: number;
+  subcategoryCount: number;
   createdAt: string;
   updatedAt: string;
   subcategories?: Subcategory[];

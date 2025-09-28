@@ -58,6 +58,7 @@ export class CategoryResponseDto {
   iconFileId?: string;
   isActive!: boolean;
   sortOrder!: number;
+  subcategoryCount!: number;
   createdAt!: Date;
   updatedAt!: Date;
 }

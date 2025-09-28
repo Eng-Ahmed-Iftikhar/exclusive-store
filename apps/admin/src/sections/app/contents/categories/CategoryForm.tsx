@@ -389,8 +389,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
                     ? 'Creating...'
                     : 'Updating...'
                   : mode === 'create'
-                  ? 'Create Category'
-                  : 'Update Category'}
+                  ? 'Create'
+                  : 'Update'}
               </button>
             </div>
           </form>

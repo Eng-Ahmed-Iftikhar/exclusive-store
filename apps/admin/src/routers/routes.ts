@@ -17,6 +17,7 @@ const MANAGEMENT_ROUTES = {
 const CONTENT_ROUTES = {
   ADMIN_CONTENT: '/content',
   ADMIN_CATEGORIES: '/categories',
+  ADMIN_CATEGORY_DETAIL: '/categories/:id',
   ADMIN_CREATE_CATEGORY: '/categories/create',
   ADMIN_EDIT_CATEGORY: '/categories/edit/:id',
   ADMIN_SUBCATEGORIES: '/subcategories',
@@ -70,6 +71,7 @@ export const ROUTE_NAMES = {
   CREATE_TEAM: 'Create Team',
   EDIT_TEAM: 'Edit Team',
   CATEGORIES: 'Categories',
+  CATEGORY_DETAIL: 'Category Detail',
   CREATE_CATEGORY: 'Create Category',
   EDIT_CATEGORY: 'Edit Category',
   SUBCATEGORIES: 'Subcategories',
@@ -191,6 +193,12 @@ export const ADMIN_ROUTES = [
     name: ROUTE_NAMES.CATEGORIES,
     element: 'Categories',
     icon: 'categories',
+  },
+  {
+    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CATEGORY_DETAIL,
+    name: ROUTE_NAMES.CATEGORY_DETAIL,
+    element: 'CategoryDetail',
+    icon: 'category-detail',
   },
   {
     path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CREATE_CATEGORY,
