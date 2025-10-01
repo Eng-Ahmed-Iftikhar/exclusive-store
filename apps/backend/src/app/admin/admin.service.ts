@@ -49,7 +49,7 @@ export class AdminService {
   }
 
   private async getTotalItems() {
-    return await this.prisma.item.count({
+    return await this.prisma.product.count({
       where: { isActive: true },
     });
   }
@@ -96,7 +96,7 @@ export class AdminService {
 
   private async getTopProducts() {
     const orderItems = await this.prisma.orderItem.groupBy({
-      by: ['itemId'],
+      by: ['variantId'],
       _sum: {
         quantity: true,
       },
@@ -110,10 +110,16 @@ export class AdminService {
 
     const topProducts = await Promise.all(
       orderItems.map(
-        async (item: { itemId: string; _sum: { quantity: number | null } }) => {
-          const itemDetails = await this.prisma.item.findUnique({
-            where: { id: item.itemId },
+        async (item: {
+          variantId: string;
+          _sum: { quantity: number | null };
+        }) => {
+          const variantDetails = await this.prisma.productVariant.findUnique({
+            where: { id: item.variantId },
             include: {
+              product: {
+                select: { name: true },
+              },
               prices: {
                 where: { isActive: true },
                 take: 1,
@@ -121,20 +127,20 @@ export class AdminService {
             },
           });
 
-          if (!itemDetails) return null;
+          if (!variantDetails) return null;
 
           const totalRevenue = await this.prisma.orderItem.aggregate({
-            where: { itemId: item.itemId },
+            where: { variantId: item.variantId },
             _sum: {
               price: true,
             },
           });
 
           return {
-            id: item.itemId,
-            name: itemDetails.name,
+            id: item.variantId,
+            name: `${variantDetails.product.name} - ${variantDetails.name}`,
             sales: item._sum?.quantity || 0,
-            revenue: Number(totalRevenue._sum.price) || 0,
+            revenue: Number(totalRevenue._sum?.price) || 0,
           };
         }
       )
@@ -191,7 +197,7 @@ export class AdminService {
         },
       },
       include: {
-        item: {
+        variant: {
           select: { name: true, sku: true },
         },
       },
@@ -311,14 +317,18 @@ export class AdminService {
     const categories = await this.prisma.category.findMany({
       where: { isActive: true },
       include: {
-        items: {
+        products: {
           where: { isActive: true },
           include: {
-            orders: {
-              where: {
-                order: {
-                  status: { not: 'cancelled' },
-                  paymentStatus: 'completed',
+            variants: {
+              include: {
+                orderItems: {
+                  where: {
+                    order: {
+                      status: { not: 'cancelled' },
+                      paymentStatus: 'completed',
+                    },
+                  },
                 },
               },
             },
@@ -328,33 +338,32 @@ export class AdminService {
     });
 
     const categoryData = categories
-      .map(
-        (
-          category: { name: string; items: { orders: { length: number } }[] },
-          index: number
-        ) => {
-          const totalOrders = category.items.reduce(
-            (sum: number, item: { orders: { length: number } }) =>
-              sum + item.orders.length,
-            0
-          );
+      .map((category: any, index: number) => {
+        const totalOrders = category.products.reduce(
+          (sum: number, product: any) =>
+            sum +
+            product.variants.reduce(
+              (vSum: number, variant: any) => vSum + variant.orderItems.length,
+              0
+            ),
+          0
+        );
 
-          const colors = [
-            '#8884d8',
-            '#82ca9d',
-            '#ffc658',
-            '#ff7c7c',
-            '#8dd1e1',
-            '#d084d0',
-          ];
+        const colors = [
+          '#8884d8',
+          '#82ca9d',
+          '#ffc658',
+          '#ff7c7c',
+          '#8dd1e1',
+          '#d084d0',
+        ];
 
-          return {
-            name: category.name,
-            value: totalOrders,
-            color: colors[index % colors.length],
-          };
-        }
-      )
+        return {
+          name: category.name,
+          value: totalOrders,
+          color: colors[index % colors.length],
+        };
+      })
       .filter((item: { value: number }) => item.value > 0);
 
     return categoryData;

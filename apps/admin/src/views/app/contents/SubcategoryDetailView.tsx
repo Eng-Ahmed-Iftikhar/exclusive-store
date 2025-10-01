@@ -21,7 +21,7 @@ function SubcategoryDetailView() {
 
   const handleEdit = () => {
     if (subcategory) {
-      navigate(`/content/subcategories/edit/${subcategory.id}`);
+      navigate(`/content/subcategories/${subcategory.id}/edit`);
     }
   };
 

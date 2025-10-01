@@ -3,6 +3,22 @@ import { baseQueryWithReauth } from './baseApi';
 
 // ===== TYPES =====
 
+export interface ProductVariant {
+  id: string;
+  productId: string;
+  sku: string;
+  name: string;
+  attributes?: Record<string, any>;
+  isDefault: boolean;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  prices?: Price[];
+  stock?: Stock;
+  images?: ProductImage[];
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -25,23 +41,19 @@ export interface Product {
     name: string;
     slug: string;
   };
-  prices?: Price[];
-  stock?: Stock;
+  variants?: ProductVariant[];
   images?: ProductImage[];
   reviews?: Review[];
   ratings?: Rating[];
   favorites?: Favorite[];
   averageRating?: number;
   totalReviews?: number;
-  isFavorite?: boolean;
-  currentPrice?: number;
-  salePrice?: number;
-  isOnSale?: boolean;
+  totalVariants?: number;
 }
 
 export interface Price {
   id: string;
-  productId: string;
+  variantId: string;
   price: number;
   salePrice?: number;
   currency: string;
@@ -54,7 +66,7 @@ export interface Price {
 
 export interface Stock {
   id: string;
-  productId: string;
+  variantId: string;
   quantity: number;
   reserved: number;
   minThreshold: number;
@@ -66,13 +78,20 @@ export interface Stock {
 
 export interface ProductImage {
   id: string;
-  productId: string;
+  productId?: string;
+  variantId?: string;
   fileId: string;
   altText?: string;
   isPrimary: boolean;
   sortOrder: number;
   createdAt: Date;
   updatedAt: Date;
+  file?: {
+    id: string;
+    url: string;
+    secureUrl: string;
+    originalName: string;
+  };
 }
 
 export interface Review {
@@ -270,7 +289,10 @@ export const productApi = createApi({
     }),
 
     // Update product
-    updateProduct: builder.mutation<Product, { id: string; data: UpdateProductDto }>({
+    updateProduct: builder.mutation<
+      Product,
+      { id: string; data: UpdateProductDto }
+    >({
       query: ({ id, data }) => ({
         url: `/products/${id}`,
         method: 'PATCH',
@@ -291,11 +313,65 @@ export const productApi = createApi({
       invalidatesTags: ['Product'],
     }),
 
+    // Variant endpoints
+    createVariant: builder.mutation<
+      ProductVariant,
+      {
+        productId: string;
+        sku: string;
+        name: string;
+        attributes?: Record<string, any>;
+        isDefault?: boolean;
+        isActive?: boolean;
+        sortOrder?: number;
+      }
+    >({
+      query: (data) => ({
+        url: '/products/variants',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Product'],
+    }),
+
+    getVariantsByProduct: builder.query<ProductVariant[], string>({
+      query: (productId) => `/products/${productId}/variants`,
+      providesTags: ['Product'],
+    }),
+
+    updateVariant: builder.mutation<
+      ProductVariant,
+      {
+        id: string;
+        sku?: string;
+        name?: string;
+        attributes?: Record<string, any>;
+        isDefault?: boolean;
+        isActive?: boolean;
+        sortOrder?: number;
+      }
+    >({
+      query: ({ id, ...data }) => ({
+        url: `/products/variants/${id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['Product'],
+    }),
+
+    deleteVariant: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/products/variants/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Product'],
+    }),
+
     // Create price
     createPrice: builder.mutation<
       Price,
       {
-        productId: string;
+        variantId: string;
         price: number;
         salePrice?: number;
         currency?: string;
@@ -346,7 +422,7 @@ export const productApi = createApi({
     createStock: builder.mutation<
       Stock,
       {
-        productId: string;
+        variantId: string;
         quantity: number;
         reserved?: number;
         minThreshold?: number;
@@ -395,7 +471,8 @@ export const productApi = createApi({
     createProductImage: builder.mutation<
       ProductImage,
       {
-        productId: string;
+        productId?: string;
+        variantId?: string;
         fileId: string;
         altText?: string;
         isPrimary?: boolean;
@@ -493,7 +570,10 @@ export const productApi = createApi({
     }),
 
     // Create rating
-    createRating: builder.mutation<Rating, { productId: string; rating: number }>({
+    createRating: builder.mutation<
+      Rating,
+      { productId: string; rating: number }
+    >({
       query: (data) => ({
         url: '/products/ratings',
         method: 'POST',
@@ -562,6 +642,10 @@ export const {
   useCreateProductMutation,
   useUpdateProductMutation,
   useDeleteProductMutation,
+  useCreateVariantMutation,
+  useGetVariantsByProductQuery,
+  useUpdateVariantMutation,
+  useDeleteVariantMutation,
   useCreatePriceMutation,
   useUpdatePriceMutation,
   useDeletePriceMutation,

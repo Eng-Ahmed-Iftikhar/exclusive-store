@@ -184,7 +184,7 @@ export class OrdersService {
     // Create order items
     const orderItems = cart.items.map((item) => ({
       orderId: order.id,
-      itemId: item.itemId,
+      variantId: item.variantId,
       quantity: item.quantity,
       price: item.price,
     }));
@@ -249,7 +249,8 @@ export class OrdersService {
           }),
           total: total,
           items: cart.items.map((item) => ({
-            name: item.item.name,
+            name:
+              item.variant?.product?.name || item.variant?.name || 'Product',
             quantity: item.quantity,
             price: item.price,
           })),
@@ -273,7 +274,11 @@ export class OrdersService {
       include: {
         items: {
           include: {
-            item: true,
+            variant: {
+              include: {
+                product: true,
+              },
+            },
           },
         },
       },
@@ -405,11 +410,17 @@ export class OrdersService {
       include: {
         items: {
           include: {
-            item: {
+            variant: {
               include: {
-                images: true,
-                category: true,
-                subcategory: true,
+                images: {
+                  include: { file: true },
+                },
+                product: {
+                  include: {
+                    category: true,
+                    subcategory: true,
+                  },
+                },
               },
             },
           },
@@ -452,11 +463,17 @@ export class OrdersService {
         include: {
           items: {
             include: {
-              item: {
+              variant: {
                 include: {
-                  images: true,
-                  category: true,
-                  subcategory: true,
+                  images: {
+                    include: { file: true },
+                  },
+                  product: {
+                    include: {
+                      category: true,
+                      subcategory: true,
+                    },
+                  },
                 },
               },
             },
@@ -770,7 +787,7 @@ export class OrdersService {
     // Create order items
     const orderItems = cart.items.map((item: any) => ({
       orderId: order.id,
-      itemId: item.itemId,
+      variantId: item.variantId,
       quantity: item.quantity,
       price: item.price,
     }));
@@ -846,7 +863,8 @@ export class OrdersService {
           }),
           total: order.total,
           items: cart.items.map((item: any) => ({
-            name: item.item.name,
+            name:
+              item.variant?.product?.name || item.variant?.name || 'Product',
             quantity: item.quantity,
             price: item.price,
           })),
@@ -872,8 +890,8 @@ export class OrdersService {
       billingAddress: JSON.parse(order.billingAddress),
       items: order.items.map((item: any) => ({
         id: item.id,
-        itemId: item.itemId,
-        item: item.item,
+        itemId: item.variantId,
+        item: item.variant,
         quantity: item.quantity,
         price: item.price,
       })),

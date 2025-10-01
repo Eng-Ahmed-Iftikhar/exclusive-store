@@ -41,7 +41,7 @@ const CategoryDetailView: React.FC = () => {
   });
 
   const handleEdit = () => {
-    navigate(`/content/categories/edit/${id}`);
+    navigate(`/content/categories/${id}/edit`);
   };
 
   const handleBack = () => {
@@ -57,7 +57,7 @@ const CategoryDetailView: React.FC = () => {
   };
 
   const handleEditSubcategory = (subcategoryId: string) => {
-    navigate(`/content/subcategories/edit/${subcategoryId}`);
+    navigate(`/content/subcategories/${subcategoryId}/edit`);
   };
 
   if (categoryLoading) {

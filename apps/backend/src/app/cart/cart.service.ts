@@ -26,11 +26,17 @@ export class CartService {
       include: {
         items: {
           include: {
-            item: {
+            variant: {
               include: {
-                images: true,
-                category: true,
-                subcategory: true,
+                images: {
+                  include: { file: true },
+                },
+                product: {
+                  include: {
+                    category: true,
+                    subcategory: true,
+                  },
+                },
               },
             },
           },
@@ -45,11 +51,17 @@ export class CartService {
         include: {
           items: {
             include: {
-              item: {
+              variant: {
                 include: {
-                  images: true,
-                  category: true,
-                  subcategory: true,
+                  images: {
+                    include: { file: true },
+                  },
+                  product: {
+                    include: {
+                      category: true,
+                      subcategory: true,
+                    },
+                  },
                 },
               },
             },
@@ -70,11 +82,17 @@ export class CartService {
             createdAt: 'desc',
           },
           include: {
-            item: {
+            variant: {
               include: {
-                images: true,
-                category: true,
-                subcategory: true,
+                images: {
+                  include: { file: true },
+                },
+                product: {
+                  include: {
+                    category: true,
+                    subcategory: true,
+                  },
+                },
               },
             },
           },
@@ -95,11 +113,17 @@ export class CartService {
       include: {
         items: {
           include: {
-            item: {
+            variant: {
               include: {
-                images: true,
-                category: true,
-                subcategory: true,
+                images: {
+                  include: { file: true },
+                },
+                product: {
+                  include: {
+                    category: true,
+                    subcategory: true,
+                  },
+                },
               },
             },
           },
@@ -115,19 +139,19 @@ export class CartService {
     addToCartDto: AddToCartDto,
     userId?: string
   ): Promise<CartResponseDto> {
-    // Check if item exists
-    const item = await this.prisma.item.findUnique({
-      where: { id: addToCartDto.itemId },
+    // Check if variant exists
+    const variant = await this.prisma.productVariant.findUnique({
+      where: { id: addToCartDto.variantId },
       include: { prices: true },
     });
 
-    if (!item) {
-      throw new NotFoundException('Item not found');
+    if (!variant) {
+      throw new NotFoundException('Product variant not found');
     }
 
     // Get the active price and determine the correct price to use
-    const activePrice = item.prices.find((price) => price.isActive);
-    let itemPrice = 0;
+    const activePrice = variant.prices.find((price: any) => price.isActive);
+    let variantPrice = 0;
 
     if (activePrice) {
       // Check if there's a sale price available
@@ -137,18 +161,18 @@ export class CartService {
         Number(activePrice.salePrice) < Number(activePrice.price)
       ) {
         // Use sale price if it's less than original price
-        itemPrice = Number(activePrice.salePrice);
+        variantPrice = Number(activePrice.salePrice);
       } else {
         // Use original price if no sale or sale price is invalid
-        itemPrice = Number(activePrice.price);
+        variantPrice = Number(activePrice.price);
       }
     }
 
-    // Check if item is already in cart
+    // Check if variant is already in cart
     const existingCartItem = await this.prisma.cartItem.findFirst({
       where: {
         cartId,
-        itemId: addToCartDto.itemId,
+        variantId: addToCartDto.variantId,
       },
     });
 
@@ -164,13 +188,13 @@ export class CartService {
         data: { quantity: newQuantity },
       });
     } else {
-      // Add new item to cart
+      // Add new variant to cart
       await this.prisma.cartItem.create({
         data: {
           cartId,
-          itemId: addToCartDto.itemId,
+          variantId: addToCartDto.variantId,
           quantity: addToCartDto.quantity,
-          price: itemPrice,
+          price: variantPrice,
         },
       });
     }
@@ -202,7 +226,7 @@ export class CartService {
         cartId,
       },
       include: {
-        item: {
+        variant: {
           include: { prices: true },
         },
       },
@@ -219,7 +243,9 @@ export class CartService {
       });
     } else {
       // Recalculate price in case sale status has changed
-      const activePrice = cartItem.item.prices.find((price) => price.isActive);
+      const activePrice = cartItem.variant.prices.find(
+        (price: any) => price.isActive
+      );
       let newPrice = cartItem.price; // Keep existing price as fallback
       console.log({ activePrice });
 
@@ -376,8 +402,8 @@ export class CartService {
   private formatCart(cart: any): CartDto {
     const items = cart.items.map((item: any) => ({
       id: item.id,
-      itemId: item.itemId,
-      item: item.item,
+      variantId: item.variantId,
+      variant: item.variant,
       quantity: item.quantity,
       price: item.price,
       createdAt: item.createdAt.toISOString(),
@@ -500,15 +526,15 @@ export class CartService {
         return { isValid: false, issues };
       }
 
-      // Check if all cart items reference valid items
+      // Check if all cart items reference valid variants
       for (const item of cart.items) {
-        const itemExists = await this.prisma.item.findUnique({
-          where: { id: item.itemId },
+        const variantExists = await this.prisma.productVariant.findUnique({
+          where: { id: item.variantId },
         });
 
-        if (!itemExists) {
+        if (!variantExists) {
           issues.push(
-            `Cart item ${item.id} references non-existent item ${item.itemId}`
+            `Cart item ${item.id} references non-existent variant ${item.variantId}`
           );
         }
       }
@@ -538,7 +564,7 @@ export class CartService {
       include: {
         items: {
           include: {
-            item: {
+            variant: {
               include: { prices: true },
             },
           },
@@ -552,7 +578,9 @@ export class CartService {
 
     // Update prices for all cart items
     for (const cartItem of cart.items) {
-      const activePrice = cartItem.item.prices.find((price) => price.isActive);
+      const activePrice = cartItem.variant.prices.find(
+        (price: any) => price.isActive
+      );
       let newPrice = cartItem.price; // Keep existing price as fallback
 
       if (activePrice) {

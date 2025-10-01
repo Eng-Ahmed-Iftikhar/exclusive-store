@@ -47,41 +47,44 @@ export class FavoritesController {
     return this.favoritesService.getUserFavorites(userId);
   }
 
-  @Post(':itemId')
-  @ApiOperation({ summary: 'Add item to favorites' })
+  @Post(':productId')
+  @ApiOperation({ summary: 'Add product to favorites' })
   @ApiParam({
-    name: 'itemId',
-    description: 'ID of the item to add to favorites',
+    name: 'productId',
+    description: 'ID of the product to add to favorites',
   })
   @ApiResponse({
     status: 201,
-    description: 'Item added to favorites successfully',
+    description: 'Product added to favorites successfully',
     schema: {
       type: 'object',
       properties: {
         id: { type: 'string' },
-        item: { type: 'object' },
+        product: { type: 'object' },
         createdAt: { type: 'string', format: 'date-time' },
       },
     },
   })
-  @ApiResponse({ status: 400, description: 'Item already in favorites' })
-  @ApiResponse({ status: 404, description: 'Item not found' })
+  @ApiResponse({ status: 400, description: 'Product already in favorites' })
+  @ApiResponse({ status: 404, description: 'Product not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async addToFavorites(@Param('itemId') itemId: string, @Request() req: any) {
+  async addToFavorites(
+    @Param('productId') productId: string,
+    @Request() req: any
+  ) {
     const userId = req.user.id;
-    return this.favoritesService.addToFavorites(userId, itemId);
+    return this.favoritesService.addToFavorites(userId, productId);
   }
 
-  @Delete(':itemId')
-  @ApiOperation({ summary: 'Remove item from favorites' })
+  @Delete(':productId')
+  @ApiOperation({ summary: 'Remove product from favorites' })
   @ApiParam({
-    name: 'itemId',
-    description: 'ID of the item to remove from favorites',
+    name: 'productId',
+    description: 'ID of the product to remove from favorites',
   })
   @ApiResponse({
     status: 200,
-    description: 'Item removed from favorites successfully',
+    description: 'Product removed from favorites successfully',
     schema: {
       type: 'object',
       properties: {
@@ -92,19 +95,19 @@ export class FavoritesController {
   @ApiResponse({ status: 404, description: 'Favorite not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async removeFromFavorites(
-    @Param('itemId') itemId: string,
+    @Param('productId') productId: string,
     @Request() req: any
   ) {
     const userId = req.user.id;
-    return this.favoritesService.removeFromFavorites(userId, itemId);
+    return this.favoritesService.removeFromFavorites(userId, productId);
   }
 
-  @Get('check/:itemId')
-  @ApiOperation({ summary: 'Check if item is in user favorites' })
-  @ApiParam({ name: 'itemId', description: 'ID of the item to check' })
+  @Get('check/:productId')
+  @ApiOperation({ summary: 'Check if product is in user favorites' })
+  @ApiParam({ name: 'productId', description: 'ID of the product to check' })
   @ApiResponse({
     status: 200,
-    description: 'Returns favorite status of the item',
+    description: 'Returns favorite status of the product',
     schema: {
       type: 'object',
       properties: {
@@ -114,10 +117,10 @@ export class FavoritesController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async checkFavoriteStatus(
-    @Param('itemId') itemId: string,
+    @Param('productId') productId: string,
     @Request() req: any
   ) {
     const userId = req.user.id;
-    return this.favoritesService.checkFavoriteStatus(userId, itemId);
+    return this.favoritesService.checkFavoriteStatus(userId, productId);
   }
 }

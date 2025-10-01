@@ -11,7 +11,7 @@ function SubcategoryView() {
   };
 
   const handleEdit = (subcategory: Subcategory) => {
-    navigate(`/content/subcategories/edit/${subcategory.id}`);
+    navigate(`/content/subcategories/${subcategory.id}/edit`);
   };
 
   const handleView = (subcategory: Subcategory) => {

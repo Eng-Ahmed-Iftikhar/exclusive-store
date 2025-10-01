@@ -387,10 +387,12 @@ export class SubcategoryService {
       include: {
         category: {
           select: {
+            id: true,
             name: true,
+            slug: true,
           },
         },
-        items: {
+        products: {
           select: {
             id: true,
           },
@@ -402,10 +404,10 @@ export class SubcategoryService {
       throw new NotFoundException(`Subcategory with ID ${id} not found`);
     }
 
-    // Check if subcategory has associated items
-    if (subcategory.items.length > 0) {
+    // Check if subcategory has associated products
+    if (subcategory.products.length > 0) {
       throw new ConflictException(
-        `Cannot delete subcategory '${subcategory.name}' because it has ${subcategory.items.length} associated item(s)`
+        `Cannot delete subcategory '${subcategory.name}' because it has ${subcategory.products.length} associated product(s)`
       );
     }
 

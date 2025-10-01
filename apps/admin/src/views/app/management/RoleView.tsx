@@ -11,7 +11,7 @@ const RoleView: React.FC = () => {
   };
 
   const handleEdit = (role: Role) => {
-    navigate(`/management/roles/edit/${role.id}`);
+    navigate(`/management/roles/${role.id}/edit`);
   };
 
   return (

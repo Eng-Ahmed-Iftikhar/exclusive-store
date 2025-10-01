@@ -217,7 +217,7 @@ model Category {
 
   // Relations
   subcategories Subcategory[]
-  items         Item[]
+  products      Product[]
   iconFile      File?   @relation("CategoryIcon", fields: [iconFileId], references: [id])
 
   @@map("categories")
@@ -237,17 +237,18 @@ model Subcategory {
 
   // Relations
   category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  items    Item[]
+  products Product[]
   iconFile File?   @relation("SubcategoryIcon", fields: [iconFileId], references: [id])
 
   @@map("subcategories")
 }
 
-model Item {
+// Products - Base product information
+model Product {
   id            String   @id @default(cuid())
   name          String
-  description  String?
-  sku           String?  @unique
+  description   String?
+  sku           String?  @unique  // Base SKU for the product
   isActive      Boolean  @default(true)
   isFeatured    Boolean  @default(false)
   sortOrder     Int      @default(0)
@@ -257,19 +258,40 @@ model Item {
   updatedAt     DateTime @updatedAt
 
   // Relations
-  category    Category?    @relation(fields: [categoryId], references: [id])
-  subcategory Subcategory? @relation(fields: [subcategoryId], references: [id])
-  prices      Price[]
-  stock       Stock?
-  images      ItemImage[]
-  reviews     Review[]
-  ratings     Rating[]
-  favorites   Favorite[]
+  category       Category?        @relation(fields: [categoryId], references: [id])
+  subcategory    Subcategory?     @relation(fields: [subcategoryId], references: [id])
+  variants       ProductVariant[] // Product can have multiple variants
+  images         ProductImage[]   // Product-level images
+  reviews        Review[]
+  ratings        Rating[]
+  favorites      Favorite[]
   flashSaleItems FlashSaleItem[]
-  cartItems   CartItem[]
-  orders      OrderItem[]
 
-  @@map("items")
+  @@map("products")
+}
+
+// Product Variants - Different versions of a product (e.g., size, color, material)
+model ProductVariant {
+  id         String   @id @default(cuid())
+  productId  String
+  sku        String   @unique  // Unique SKU for this variant
+  name       String   // Variant name (e.g., "Red - Large", "128GB - Black")
+  attributes Json?    // JSON object: { color: "Red", size: "Large", material: "Cotton" }
+  isDefault  Boolean  @default(false)  // Mark one variant as default
+  isActive   Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  product    Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  prices     Price[]        // Each variant has its own pricing
+  stock      Stock?         // Each variant has its own inventory
+  images     ProductImage[] // Each variant can have its own images
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@map("product_variants")
 }
 
 model Cart {
@@ -286,14 +308,14 @@ model Cart {
 model CartItem {
   id        String   @id @default(cuid())
   cartId    String
-  itemId    String
+  variantId String   // Links to product variant
   quantity  Int
   price     Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  cart    Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
   @@map("cart_items")
 }
@@ -348,21 +370,21 @@ model PaymentHistory {
 model OrderItem {
   id        String   @id @default(cuid())
   orderId   String
-  itemId    String
+  variantId String   // Links to product variant
   quantity  Int
   price     Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
   @@map("order_items")
 }
 
 model Price {
   id        String   @id @default(cuid())
-  itemId    String
+  variantId String   // Links to product variant
   price     Decimal  @db.Decimal(10, 2)
   salePrice Decimal? @db.Decimal(10, 2)
   currency  String   @default("USD")
@@ -373,31 +395,33 @@ model Price {
   updatedAt DateTime @updatedAt
 
   // Relations
-  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
   @@map("prices")
 }
 
 model Stock {
-  id            String   @id @default(cuid())
-  itemId        String   @unique
-  quantity      Int      @default(0)
-  reserved      Int      @default(0)
-  minThreshold  Int      @default(5)
-  maxThreshold  Int?
-  isInStock     Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  variantId    String   @unique  // Links to product variant
+  quantity     Int      @default(0)
+  reserved     Int      @default(0)
+  minThreshold Int      @default(5)
+  maxThreshold Int?
+  isInStock    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
-  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
   @@map("stock")
 }
 
-model ItemImage {
+// Product Images - Can link to either product or variant
+model ProductImage {
   id        String   @id @default(cuid())
-  itemId    String
+  productId String?  // Optional: for product-level images
+  variantId String?  // Optional: for variant-specific images
   fileId    String   // Reference to File model
   altText   String?
   isPrimary Boolean  @default(false)
@@ -406,58 +430,59 @@ model ItemImage {
   updatedAt DateTime @updatedAt
 
   // Relations
-  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  file File @relation("ItemImage", fields: [fileId], references: [id])
+  product Product?        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  file    File            @relation("ProductImage", fields: [fileId], references: [id])
 
-  @@map("item_images")
+  @@map("product_images")
 }
 
 model Review {
-  id        String   @id @default(cuid())
-  itemId    String
-  userId    String
-  title     String?
-  content   String
-  rating    Int      // 1-5 stars
-  isApproved Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  productId  String
+  userId     String
+  title      String?
+  content    String
+  rating     Int      // 1-5 stars
+  isApproved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   // Relations
-  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([itemId, userId])
+  @@unique([productId, userId])
   @@map("reviews")
 }
 
 model Rating {
   id        String   @id @default(cuid())
-  itemId    String
+  productId String
   userId    String
   rating    Int      // 1-5 stars
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([itemId, userId])
+  @@unique([productId, userId])
   @@map("ratings")
 }
 
 model Favorite {
   id        String   @id @default(cuid())
-  itemId    String
+  productId String
   userId    String
   createdAt DateTime @default(now())
 
   // Relations
-  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([itemId, userId])
+  @@unique([productId, userId])
   @@map("favorites")
 }
 
@@ -479,20 +504,20 @@ model FlashSale {
 }
 
 model FlashSaleItem {
-  id          String   @id @default(cuid())
-  flashSaleId String
-  itemId      String
-  salePrice   Decimal  @db.Decimal(10, 2)
-  originalPrice Decimal @db.Decimal(10, 2)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  flashSaleId   String
+  productId     String
+  salePrice     Decimal  @db.Decimal(10, 2)
+  originalPrice Decimal  @db.Decimal(10, 2)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   // Relations
   flashSale FlashSale @relation(fields: [flashSaleId], references: [id], onDelete: Cascade)
-  item      Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@unique([flashSaleId, itemId])
+  @@unique([flashSaleId, productId])
   @@map("flash_sale_items")
 }
 
@@ -515,9 +540,9 @@ model File {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  categoryIcons     Category[]     @relation("CategoryIcon")
-  subcategoryIcons  Subcategory[]  @relation("SubcategoryIcon")
-  itemImages        ItemImage[]    @relation("ItemImage")
+  categoryIcons     Category[]       @relation("CategoryIcon")
+  subcategoryIcons  Subcategory[]    @relation("SubcategoryIcon")
+  productImages     ProductImage[]   @relation("ProductImage")
 
   @@map("files")
 }

@@ -10,7 +10,7 @@ function TeamsView() {
   };
 
   const handleEdit = (team: Team) => {
-    navigate(`/management/teams/edit/${team.id}`);
+    navigate(`/management/teams/${team.id}/edit`);
   };
 
   return (

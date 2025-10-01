@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AdminLayout from '../layouts/app/Layout';
+import ProductCreationLayout from '../layouts/ProductCreationLayout';
 import Dashboard from '@/pages/app/DashboardPage';
 import PermissionPage from '@/pages/app/management/PermissionPage';
 import CreatePermissionPage from '@/pages/app/management/CreatePermissionPage';
@@ -25,6 +26,10 @@ import EditSubcategoryPage from '@/pages/app/contents/EditSubcategoryPage';
 import ProductPage from '@/pages/app/contents/ProductPage';
 import ProductDetailPage from '@/pages/app/contents/ProductDetailPage';
 import CreateProductPage from '@/pages/app/contents/CreateProductPage';
+import CreateProductBasicInfoPage from '@/pages/app/contents/products/CreateProductBasicInfoPage';
+import CreateProductVariantsPage from '@/pages/app/contents/products/CreateProductVariantsPage';
+import CreateProductImagesPage from '@/pages/app/contents/products/CreateProductImagesPage';
+import CreateProductReviewPage from '@/pages/app/contents/products/CreateProductReviewPage';
 import EditProductPage from '@/pages/app/contents/EditProductPage';
 import Login from '@/pages/auth/LoginPage';
 import SetupPasswordPage from '@/pages/auth/SetupPasswordPage';
@@ -59,6 +64,10 @@ const COMPONENT_MAP = {
   Products: ProductPage,
   ProductDetail: ProductDetailPage,
   CreateProduct: CreateProductPage,
+  CreateProductBasic: CreateProductBasicInfoPage,
+  CreateProductVariants: CreateProductVariantsPage,
+  CreateProductImages: CreateProductImagesPage,
+  CreateProductReview: CreateProductReviewPage,
   EditProduct: EditProductPage,
   Login: Login,
   SetupPassword: SetupPasswordPage,
@@ -68,6 +77,14 @@ const COMPONENT_MAP = {
 
 // Main Router Component
 const AppRouter: React.FC = () => {
+  // Product creation routes that need ProductCreationContext
+  const productCreationRoutes = [
+    ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CREATE_PRODUCT_BASIC,
+    ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CREATE_PRODUCT_VARIANTS,
+    ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CREATE_PRODUCT_IMAGES,
+    ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CREATE_PRODUCT_REVIEW,
+  ];
+
   return (
     <Routes>
       {/* Public Routes */}
@@ -87,8 +104,29 @@ const AppRouter: React.FC = () => {
         );
       })}
 
-      {/* Individual Admin Pages */}
-      {ADMIN_ROUTES.map((route) => {
+      {/* Product Creation Routes with Context Provider */}
+      <Route
+        element={
+          <ProtectedRoute requireAuth={true} redirectTo={ROUTES.LOGIN}>
+            <ProductCreationLayout />
+          </ProtectedRoute>
+        }
+      >
+        {ADMIN_ROUTES.filter((route) =>
+          productCreationRoutes.includes(route.path)
+        ).map((route) => {
+          const Component =
+            COMPONENT_MAP[route.element as keyof typeof COMPONENT_MAP];
+          return (
+            <Route key={route.path} path={route.path} element={<Component />} />
+          );
+        })}
+      </Route>
+
+      {/* Other Admin Pages (without ProductCreationContext) */}
+      {ADMIN_ROUTES.filter(
+        (route) => !productCreationRoutes.includes(route.path)
+      ).map((route) => {
         const Component =
           COMPONENT_MAP[route.element as keyof typeof COMPONENT_MAP];
 

@@ -13,7 +13,7 @@ import { Type } from 'class-transformer';
 
 export class CreateFlashSaleItemDto {
   @IsString()
-  itemId!: string;
+  productId!: string;
 
   @IsInt()
   @Min(0)

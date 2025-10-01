@@ -8,11 +8,13 @@ export class CartRecoveryService {
   /**
    * Attempts to recover a cart by finding the cart item and determining its actual cart
    */
-  async recoverCartFromItem(cartItemId: string): Promise<{ cartId: string; cartExists: boolean } | null> {
+  async recoverCartFromItem(
+    cartItemId: string
+  ): Promise<{ cartId: string; cartExists: boolean } | null> {
     try {
       const cartItem = await this.prisma.cartItem.findUnique({
         where: { id: cartItemId },
-        include: { cart: true }
+        include: { cart: true },
       });
 
       if (!cartItem) {
@@ -20,15 +22,19 @@ export class CartRecoveryService {
       }
 
       const cartExists = await this.prisma.cart.findUnique({
-        where: { id: cartItem.cartId }
+        where: { id: cartItem.cartId },
       });
 
       return {
         cartId: cartItem.cartId,
-        cartExists: !!cartExists
+        cartExists: !!cartExists,
       };
     } catch (error) {
-      console.error(`[CartRecoveryService] Error recovering cart from item: ${error instanceof Error ? error.message : String(error)}`);
+      console.error(
+        `[CartRecoveryService] Error recovering cart from item: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
       return null;
     }
   }
@@ -40,12 +46,16 @@ export class CartRecoveryService {
     try {
       const recentCart = await this.prisma.cart.findFirst({
         where: { userId },
-        orderBy: { updatedAt: 'desc' }
+        orderBy: { updatedAt: 'desc' },
       });
 
       return recentCart?.id || null;
     } catch (error) {
-      console.error(`[CartRecoveryService] Error finding user recent cart: ${error instanceof Error ? error.message : String(error)}`);
+      console.error(
+        `[CartRecoveryService] Error finding user recent cart: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
       return null;
     }
   }
@@ -57,12 +67,16 @@ export class CartRecoveryService {
     try {
       const recentCart = await this.prisma.cart.findFirst({
         where: { userId: null },
-        orderBy: { updatedAt: 'desc' }
+        orderBy: { updatedAt: 'desc' },
       });
 
       return recentCart?.id || null;
     } catch (error) {
-      console.error(`[CartRecoveryService] Error finding recent guest cart: ${error instanceof Error ? error.message : String(error)}`);
+      console.error(
+        `[CartRecoveryService] Error finding recent guest cart: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
       return null;
     }
   }
@@ -70,11 +84,14 @@ export class CartRecoveryService {
   /**
    * Creates a new cart and migrates items from an old cart if possible
    */
-  async createRecoveryCart(userId?: string, oldCartId?: string): Promise<{ cartId: string; migratedItems: number }> {
+  async createRecoveryCart(
+    userId?: string,
+    oldCartId?: string
+  ): Promise<{ cartId: string; migratedItems: number }> {
     try {
       // Create new cart
       const newCart = await this.prisma.cart.create({
-        data: { userId }
+        data: { userId },
       });
 
       let migratedItems = 0;
@@ -82,7 +99,7 @@ export class CartRecoveryService {
       // If we have an old cart ID, try to migrate items
       if (oldCartId) {
         const oldCartItems = await this.prisma.cartItem.findMany({
-          where: { cartId: oldCartId }
+          where: { cartId: oldCartId },
         });
 
         if (oldCartItems.length > 0) {
@@ -92,14 +109,18 @@ export class CartRecoveryService {
               await this.prisma.cartItem.create({
                 data: {
                   cartId: newCart.id,
-                  itemId: item.itemId,
+                  variantId: item.variantId,
                   quantity: item.quantity,
-                  price: item.price
-                }
+                  price: item.price,
+                },
               });
               migratedItems++;
             } catch (error) {
-              console.warn(`[CartRecoveryService] Failed to migrate item ${item.id}: ${error instanceof Error ? error.message : String(error)}`);
+              console.warn(
+                `[CartRecoveryService] Failed to migrate item ${item.id}: ${
+                  error instanceof Error ? error.message : String(error)
+                }`
+              );
             }
           }
         }
@@ -107,7 +128,11 @@ export class CartRecoveryService {
 
       return { cartId: newCart.id, migratedItems };
     } catch (error) {
-      console.error(`[CartRecoveryService] Error creating recovery cart: ${error instanceof Error ? error.message : String(error)}`);
+      console.error(
+        `[CartRecoveryService] Error creating recovery cart: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
       throw error;
     }
   }

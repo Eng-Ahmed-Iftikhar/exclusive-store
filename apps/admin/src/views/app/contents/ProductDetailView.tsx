@@ -26,7 +26,7 @@ const ProductDetailView: React.FC = () => {
   });
 
   const handleEdit = () => {
-    navigate(`/content/products/edit/${id}`);
+    navigate(`/content/products/${id}/edit`);
   };
 
   const handleBack = () => {

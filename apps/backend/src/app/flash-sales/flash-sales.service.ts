@@ -60,12 +60,11 @@ export class FlashSalesService {
         items: {
           where: { isActive: true },
           include: {
-            item: {
+            product: {
               include: {
                 images: {
                   orderBy: { sortOrder: 'asc' },
                 },
-                stock: true,
                 reviews: {
                   where: { isApproved: true },
                 },
@@ -97,12 +96,18 @@ export class FlashSalesService {
         items: {
           where: { isActive: true },
           include: {
-            item: {
+            product: {
               include: {
-                images: {
-                  orderBy: { sortOrder: 'asc' },
+                variants: {
+                  include: {
+                    images: {
+                      include: { file: true },
+                      orderBy: { sortOrder: 'asc' },
+                    },
+                    stock: true,
+                    prices: true,
+                  },
                 },
-                stock: true,
                 reviews: {
                   where: { isApproved: true },
                 },
@@ -156,12 +161,18 @@ export class FlashSalesService {
         flashSaleId,
       },
       include: {
-        item: {
+        product: {
           include: {
-            images: {
-              orderBy: { sortOrder: 'asc' },
+            variants: {
+              include: {
+                images: {
+                  include: { file: true },
+                  orderBy: { sortOrder: 'asc' },
+                },
+                stock: true,
+                prices: true,
+              },
             },
-            stock: true,
             reviews: {
               where: { isApproved: true },
             },
@@ -181,12 +192,18 @@ export class FlashSalesService {
       where: { id },
       data: updateFlashSaleItemDto,
       include: {
-        item: {
+        product: {
           include: {
-            images: {
-              orderBy: { sortOrder: 'asc' },
+            variants: {
+              include: {
+                images: {
+                  include: { file: true },
+                  orderBy: { sortOrder: 'asc' },
+                },
+                stock: true,
+                prices: true,
+              },
             },
-            stock: true,
             reviews: {
               where: { isApproved: true },
             },
@@ -211,12 +228,18 @@ export class FlashSalesService {
         items: {
           where: { isActive: true },
           include: {
-            item: {
+            product: {
               include: {
-                images: {
-                  orderBy: { sortOrder: 'asc' },
+                variants: {
+                  include: {
+                    images: {
+                      include: { file: true },
+                      orderBy: { sortOrder: 'asc' },
+                    },
+                    stock: true,
+                    prices: true,
+                  },
                 },
-                stock: true,
                 reviews: {
                   where: { isApproved: true },
                 },
@@ -239,91 +262,54 @@ export class FlashSalesService {
       throw new NotFoundException('Flash sale not found');
     }
 
-    return flashSale.items?.map((item: any) => ({
-      id: item.item.id,
-      name: item.item.name,
-      description: item.item.description,
-      sku: item.item.sku,
-      isActive: item.item.isActive,
-      isFeatured: item.item.isFeatured,
-      sortOrder: item.item.sortOrder,
-      categoryId: item.item.categoryId,
-      subcategoryId: item.item.subcategoryId,
-      createdAt: item.item.createdAt,
-      updatedAt: item.item.updatedAt,
-      category: item.item.category,
-      subcategory: item.item.subcategory,
-      prices: [{
-        id: 'flash-sale-price',
-        itemId: item.item.id,
-        price: Number(item.currentPrice),
-        salePrice: Number(item.salePrice),
-        currency: 'USD',
-        isActive: true,
-        validFrom: flashSale.startDate,
-        validTo: flashSale.endDate,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-      }],
-      stock: item.item.stock ? {
-        id: item.item.stock.id,
-        itemId: item.item.stock.itemId,
-        quantity: item.item.stock.quantity,
-        reserved: item.item.stock.reserved,
-        minThreshold: item.item.stock.minThreshold,
-        maxThreshold: item.item.stock.maxThreshold,
-        isInStock: item.item.stock.isInStock,
-        createdAt: item.item.stock.createdAt,
-        updatedAt: item.item.stock.updatedAt,
-      } : undefined,
-      images: item.item.images?.map((img: any) => ({
-        id: img.id,
-        itemId: img.itemId,
-        url: img.url,
-        altText: img.altText,
-        isPrimary: img.isPrimary,
-        sortOrder: img.sortOrder,
-        createdAt: img.createdAt,
-        updatedAt: img.updatedAt,
-      })),
-      reviews: item.item.reviews?.map((review: any) => ({
-        id: review.id,
-        itemId: review.itemId,
-        userId: review.userId,
-        title: review.title,
-        content: review.content,
-        rating: review.rating,
-        isApproved: review.isApproved,
-        createdAt: review.createdAt,
-        updatedAt: review.updatedAt,
-      })),
-      ratings: item.item.ratings?.map((rating: any) => ({
-        id: rating.id,
-        itemId: rating.itemId,
-        userId: rating.userId,
-        rating: rating.rating,
-        createdAt: rating.createdAt,
-        updatedAt: rating.updatedAt,
-      })),
-      favorites: item.item.favorites?.map((favorite: any) => ({
-        id: favorite.id,
-        itemId: favorite.itemId,
-        userId: favorite.userId,
-        createdAt: favorite.createdAt,
-        updatedAt: favorite.updatedAt,
-      })),
-      averageRating: item.item.ratings?.length > 0 
-        ? Math.round((item.item.ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / item.item.ratings.length) * 10) / 10
-        : 0,
-      totalReviews: item.item.reviews?.length || 0,
-      isFavorite: item.item.favorites?.length > 0,
-      currentPrice: Number(item.currentPrice),
-      salePrice: Number(item.salePrice),
-      isOnSale: true, // Flash sale items are always on sale
-      flashSaleId: flashSale.id,
-      flashSaleDiscount: flashSale.discount,
-      timeRemaining: this.calculateTimeRemaining(flashSale.endDate),
-    })) || [];
+    // Return simplified product data for flash sales
+    return (
+      flashSale.items?.map((flashSaleItem: any) => {
+        const product = flashSaleItem.product;
+        const defaultVariant = product.variants?.[0]; // Use first variant
+
+        return {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          sku: product.sku,
+          isActive: product.isActive,
+          isFeatured: product.isFeatured,
+          sortOrder: product.sortOrder,
+          categoryId: product.categoryId,
+          subcategoryId: product.subcategoryId,
+          createdAt: product.createdAt,
+          updatedAt: product.updatedAt,
+          category: product.category,
+          subcategory: product.subcategory,
+          prices: defaultVariant?.prices || [],
+          stock: defaultVariant?.stock,
+          images: defaultVariant?.images || [],
+          reviews: product.reviews || [],
+          ratings: product.ratings || [],
+          favorites: product.favorites || [],
+          averageRating:
+            product.ratings?.length > 0
+              ? Math.round(
+                  (product.ratings.reduce(
+                    (sum: number, r: any) => sum + r.rating,
+                    0
+                  ) /
+                    product.ratings.length) *
+                    10
+                ) / 10
+              : 0,
+          totalReviews: product.reviews?.length || 0,
+          isFavorite: product.favorites?.length > 0,
+          currentPrice: Number(flashSaleItem.originalPrice),
+          salePrice: Number(flashSaleItem.salePrice),
+          isOnSale: true,
+          flashSaleId: flashSale.id,
+          flashSaleDiscount: flashSale.discount,
+          timeRemaining: this.calculateTimeRemaining(flashSale.endDate),
+        };
+      }) || []
+    );
   }
 
   private calculateTimeRemaining(endDate: Date): {
@@ -352,31 +338,36 @@ export class FlashSalesService {
   private mapToFlashSaleItemResponse(
     flashSaleItem: any
   ): FlashSaleItemResponseDto {
+    const product = flashSaleItem.product;
+    const defaultVariant = product.variants?.[0];
+
     return {
       id: flashSaleItem.id,
-      itemId: flashSaleItem.itemId,
+      itemId: flashSaleItem.productId,
       salePrice: Number(flashSaleItem.salePrice),
-      currentPrice: Number(flashSaleItem.currentPrice),
+      currentPrice: Number(flashSaleItem.originalPrice),
       isActive: flashSaleItem.isActive,
       createdAt: flashSaleItem.createdAt,
       updatedAt: flashSaleItem.updatedAt,
 
-      name: flashSaleItem.item.name,
-      description: flashSaleItem.item.description,
-      images: flashSaleItem.item.images.map((img: any) => ({
-        url: img.url,
-        altText: img.altText,
-        isPrimary: img.isPrimary,
-      })),
-      stock: flashSaleItem.item.stock
+      name: product.name,
+      description: product.description,
+      images:
+        defaultVariant?.images?.map((img: any) => ({
+          url: img.file?.url || img.file?.secureUrl,
+          altText: img.altText,
+          isPrimary: img.isPrimary,
+        })) || [],
+      stock: defaultVariant?.stock
         ? {
-            quantity: flashSaleItem.item.stock.quantity,
-            isInStock: flashSaleItem.item.stock.isInStock,
+            quantity: defaultVariant.stock.quantity,
+            isInStock: defaultVariant.stock.isInStock,
           }
         : undefined,
-      reviews: flashSaleItem.item.reviews.map((review: any) => ({
-        rating: review.rating,
-      })),
+      reviews:
+        product.reviews?.map((review: any) => ({
+          rating: review.rating,
+        })) || [],
     };
   }
 
@@ -391,92 +382,51 @@ export class FlashSalesService {
       discount: flashSale.discount,
       createdAt: flashSale.createdAt,
       updatedAt: flashSale.updatedAt,
-      items: flashSale.items?.map((item: any) => ({
-        id: item.item.id,
-        name: item.item.name,
-        description: item.item.description,
-        sku: item.item.sku,
-        isActive: item.item.isActive,
-        isFeatured: item.item.isFeatured,
-        sortOrder: item.item.sortOrder,
-        categoryId: item.item.categoryId,
-        subcategoryId: item.item.subcategoryId,
-        createdAt: item.item.createdAt,
-        updatedAt: item.item.updatedAt,
-        category: item.item.category,
-        subcategory: item.item.subcategory,
-        prices: [{
-          id: 'flash-sale-price',
-          itemId: item.item.id,
-          price: Number(item.currentPrice),
-          salePrice: Number(item.salePrice),
-          currency: 'USD',
-          isActive: true,
-          validFrom: flashSale.startDate,
-          validTo: flashSale.endDate,
-          createdAt: item.createdAt,
-          updatedAt: item.updatedAt,
-        }],
-        stock: item.item.stock ? {
-          id: item.item.stock.id,
-          itemId: item.item.stock.itemId,
-          quantity: item.item.stock.quantity,
-          reserved: item.item.stock.reserved,
-          minThreshold: item.item.stock.minThreshold,
-          maxThreshold: item.item.stock.maxThreshold,
-          isInStock: item.item.stock.isInStock,
-          createdAt: item.item.stock.createdAt,
-          updatedAt: item.item.stock.updatedAt,
-        } : undefined,
-        images: item.item.images?.map((img: any) => ({
-          id: img.id,
-          itemId: img.itemId,
-          url: img.url,
-          altText: img.altText,
-          isPrimary: img.isPrimary,
-          sortOrder: img.sortOrder,
-          createdAt: img.createdAt,
-          updatedAt: img.updatedAt,
-        })),
-        reviews: item.item.reviews?.map((review: any) => ({
-          id: review.id,
-          itemId: review.itemId,
-          userId: review.userId,
-          title: review.title,
-          content: review.content,
-          rating: review.rating,
-          isApproved: review.isApproved,
-          createdAt: review.createdAt,
-          updatedAt: review.updatedAt,
-        })),
-        ratings: item.item.ratings?.map((rating: any) => ({
-          id: rating.id,
-          itemId: rating.itemId,
-          userId: rating.userId,
-          rating: rating.rating,
-          createdAt: rating.createdAt,
-          updatedAt: rating.updatedAt,
-        })),
-        favorites: item.item.favorites?.map((favorite: any) => ({
-          id: favorite.id,
-          itemId: favorite.itemId,
-          userId: favorite.userId,
-          createdAt: favorite.createdAt,
-          updatedAt: favorite.updatedAt,
-        })),
-        averageRating: item.item.ratings?.length > 0 
-          ? Math.round((item.item.ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / item.item.ratings.length) * 10) / 10
-          : 0,
-        totalReviews: item.item.reviews?.length || 0,
-        isFavorite: item.item.favorites?.length > 0,
-        currentPrice: Number(item.currentPrice ) || this.calculateOriginalPrice(Number(item.salePrice), flashSale.discount),
-        salePrice: Number(item.salePrice) || item.item.prices.find((price: any) => price.active)?.salePrice,
-        isOnSale: true, // Flash sale items are always on sale
-        flashSaleId: flashSale.id,
-        flashSaleDiscount: flashSale.discount,
-        timeRemaining: this.calculateTimeRemaining(flashSale.endDate),
-      })),
-    };
+      items: flashSale.items?.map((flashSaleItem: any) => {
+        const product = flashSaleItem.product;
+        const defaultVariant = product.variants?.[0];
 
+        return {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          sku: product.sku,
+          isActive: product.isActive,
+          isFeatured: product.isFeatured,
+          sortOrder: product.sortOrder,
+          categoryId: product.categoryId,
+          subcategoryId: product.subcategoryId,
+          createdAt: product.createdAt,
+          updatedAt: product.updatedAt,
+          category: product.category,
+          subcategory: product.subcategory,
+          prices: defaultVariant?.prices || [],
+          stock: defaultVariant?.stock,
+          images: defaultVariant?.images || [],
+          reviews: product.reviews || [],
+          ratings: product.ratings || [],
+          favorites: product.favorites || [],
+          averageRating:
+            product.ratings?.length > 0
+              ? Math.round(
+                  (product.ratings.reduce(
+                    (sum: number, r: any) => sum + r.rating,
+                    0
+                  ) /
+                    product.ratings.length) *
+                    10
+                ) / 10
+              : 0,
+          totalReviews: product.reviews?.length || 0,
+          isFavorite: product.favorites?.length > 0,
+          currentPrice: Number(flashSaleItem.originalPrice),
+          salePrice: Number(flashSaleItem.salePrice),
+          isOnSale: true,
+          flashSaleId: flashSale.id,
+          flashSaleDiscount: flashSale.discount,
+          timeRemaining: this.calculateTimeRemaining(flashSale.endDate),
+        };
+      }),
+    };
   }
 }

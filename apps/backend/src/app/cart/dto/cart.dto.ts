@@ -2,9 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsString, Max, Min } from 'class-validator';
 
 export class AddToCartDto {
-  @ApiProperty({ description: 'Item ID to add to cart' })
+  @ApiProperty({ description: 'Variant ID to add to cart' })
   @IsString()
-  itemId!: string;
+  variantId!: string;
 
   @ApiProperty({ description: 'Quantity to add', minimum: 1, maximum: 10 })
   @IsNumber()
@@ -14,7 +14,11 @@ export class AddToCartDto {
 }
 
 export class UpdateCartItemDto {
-  @ApiProperty({ description: 'New quantity for the cart item', minimum: 0, maximum: 10 })
+  @ApiProperty({
+    description: 'New quantity for the cart item',
+    minimum: 0,
+    maximum: 10,
+  })
   @IsNumber()
   @Min(0)
   @Max(10)
@@ -26,10 +30,10 @@ export class CartItemDto {
   id!: string;
 
   @ApiProperty()
-  itemId!: string;
+  variantId!: string;
 
   @ApiProperty()
-  item!: any;
+  variant!: any;
 
   @ApiProperty()
   quantity!: number;

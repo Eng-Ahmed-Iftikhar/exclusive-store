@@ -7,234 +7,331 @@ import {
   Body,
   Param,
   Query,
+  UseGuards,
   HttpCode,
   HttpStatus,
-  UseGuards,
   Request,
 } from '@nestjs/common';
-import { ProductsService } from './products.service';
 import {
-  CreateItemDto,
-  UpdateItemDto,
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBearerAuth,
+  ApiBody,
+} from '@nestjs/swagger';
+import { ProductsService } from './products.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import {
+  CreateProductDto,
+  UpdateProductDto,
+  ProductResponseDto,
+} from './dto/product.dto';
+import {
+  CreateVariantDto,
+  UpdateVariantDto,
+  VariantResponseDto,
   CreatePriceDto,
   UpdatePriceDto,
+  PriceResponseDto,
   CreateStockDto,
   UpdateStockDto,
-  CreateItemImageDto,
-  UpdateItemImageDto,
-  CreateReviewDto,
-  UpdateReviewDto,
-  AdminUpdateReviewDto,
-  CreateRatingDto,
-  UpdateRatingDto,
-  CreateFavoriteDto,
-  ItemResponseDto,
-  PriceResponseDto,
   StockResponseDto,
-  ItemImageResponseDto,
-  ReviewResponseDto,
-  RatingResponseDto,
-  FavoriteResponseDto,
-  ItemQueryDto,
-} from './dto/item.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+  CreateProductImageDto,
+  UpdateProductImageDto,
+  ProductImageResponseDto,
+} from './dto/variant.dto';
 
-@Controller('products')
 @ApiTags('Products')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
+@Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
-  // ===== PRODUCT ENDPOINTS =====
+  // ==================== PRODUCT ENDPOINTS ====================
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Create a new product',
+    description: 'Create a new product with basic information',
+  })
+  @ApiBody({ type: CreateProductDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Product created successfully',
+    type: ProductResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  @ApiResponse({ status: 409, description: 'SKU already exists' })
   async createProduct(
-    @Body() createItemDto: CreateItemDto,
+    @Body() createProductDto: CreateProductDto,
     @Request() req: any
-  ): Promise<ItemResponseDto> {
-    const userId = req.user?.id;
-    return this.productsService.createItem(createItemDto, userId);
+  ): Promise<ProductResponseDto> {
+    return this.productsService.createProduct(createProductDto, req.user?.id);
   }
 
   @Get()
+  @ApiOperation({
+    summary: 'Get all products',
+    description:
+      'Retrieve a paginated list of products with search functionality',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page',
+    example: 20,
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search term',
+    example: 't-shirt',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Products retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        products: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/ProductResponseDto' },
+        },
+        total: { type: 'number' },
+        page: { type: 'number' },
+        limit: { type: 'number' },
+        totalPages: { type: 'number' },
+      },
+    },
+  })
   async getAllProducts(
-    @Query() query: ItemQueryDto,
-    @Request() req: any
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string
   ): Promise<{
-    products: ItemResponseDto[];
+    products: ProductResponseDto[];
     total: number;
     page: number;
     limit: number;
     totalPages: number;
   }> {
-    const userId = req.user?.id;
-    const result = await this.productsService.getAllItems(query, userId);
-    return {
-      products: result.items,
-      total: result.total,
-      page: result.page,
-      limit: result.limit,
-      totalPages: result.totalPages,
-    };
-  }
-
-  // ===== FEATURED PRODUCTS =====
-
-  @Get('featured')
-  async getFeaturedProducts(@Request() req: any): Promise<ItemResponseDto[]> {
-    const userId = req.user?.id;
-    return this.productsService.getFeaturedItems(userId, 10);
-  }
-
-  @Get('best-selling')
-  async getBestSellingProducts(
-    @Request() req: any
-  ): Promise<ItemResponseDto[]> {
-    const userId = req.user?.id;
-    return this.productsService.getBestSellingItems(userId, 10);
-  }
-
-  @Get('top-rated')
-  async getTopRatedProducts(
-    @Request() req: any,
-    @Query('minRating') minRating?: string,
-    @Query('limit') limit?: string
-  ): Promise<ItemResponseDto[]> {
-    const userId = req.user?.id;
-    const minRatingNum = minRating ? parseInt(minRating) : 4;
-    const limitNum = limit ? parseInt(limit) : 10;
-    return this.productsService.getItemsByRating(
-      userId,
-      minRatingNum,
-      limitNum
+    return this.productsService.getAllProducts(
+      parseInt(page || '1'),
+      parseInt(limit || '20'),
+      search || ''
     );
-  }
-
-  @Get('new-arrivals')
-  async getNewArrivalProducts(
-    @Request() req: any,
-    @Query('limit') limit?: string
-  ): Promise<ItemResponseDto[]> {
-    const userId = req.user?.id;
-    const limitNum = limit ? parseInt(limit) : 8;
-    return this.productsService.getNewArrivalItems(userId, limitNum);
-  }
-
-  // ===== CATEGORY PRODUCTS =====
-
-  @Get('category/:categoryId')
-  async getProductsByCategory(
-    @Param('categoryId') categoryId: string,
-    @Query() query: Omit<ItemQueryDto, 'categoryId'>,
-    @Request() req: any
-  ): Promise<{
-    products: ItemResponseDto[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  }> {
-    const userId = req.user?.id;
-    const result = await this.productsService.getAllItems(
-      { ...query, categoryId },
-      userId
-    );
-    return {
-      products: result.items,
-      total: result.total,
-      page: result.page,
-      limit: result.limit,
-      totalPages: result.totalPages,
-    };
-  }
-
-  @Get('subcategory/:subcategoryId')
-  async getProductsBySubcategory(
-    @Param('subcategoryId') subcategoryId: string,
-    @Query() query: Omit<ItemQueryDto, 'subcategoryId'>,
-    @Request() req: any
-  ): Promise<{
-    products: ItemResponseDto[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  }> {
-    const userId = req.user?.id;
-    const result = await this.productsService.getAllItems(
-      { ...query, subcategoryId },
-      userId
-    );
-    return {
-      products: result.items,
-      total: result.total,
-      page: result.page,
-      limit: result.limit,
-      totalPages: result.totalPages,
-    };
-  }
-
-  // ===== SEARCH PRODUCTS =====
-
-  @Get('search')
-  async searchProducts(
-    @Query() query: ItemQueryDto,
-    @Request() req: any
-  ): Promise<{
-    products: ItemResponseDto[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  }> {
-    const userId = req.user?.id;
-    const result = await this.productsService.getAllItems(query, userId);
-    return {
-      products: result.items,
-      total: result.total,
-      page: result.page,
-      limit: result.limit,
-      totalPages: result.totalPages,
-    };
   }
 
   @Get(':id')
-  async getProductById(
-    @Param('id') id: string,
-    @Request() req: any
-  ): Promise<ItemResponseDto> {
-    const userId = req.user?.id;
-    return this.productsService.getItemById(id, userId);
+  @ApiOperation({
+    summary: 'Get product by ID',
+    description:
+      'Retrieve detailed product information including variants, images, prices, and stock',
+  })
+  @ApiParam({ name: 'id', description: 'Product ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Product retrieved successfully',
+    type: ProductResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Product not found' })
+  async getProductById(@Param('id') id: string): Promise<ProductResponseDto> {
+    return this.productsService.getProductById(id);
   }
 
   @Put(':id')
+  @ApiOperation({
+    summary: 'Update product',
+    description: 'Update product information',
+  })
+  @ApiParam({ name: 'id', description: 'Product ID' })
+  @ApiBody({ type: UpdateProductDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Product updated successfully',
+    type: ProductResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Product not found' })
+  @ApiResponse({ status: 409, description: 'SKU conflict' })
   async updateProduct(
     @Param('id') id: string,
-    @Body() updateItemDto: UpdateItemDto
-  ): Promise<ItemResponseDto> {
-    return this.productsService.updateItem(id, updateItemDto);
+    @Body() updateProductDto: UpdateProductDto
+  ): Promise<ProductResponseDto> {
+    return this.productsService.updateProduct(id, updateProductDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Delete product',
+    description:
+      'Delete a product and all its variants, prices, stock, and images',
+  })
+  @ApiParam({ name: 'id', description: 'Product ID' })
+  @ApiResponse({ status: 204, description: 'Product deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Product not found' })
   async deleteProduct(@Param('id') id: string): Promise<void> {
-    return this.productsService.deleteItem(id);
+    return this.productsService.deleteProduct(id);
   }
 
-  // ===== PRICE ENDPOINTS =====
+  // ==================== VARIANT ENDPOINTS ====================
+
+  @Post('variants')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Create a product variant',
+    description:
+      'Create a new variant for a product with specific attributes (color, size, etc.)',
+  })
+  @ApiBody({ type: CreateVariantDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Variant created successfully',
+    type: VariantResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  @ApiResponse({ status: 404, description: 'Product not found' })
+  @ApiResponse({ status: 409, description: 'Variant SKU already exists' })
+  async createVariant(
+    @Body() createVariantDto: CreateVariantDto,
+    @Request() req: any
+  ): Promise<VariantResponseDto> {
+    return this.productsService.createVariant(createVariantDto, req.user?.id);
+  }
+
+  @Get(':productId/variants')
+  @ApiOperation({
+    summary: 'Get product variants',
+    description: 'Retrieve all variants for a specific product',
+  })
+  @ApiParam({ name: 'productId', description: 'Product ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Variants retrieved successfully',
+    type: [VariantResponseDto],
+  })
+  async getVariantsByProduct(
+    @Param('productId') productId: string
+  ): Promise<VariantResponseDto[]> {
+    return this.productsService.getVariantsByProduct(productId);
+  }
+
+  @Get('variants/:id')
+  @ApiOperation({
+    summary: 'Get variant by ID',
+    description:
+      'Retrieve detailed variant information including prices, stock, and images',
+  })
+  @ApiParam({ name: 'id', description: 'Variant ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Variant retrieved successfully',
+    type: VariantResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Variant not found' })
+  async getVariantById(@Param('id') id: string): Promise<VariantResponseDto> {
+    return this.productsService.getVariantById(id);
+  }
+
+  @Put('variants/:id')
+  @ApiOperation({
+    summary: 'Update variant',
+    description: 'Update variant information and attributes',
+  })
+  @ApiParam({ name: 'id', description: 'Variant ID' })
+  @ApiBody({ type: UpdateVariantDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Variant updated successfully',
+    type: VariantResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Variant not found' })
+  @ApiResponse({ status: 409, description: 'SKU conflict' })
+  async updateVariant(
+    @Param('id') id: string,
+    @Body() updateVariantDto: UpdateVariantDto
+  ): Promise<VariantResponseDto> {
+    return this.productsService.updateVariant(id, updateVariantDto);
+  }
+
+  @Delete('variants/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Delete variant',
+    description:
+      'Delete a product variant and its associated prices, stock, and images',
+  })
+  @ApiParam({ name: 'id', description: 'Variant ID' })
+  @ApiResponse({ status: 204, description: 'Variant deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Variant not found' })
+  async deleteVariant(@Param('id') id: string): Promise<void> {
+    return this.productsService.deleteVariant(id);
+  }
+
+  // ==================== PRICE ENDPOINTS ====================
 
   @Post('prices')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Create price for variant',
+    description: 'Add pricing information to a product variant',
+  })
+  @ApiBody({ type: CreatePriceDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Price created successfully',
+    type: PriceResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Variant not found' })
   async createPrice(
     @Body() createPriceDto: CreatePriceDto
   ): Promise<PriceResponseDto> {
     return this.productsService.createPrice(createPriceDto);
   }
 
+  @Get('variants/:variantId/prices')
+  @ApiOperation({
+    summary: 'Get prices for variant',
+    description: 'Retrieve all pricing records for a specific variant',
+  })
+  @ApiParam({ name: 'variantId', description: 'Variant ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Prices retrieved successfully',
+    type: [PriceResponseDto],
+  })
+  async getPricesByVariant(
+    @Param('variantId') variantId: string
+  ): Promise<PriceResponseDto[]> {
+    return this.productsService.getPricesByVariant(variantId);
+  }
+
   @Put('prices/:id')
+  @ApiOperation({
+    summary: 'Update price',
+    description: 'Update pricing information',
+  })
+  @ApiParam({ name: 'id', description: 'Price ID' })
+  @ApiBody({ type: UpdatePriceDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Price updated successfully',
+    type: PriceResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Price not found' })
   async updatePrice(
     @Param('id') id: string,
     @Body() updatePriceDto: UpdatePriceDto
@@ -244,21 +341,73 @@ export class ProductsController {
 
   @Delete('prices/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Delete price',
+    description: 'Remove a price record',
+  })
+  @ApiParam({ name: 'id', description: 'Price ID' })
+  @ApiResponse({ status: 204, description: 'Price deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Price not found' })
   async deletePrice(@Param('id') id: string): Promise<void> {
     return this.productsService.deletePrice(id);
   }
 
-  // ===== STOCK ENDPOINTS =====
+  // ==================== STOCK ENDPOINTS ====================
 
   @Post('stock')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Create stock for variant',
+    description: 'Initialize inventory tracking for a product variant',
+  })
+  @ApiBody({ type: CreateStockDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Stock created successfully',
+    type: StockResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Variant not found' })
+  @ApiResponse({
+    status: 409,
+    description: 'Stock already exists for this variant',
+  })
   async createStock(
     @Body() createStockDto: CreateStockDto
   ): Promise<StockResponseDto> {
     return this.productsService.createStock(createStockDto);
   }
 
+  @Get('variants/:variantId/stock')
+  @ApiOperation({
+    summary: 'Get stock for variant',
+    description: 'Retrieve inventory information for a specific variant',
+  })
+  @ApiParam({ name: 'variantId', description: 'Variant ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Stock retrieved successfully',
+    type: StockResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Stock not found' })
+  async getStockByVariant(
+    @Param('variantId') variantId: string
+  ): Promise<StockResponseDto | null> {
+    return this.productsService.getStockByVariant(variantId);
+  }
+
   @Put('stock/:id')
+  @ApiOperation({
+    summary: 'Update stock',
+    description: 'Update inventory quantities and thresholds',
+  })
+  @ApiParam({ name: 'id', description: 'Stock ID' })
+  @ApiBody({ type: UpdateStockDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Stock updated successfully',
+    type: StockResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Stock not found' })
   async updateStock(
     @Param('id') id: string,
     @Body() updateStockDto: UpdateStockDto
@@ -266,133 +415,99 @@ export class ProductsController {
     return this.productsService.updateStock(id, updateStockDto);
   }
 
-  @Delete('stock/:id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteStock(@Param('id') id: string): Promise<void> {
-    return this.productsService.deleteStock(id);
-  }
-
-  // ===== IMAGE ENDPOINTS =====
+  // ==================== IMAGE ENDPOINTS ====================
 
   @Post('images')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Add image to product or variant',
+    description:
+      'Link an uploaded file to a product or variant. Must specify either productId or variantId.',
+  })
+  @ApiBody({ type: CreateProductImageDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Image linked successfully',
+    type: ProductImageResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Must specify productId or variantId',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Product, variant, or file not found',
+  })
   async createProductImage(
-    @Body() createItemImageDto: CreateItemImageDto
-  ): Promise<ItemImageResponseDto> {
-    return this.productsService.createItemImage(createItemImageDto);
+    @Body() createImageDto: CreateProductImageDto
+  ): Promise<ProductImageResponseDto> {
+    return this.productsService.createProductImage(createImageDto);
+  }
+
+  @Get(':productId/images')
+  @ApiOperation({
+    summary: 'Get product images',
+    description: 'Retrieve all images for a specific product',
+  })
+  @ApiParam({ name: 'productId', description: 'Product ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Images retrieved successfully',
+    type: [ProductImageResponseDto],
+  })
+  async getImagesByProduct(
+    @Param('productId') productId: string
+  ): Promise<ProductImageResponseDto[]> {
+    return this.productsService.getImagesByProduct(productId);
+  }
+
+  @Get('variants/:variantId/images')
+  @ApiOperation({
+    summary: 'Get variant images',
+    description: 'Retrieve all images for a specific variant',
+  })
+  @ApiParam({ name: 'variantId', description: 'Variant ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Images retrieved successfully',
+    type: [ProductImageResponseDto],
+  })
+  async getImagesByVariant(
+    @Param('variantId') variantId: string
+  ): Promise<ProductImageResponseDto[]> {
+    return this.productsService.getImagesByVariant(variantId);
   }
 
   @Put('images/:id')
+  @ApiOperation({
+    summary: 'Update product image',
+    description: 'Update image metadata (alt text, primary status, sort order)',
+  })
+  @ApiParam({ name: 'id', description: 'Image ID' })
+  @ApiBody({ type: UpdateProductImageDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Image updated successfully',
+    type: ProductImageResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Image not found' })
   async updateProductImage(
     @Param('id') id: string,
-    @Body() updateItemImageDto: UpdateItemImageDto
-  ): Promise<ItemImageResponseDto> {
-    return this.productsService.updateItemImage(id, updateItemImageDto);
+    @Body() updateImageDto: UpdateProductImageDto
+  ): Promise<ProductImageResponseDto> {
+    return this.productsService.updateProductImage(id, updateImageDto);
   }
 
   @Delete('images/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Delete product image',
+    description: 'Remove image link from product or variant',
+  })
+  @ApiParam({ name: 'id', description: 'Image ID' })
+  @ApiResponse({ status: 204, description: 'Image deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Image not found' })
   async deleteProductImage(@Param('id') id: string): Promise<void> {
-    return this.productsService.deleteItemImage(id);
-  }
-
-  // ===== REVIEW ENDPOINTS =====
-
-  @Post('reviews')
-  @HttpCode(HttpStatus.CREATED)
-  async createReview(
-    @Request() req: any,
-    @Body() createReviewDto: CreateReviewDto
-  ): Promise<ReviewResponseDto> {
-    const userId = req.user.id;
-    return this.productsService.createReview(userId, createReviewDto);
-  }
-
-  @Put('reviews/:id')
-  async updateReview(
-    @Param('id') id: string,
-    @Request() req: any,
-    @Body() updateReviewDto: UpdateReviewDto
-  ): Promise<ReviewResponseDto> {
-    const userId = req.user.id;
-    return this.productsService.updateReview(id, userId, updateReviewDto);
-  }
-
-  @Put('reviews/:id/admin')
-  async adminUpdateReview(
-    @Param('id') id: string,
-    @Body() updateReviewDto: AdminUpdateReviewDto
-  ): Promise<ReviewResponseDto> {
-    return this.productsService.adminUpdateReview(id, updateReviewDto);
-  }
-
-  @Delete('reviews/:id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteReview(
-    @Param('id') id: string,
-    @Request() req: any
-  ): Promise<void> {
-    const userId = req.user.id;
-    return this.productsService.deleteReview(id, userId);
-  }
-
-  // ===== RATING ENDPOINTS =====
-
-  @Post('ratings')
-  @HttpCode(HttpStatus.CREATED)
-  async createRating(
-    @Request() req: any,
-    @Body() createRatingDto: CreateRatingDto
-  ): Promise<RatingResponseDto> {
-    const userId = req.user.id;
-    return this.productsService.createRating(userId, createRatingDto);
-  }
-
-  @Put('ratings/:id')
-  async updateRating(
-    @Param('id') id: string,
-    @Request() req: any,
-    @Body() updateRatingDto: UpdateRatingDto
-  ): Promise<RatingResponseDto> {
-    const userId = req.user.id;
-    return this.productsService.updateRating(id, userId, updateRatingDto);
-  }
-
-  @Delete('ratings/:id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteRating(
-    @Param('id') id: string,
-    @Request() req: any
-  ): Promise<void> {
-    const userId = req.user.id;
-    return this.productsService.deleteRating(id, userId);
-  }
-
-  // ===== FAVORITE ENDPOINTS =====
-
-  @Post('favorites')
-  @HttpCode(HttpStatus.CREATED)
-  async addToFavorites(
-    @Request() req: any,
-    @Body() createFavoriteDto: CreateFavoriteDto
-  ): Promise<FavoriteResponseDto> {
-    const userId = req.user.id;
-    return this.productsService.addToFavorites(userId, createFavoriteDto);
-  }
-
-  @Delete('favorites/:itemId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async removeFromFavorites(
-    @Param('itemId') itemId: string,
-    @Request() req: any
-  ): Promise<void> {
-    const userId = req.user.id;
-    return this.productsService.removeFromFavorites(userId, itemId);
-  }
-
-  @Get('favorites/user')
-  async getUserFavorites(@Request() req: any): Promise<FavoriteResponseDto[]> {
-    const userId = req.user.id;
-    return this.productsService.getUserFavorites(userId);
+    return this.productsService.deleteProductImage(id);
   }
 }

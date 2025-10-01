@@ -11,7 +11,7 @@ function CategoryView() {
   };
 
   const handleEdit = (category: Category) => {
-    navigate(`/content/categories/edit/${category.id}`);
+    navigate(`/content/categories/${category.id}/edit`);
   };
 
   const handleView = (category: Category) => {

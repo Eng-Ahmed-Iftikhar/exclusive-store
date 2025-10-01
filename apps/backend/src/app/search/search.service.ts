@@ -40,7 +40,7 @@ export class SearchService {
 
     // Search products if type is not specified or is 'product'
     if (!type || type === 'product') {
-      products = await this.prisma.item.findMany({
+      const rawProducts = await this.prisma.product.findMany({
         where: {
           OR: [
             { name: searchQuery },
@@ -73,20 +73,36 @@ export class SearchService {
               slug: true,
             },
           },
-          images: {
-            where: { isPrimary: true },
+          variants: {
             take: 1,
-            select: {
-              fileId: true,
-              altText: true,
-            },
-          },
-          prices: {
-            where: { isActive: true },
-            take: 1,
-            select: {
-              price: true,
-              salePrice: true,
+            include: {
+              images: {
+                where: { isPrimary: true },
+                take: 1,
+                include: {
+                  file: {
+                    select: {
+                      id: true,
+                      url: true,
+                      secureUrl: true,
+                    },
+                  },
+                },
+              },
+              prices: {
+                where: { isActive: true },
+                take: 1,
+                select: {
+                  price: true,
+                  salePrice: true,
+                },
+              },
+              stock: {
+                select: {
+                  quantity: true,
+                  isInStock: true,
+                },
+              },
             },
           },
           reviews: {
@@ -99,7 +115,7 @@ export class SearchService {
       });
 
       // Calculate average rating and format products
-      products = products.map((product) => {
+      products = rawProducts.map((product) => {
         const avgRating =
           product.reviews.length > 0
             ? product.reviews.reduce(
@@ -108,16 +124,23 @@ export class SearchService {
               ) / product.reviews.length
             : 0;
 
+        const defaultVariant = product.variants?.[0];
+
         return {
           ...product,
           averageRating: Math.round(avgRating * 10) / 10,
           totalReviews: product.reviews.length,
-          currentPrice: product.prices[0]?.price || 0,
-          salePrice: product.prices[0]?.salePrice || null,
+          currentPrice: defaultVariant?.prices?.[0]?.price
+            ? Number(defaultVariant.prices[0].price)
+            : 0,
+          salePrice: defaultVariant?.prices?.[0]?.salePrice
+            ? Number(defaultVariant.prices[0].salePrice)
+            : null,
           isOnSale:
-            product.prices[0]?.salePrice &&
-            product.prices[0]?.salePrice < product.prices[0]?.price,
-          primaryImage: product.images[0]?.fileId || null,
+            defaultVariant?.prices?.[0]?.salePrice &&
+            Number(defaultVariant.prices[0].salePrice) <
+              Number(defaultVariant.prices[0].price),
+          primaryImage: defaultVariant?.images?.[0]?.file?.url || null,
         };
       });
     }
@@ -148,7 +171,7 @@ export class SearchService {
         },
         take: 3,
       }),
-      this.prisma.item.findMany({
+      this.prisma.product.findMany({
         where: {
           OR: [{ name: searchQuery }],
         },

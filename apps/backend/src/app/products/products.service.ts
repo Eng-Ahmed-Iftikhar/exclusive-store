@@ -7,29 +7,24 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { ActivityService } from '../activity/activity.service';
 import {
-  CreateItemDto,
-  UpdateItemDto,
+  CreateProductDto,
+  UpdateProductDto,
+  ProductResponseDto,
+} from './dto/product.dto';
+import {
+  CreateVariantDto,
+  UpdateVariantDto,
+  VariantResponseDto,
+  CreateProductImageDto,
+  UpdateProductImageDto,
+  ProductImageResponseDto,
   CreatePriceDto,
   UpdatePriceDto,
+  PriceResponseDto,
   CreateStockDto,
   UpdateStockDto,
-  CreateItemImageDto,
-  UpdateItemImageDto,
-  CreateReviewDto,
-  UpdateReviewDto,
-  AdminUpdateReviewDto,
-  CreateRatingDto,
-  UpdateRatingDto,
-  CreateFavoriteDto,
-  ItemResponseDto,
-  PriceResponseDto,
   StockResponseDto,
-  ItemImageResponseDto,
-  ReviewResponseDto,
-  RatingResponseDto,
-  FavoriteResponseDto,
-  ItemQueryDto,
-} from './dto/item.dto';
+} from './dto/variant.dto';
 
 @Injectable()
 export class ProductsService {
@@ -38,27 +33,27 @@ export class ProductsService {
     private readonly activityService: ActivityService
   ) {}
 
-  // ===== PRODUCT OPERATIONS =====
+  // ==================== PRODUCT OPERATIONS ====================
 
-  async createItem(
-    createItemDto: CreateItemDto,
+  async createProduct(
+    createProductDto: CreateProductDto,
     userId?: string
-  ): Promise<ItemResponseDto> {
+  ): Promise<ProductResponseDto> {
     // Check if SKU already exists
-    if (createItemDto.sku) {
-      const existingItem = await this.prisma.item.findUnique({
-        where: { sku: createItemDto.sku },
+    if (createProductDto.sku) {
+      const existingProduct = await this.prisma.product.findUnique({
+        where: { sku: createProductDto.sku },
       });
 
-      if (existingItem) {
+      if (existingProduct) {
         throw new ConflictException(
-          `Item with SKU '${createItemDto.sku}' already exists`
+          `Product with SKU '${createProductDto.sku}' already exists`
         );
       }
     }
 
-    const item = await this.prisma.item.create({
-      data: createItemDto,
+    const product = await this.prisma.product.create({
+      data: createProductDto,
       include: {
         category: {
           select: { id: true, name: true, slug: true },
@@ -66,55 +61,58 @@ export class ProductsService {
         subcategory: {
           select: { id: true, name: true, slug: true },
         },
-        prices: true,
-        stock: true,
-        images: true,
+        variants: {
+          include: {
+            prices: true,
+            stock: true,
+            images: {
+              include: {
+                file: {
+                  select: {
+                    id: true,
+                    url: true,
+                    secureUrl: true,
+                    originalName: true,
+                    format: true,
+                    width: true,
+                    height: true,
+                  },
+                },
+              },
+            },
+          },
+        },
         reviews: true,
         ratings: true,
-        favorites: true,
       },
     });
 
     // Log product creation activity
     if (userId) {
-      await this.activityService.logProductActivity(item.id, 'created', userId);
+      await this.activityService.logProductActivity(
+        product.id,
+        'created',
+        userId
+      );
     }
 
-    return this.mapToItemResponse(item);
+    return this.mapToProductResponse(product);
   }
 
-  async getAllItems(
-    query: ItemQueryDto,
-    userId?: string
+  async getAllProducts(
+    page = 1,
+    limit = 20,
+    search = ''
   ): Promise<{
-    items: ItemResponseDto[];
+    products: ProductResponseDto[];
     total: number;
     page: number;
     limit: number;
     totalPages: number;
   }> {
-    const {
-      search,
-      categoryId,
-      category,
-      subcategoryId,
-      subcategory,
-      isFeatured,
-      isActive,
-      sortBy = 'createdAt',
-      sortOrder = 'desc',
-      page = 1,
-      limit = 20,
-      minPrice,
-      maxPrice,
-      minRating,
-    } = query;
-
     const skip = (page - 1) * limit;
 
-    // Build where clause
     const where: any = {};
-
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
@@ -123,64 +121,11 @@ export class ProductsService {
       ];
     }
 
-    // Category filtering
-    if (categoryId) {
-      where.categoryId = categoryId;
-    } else if (category) {
-      where.category = {
-        slug: category,
-      };
-    }
-
-    // Subcategory filtering
-    if (subcategoryId) {
-      where.subcategoryId = subcategoryId;
-    } else if (subcategory) {
-      where.subcategory = {
-        slug: subcategory,
-      };
-    }
-
-    if (isFeatured !== undefined) where.isFeatured = isFeatured;
-    if (isActive !== undefined) where.isActive = isActive;
-
-    // Price filtering
-    if (minPrice || maxPrice) {
-      where.prices = {
-        some: {
-          isActive: true,
-          ...(minPrice && { price: { gte: minPrice } }),
-          ...(maxPrice && { price: { lte: maxPrice } }),
-        },
-      };
-    }
-
-    // Rating filtering
-    if (minRating) {
-      where.ratings = {
-        some: {
-          rating: { gte: minRating },
-        },
-      };
-    }
-
-    // Build orderBy clause to support price/rating sorting via relation aggregates
-    const orderByClause: any = (() => {
-      if (sortBy === 'price') {
-        // Sort by the minimum active price per item (closest representation of current price)
-        return { prices: { _min: { price: sortOrder } } };
-      }
-      if (sortBy === 'rating') {
-        // Sort by average rating
-        return { ratings: { _avg: { rating: sortOrder } } };
-      }
-      return { [sortBy]: sortOrder };
-    })();
-
-    // Get items with relations
-    const [items, total] = await Promise.all([
-      this.prisma.item.findMany({
+    const [products, total] = await Promise.all([
+      this.prisma.product.findMany({
         where,
+        skip,
+        take: limit,
         include: {
           category: {
             select: { id: true, name: true, slug: true },
@@ -188,41 +133,46 @@ export class ProductsService {
           subcategory: {
             select: { id: true, name: true, slug: true },
           },
-          prices: true,
-          stock: true,
-          images: {
-            orderBy: { sortOrder: 'asc' },
+          variants: {
+            include: {
+              prices: { where: { isActive: true } },
+              stock: true,
+              images: {
+                include: {
+                  file: {
+                    select: {
+                      id: true,
+                      url: true,
+                      secureUrl: true,
+                      originalName: true,
+                      format: true,
+                      width: true,
+                      height: true,
+                    },
+                  },
+                },
+              },
+            },
           },
-          reviews: {
-            where: { isApproved: true },
-          },
+          reviews: { where: { isApproved: true } },
           ratings: true,
-          favorites: userId
-            ? {
-                where: { userId },
-              }
-            : false,
         },
-        orderBy: orderByClause,
-        skip,
-        take: limit,
+        orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.item.count({ where }),
+      this.prisma.product.count({ where }),
     ]);
 
-    const totalPages = Math.ceil(total / limit);
-
     return {
-      items: items.map((item) => this.mapToItemResponse(item)),
+      products: products.map((p) => this.mapToProductResponse(p)),
       total,
       page,
       limit,
-      totalPages,
+      totalPages: Math.ceil(total / limit),
     };
   }
 
-  async getItemById(id: string, userId?: string): Promise<ItemResponseDto> {
-    const item = await this.prisma.item.findUnique({
+  async getProductById(id: string): Promise<ProductResponseDto> {
+    const product = await this.prisma.product.findUnique({
       where: { id },
       include: {
         category: {
@@ -231,119 +181,345 @@ export class ProductsService {
         subcategory: {
           select: { id: true, name: true, slug: true },
         },
-        prices: true,
-        stock: true,
-        images: {
+        variants: {
+          include: {
+            prices: true,
+            stock: true,
+            images: {
+              include: {
+                file: {
+                  select: {
+                    id: true,
+                    url: true,
+                    secureUrl: true,
+                    originalName: true,
+                    format: true,
+                    width: true,
+                    height: true,
+                  },
+                },
+              },
+              orderBy: { sortOrder: 'asc' },
+            },
+          },
           orderBy: { sortOrder: 'asc' },
         },
-        reviews: {
-          where: { isApproved: true },
-          include: {
-            user: {
-              select: { id: true, name: true, email: true },
-            },
-          },
-        },
-        ratings: {
-          include: {
-            user: {
-              select: { id: true, name: true, email: true },
-            },
-          },
-        },
-        favorites: userId
-          ? {
-              where: { userId },
-            }
-          : false,
+        reviews: { where: { isApproved: true } },
+        ratings: true,
       },
     });
 
-    if (!item) {
-      throw new NotFoundException(`Item with ID '${id}' not found`);
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
     }
 
-    return this.mapToItemResponse(item);
+    return this.mapToProductResponse(product);
   }
 
-  async updateItem(
+  async updateProduct(
     id: string,
-    updateItemDto: UpdateItemDto
-  ): Promise<ItemResponseDto> {
-    // Check if item exists
-    const existingItem = await this.prisma.item.findUnique({
+    updateProductDto: UpdateProductDto
+  ): Promise<ProductResponseDto> {
+    // Check if product exists
+    const existingProduct = await this.prisma.product.findUnique({
       where: { id },
     });
 
-    if (!existingItem) {
-      throw new NotFoundException(`Item with ID '${id}' not found`);
+    if (!existingProduct) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
     }
 
-    // Check if new SKU conflicts with existing ones
-    if (updateItemDto.sku && updateItemDto.sku !== existingItem.sku) {
-      const skuConflict = await this.prisma.item.findUnique({
-        where: { sku: updateItemDto.sku },
+    // Check SKU conflict
+    if (updateProductDto.sku && updateProductDto.sku !== existingProduct.sku) {
+      const skuConflict = await this.prisma.product.findUnique({
+        where: { sku: updateProductDto.sku },
       });
 
       if (skuConflict) {
         throw new ConflictException(
-          `Item with SKU '${updateItemDto.sku}' already exists`
+          `Product with SKU '${updateProductDto.sku}' already exists`
         );
       }
     }
 
-    const updatedItem = await this.prisma.item.update({
+    const product = await this.prisma.product.update({
       where: { id },
-      data: updateItemDto,
+      data: updateProductDto,
       include: {
-        category: {
-          select: { id: true, name: true, slug: true },
+        category: { select: { id: true, name: true, slug: true } },
+        subcategory: { select: { id: true, name: true, slug: true } },
+        variants: {
+          include: {
+            prices: true,
+            stock: true,
+            images: {
+              include: {
+                file: {
+                  select: {
+                    id: true,
+                    url: true,
+                    secureUrl: true,
+                    originalName: true,
+                    format: true,
+                    width: true,
+                    height: true,
+                  },
+                },
+              },
+            },
+          },
         },
-        subcategory: {
-          select: { id: true, name: true, slug: true },
-        },
-        prices: true,
-        stock: true,
-        images: true,
-        reviews: true,
+        reviews: { where: { isApproved: true } },
         ratings: true,
-        favorites: true,
       },
     });
 
-    // Log product update activity
-    await this.activityService.logProductActivity(id, 'updated', 'admin');
-
-    return this.mapToItemResponse(updatedItem);
+    return this.mapToProductResponse(product);
   }
 
-  async deleteItem(id: string): Promise<void> {
-    // Check if item exists
-    const existingItem = await this.prisma.item.findUnique({
+  async deleteProduct(id: string): Promise<void> {
+    const product = await this.prisma.product.findUnique({
       where: { id },
     });
 
-    if (!existingItem) {
-      throw new NotFoundException(`Item with ID '${id}' not found`);
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
     }
 
-    // Delete item (related data will be deleted due to cascade)
-    await this.prisma.item.delete({
+    await this.prisma.product.delete({
       where: { id },
     });
   }
 
-  // ===== PRICE OPERATIONS =====
+  // ==================== VARIANT OPERATIONS ====================
 
-  async createPrice(createPriceDto: CreatePriceDto): Promise<PriceResponseDto> {
-    // Check if item exists
-    const item = await this.prisma.item.findUnique({
-      where: { id: createPriceDto.itemId },
+  async createVariant(
+    createVariantDto: CreateVariantDto,
+    userId?: string
+  ): Promise<VariantResponseDto> {
+    // Check if product exists
+    const product = await this.prisma.product.findUnique({
+      where: { id: createVariantDto.productId },
     });
 
-    if (!item) {
+    if (!product) {
       throw new NotFoundException(
-        `Item with ID '${createPriceDto.itemId}' not found`
+        `Product with ID ${createVariantDto.productId} not found`
+      );
+    }
+
+    // Check if SKU already exists
+    const existingVariant = await this.prisma.productVariant.findUnique({
+      where: { sku: createVariantDto.sku },
+    });
+
+    if (existingVariant) {
+      throw new ConflictException(
+        `Variant with SKU '${createVariantDto.sku}' already exists`
+      );
+    }
+
+    // If this is marked as default, unset other defaults for this product
+    if (createVariantDto.isDefault) {
+      await this.prisma.productVariant.updateMany({
+        where: { productId: createVariantDto.productId },
+        data: { isDefault: false },
+      });
+    }
+
+    const variant = await this.prisma.productVariant.create({
+      data: createVariantDto,
+      include: {
+        prices: true,
+        stock: true,
+        images: {
+          include: {
+            file: {
+              select: {
+                id: true,
+                url: true,
+                secureUrl: true,
+                originalName: true,
+                format: true,
+                width: true,
+                height: true,
+              },
+            },
+          },
+          orderBy: { sortOrder: 'asc' },
+        },
+      },
+    });
+
+    if (userId) {
+      await this.activityService.createActivity({
+        type: 'product',
+        title: 'Variant Created',
+        description: `Created variant "${variant.name}" for product`,
+        metadata: { variantId: variant.id, productId: variant.productId },
+        userId,
+      });
+    }
+
+    return this.mapToVariantResponse(variant);
+  }
+
+  async getVariantsByProduct(productId: string): Promise<VariantResponseDto[]> {
+    const variants = await this.prisma.productVariant.findMany({
+      where: { productId },
+      include: {
+        prices: { where: { isActive: true } },
+        stock: true,
+        images: {
+          include: {
+            file: {
+              select: {
+                id: true,
+                url: true,
+                secureUrl: true,
+                originalName: true,
+                format: true,
+                width: true,
+                height: true,
+              },
+            },
+          },
+          orderBy: { sortOrder: 'asc' },
+        },
+      },
+      orderBy: [{ isDefault: 'desc' }, { sortOrder: 'asc' }],
+    });
+
+    return variants.map((v) => this.mapToVariantResponse(v));
+  }
+
+  async getVariantById(id: string): Promise<VariantResponseDto> {
+    const variant = await this.prisma.productVariant.findUnique({
+      where: { id },
+      include: {
+        prices: true,
+        stock: true,
+        images: {
+          include: {
+            file: {
+              select: {
+                id: true,
+                url: true,
+                secureUrl: true,
+                originalName: true,
+                format: true,
+                width: true,
+                height: true,
+              },
+            },
+          },
+          orderBy: { sortOrder: 'asc' },
+        },
+        product: {
+          select: {
+            id: true,
+            name: true,
+            sku: true,
+          },
+        },
+      },
+    });
+
+    if (!variant) {
+      throw new NotFoundException(`Variant with ID ${id} not found`);
+    }
+
+    return this.mapToVariantResponse(variant);
+  }
+
+  async updateVariant(
+    id: string,
+    updateVariantDto: UpdateVariantDto
+  ): Promise<VariantResponseDto> {
+    const existingVariant = await this.prisma.productVariant.findUnique({
+      where: { id },
+    });
+
+    if (!existingVariant) {
+      throw new NotFoundException(`Variant with ID ${id} not found`);
+    }
+
+    // Check SKU conflict
+    if (updateVariantDto.sku && updateVariantDto.sku !== existingVariant.sku) {
+      const skuConflict = await this.prisma.productVariant.findUnique({
+        where: { sku: updateVariantDto.sku },
+      });
+
+      if (skuConflict) {
+        throw new ConflictException(
+          `Variant with SKU '${updateVariantDto.sku}' already exists`
+        );
+      }
+    }
+
+    // If setting as default, unset other defaults
+    if (updateVariantDto.isDefault) {
+      await this.prisma.productVariant.updateMany({
+        where: {
+          productId: existingVariant.productId,
+          id: { not: id },
+        },
+        data: { isDefault: false },
+      });
+    }
+
+    const variant = await this.prisma.productVariant.update({
+      where: { id },
+      data: updateVariantDto,
+      include: {
+        prices: true,
+        stock: true,
+        images: {
+          include: {
+            file: {
+              select: {
+                id: true,
+                url: true,
+                secureUrl: true,
+                originalName: true,
+                format: true,
+                width: true,
+                height: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return this.mapToVariantResponse(variant);
+  }
+
+  async deleteVariant(id: string): Promise<void> {
+    const variant = await this.prisma.productVariant.findUnique({
+      where: { id },
+    });
+
+    if (!variant) {
+      throw new NotFoundException(`Variant with ID ${id} not found`);
+    }
+
+    await this.prisma.productVariant.delete({
+      where: { id },
+    });
+  }
+
+  // ==================== PRICE OPERATIONS ====================
+
+  async createPrice(createPriceDto: CreatePriceDto): Promise<PriceResponseDto> {
+    // Verify variant exists
+    const variant = await this.prisma.productVariant.findUnique({
+      where: { id: createPriceDto.variantId },
+    });
+
+    if (!variant) {
+      throw new NotFoundException(
+        `Variant with ID ${createPriceDto.variantId} not found`
       );
     }
 
@@ -358,31 +534,29 @@ export class ProductsService {
     id: string,
     updatePriceDto: UpdatePriceDto
   ): Promise<PriceResponseDto> {
-    // Check if price exists
     const existingPrice = await this.prisma.price.findUnique({
       where: { id },
     });
 
     if (!existingPrice) {
-      throw new NotFoundException(`Price with ID '${id}' not found`);
+      throw new NotFoundException(`Price with ID ${id} not found`);
     }
 
-    const updatedPrice = await this.prisma.price.update({
+    const price = await this.prisma.price.update({
       where: { id },
       data: updatePriceDto,
     });
 
-    return this.mapToPriceResponse(updatedPrice);
+    return this.mapToPriceResponse(price);
   }
 
   async deletePrice(id: string): Promise<void> {
-    // Check if price exists
-    const existingPrice = await this.prisma.price.findUnique({
+    const price = await this.prisma.price.findUnique({
       where: { id },
     });
 
-    if (!existingPrice) {
-      throw new NotFoundException(`Price with ID '${id}' not found`);
+    if (!price) {
+      throw new NotFoundException(`Price with ID ${id} not found`);
     }
 
     await this.prisma.price.delete({
@@ -390,28 +564,37 @@ export class ProductsService {
     });
   }
 
-  // ===== STOCK OPERATIONS =====
-
-  async createStock(createStockDto: CreateStockDto): Promise<StockResponseDto> {
-    // Check if item exists
-    const item = await this.prisma.item.findUnique({
-      where: { id: createStockDto.itemId },
+  async getPricesByVariant(variantId: string): Promise<PriceResponseDto[]> {
+    const prices = await this.prisma.price.findMany({
+      where: { variantId },
+      orderBy: { createdAt: 'desc' },
     });
 
-    if (!item) {
+    return prices.map((p) => this.mapToPriceResponse(p));
+  }
+
+  // ==================== STOCK OPERATIONS ====================
+
+  async createStock(createStockDto: CreateStockDto): Promise<StockResponseDto> {
+    // Verify variant exists
+    const variant = await this.prisma.productVariant.findUnique({
+      where: { id: createStockDto.variantId },
+    });
+
+    if (!variant) {
       throw new NotFoundException(
-        `Item with ID '${createStockDto.itemId}' not found`
+        `Variant with ID ${createStockDto.variantId} not found`
       );
     }
 
-    // Check if stock already exists for this item
+    // Check if stock already exists for this variant
     const existingStock = await this.prisma.stock.findUnique({
-      where: { itemId: createStockDto.itemId },
+      where: { variantId: createStockDto.variantId },
     });
 
     if (existingStock) {
       throw new ConflictException(
-        `Stock already exists for item '${createStockDto.itemId}'`
+        `Stock record already exists for variant ${createStockDto.variantId}`
       );
     }
 
@@ -426,611 +609,286 @@ export class ProductsService {
     id: string,
     updateStockDto: UpdateStockDto
   ): Promise<StockResponseDto> {
-    // Check if stock exists
     const existingStock = await this.prisma.stock.findUnique({
       where: { id },
     });
 
     if (!existingStock) {
-      throw new NotFoundException(`Stock with ID '${id}' not found`);
+      throw new NotFoundException(`Stock with ID ${id} not found`);
     }
 
-    const updatedStock = await this.prisma.stock.update({
+    const stock = await this.prisma.stock.update({
       where: { id },
       data: updateStockDto,
     });
 
-    return this.mapToStockResponse(updatedStock);
+    return this.mapToStockResponse(stock);
   }
 
-  async deleteStock(id: string): Promise<void> {
-    // Check if stock exists
-    const existingStock = await this.prisma.stock.findUnique({
-      where: { id },
+  async getStockByVariant(variantId: string): Promise<StockResponseDto | null> {
+    const stock = await this.prisma.stock.findUnique({
+      where: { variantId },
     });
 
-    if (!existingStock) {
-      throw new NotFoundException(`Stock with ID '${id}' not found`);
-    }
-
-    await this.prisma.stock.delete({
-      where: { id },
-    });
+    return stock ? this.mapToStockResponse(stock) : null;
   }
 
-  // ===== IMAGE OPERATIONS =====
+  // ==================== PRODUCT IMAGE OPERATIONS ====================
 
-  async createItemImage(
-    createItemImageDto: CreateItemImageDto
-  ): Promise<ItemImageResponseDto> {
-    // Check if item exists
-    const item = await this.prisma.item.findUnique({
-      where: { id: createItemImageDto.itemId },
-    });
-
-    if (!item) {
-      throw new NotFoundException(
-        `Item with ID '${createItemImageDto.itemId}' not found`
+  async createProductImage(
+    createImageDto: CreateProductImageDto
+  ): Promise<ProductImageResponseDto> {
+    // Must specify either productId or variantId
+    if (!createImageDto.productId && !createImageDto.variantId) {
+      throw new BadRequestException(
+        'Either productId or variantId must be specified'
       );
     }
 
-    // If this is the primary image, unset other primary images
-    if (createItemImageDto.isPrimary) {
-      await this.prisma.itemImage.updateMany({
-        where: { itemId: createItemImageDto.itemId, isPrimary: true },
+    // Verify product or variant exists
+    if (createImageDto.productId) {
+      const product = await this.prisma.product.findUnique({
+        where: { id: createImageDto.productId },
+      });
+      if (!product) {
+        throw new NotFoundException(
+          `Product with ID ${createImageDto.productId} not found`
+        );
+      }
+    }
+
+    if (createImageDto.variantId) {
+      const variant = await this.prisma.productVariant.findUnique({
+        where: { id: createImageDto.variantId },
+      });
+      if (!variant) {
+        throw new NotFoundException(
+          `Variant with ID ${createImageDto.variantId} not found`
+        );
+      }
+    }
+
+    // Verify file exists
+    const file = await this.prisma.file.findUnique({
+      where: { id: createImageDto.fileId },
+    });
+
+    if (!file) {
+      throw new NotFoundException(
+        `File with ID ${createImageDto.fileId} not found`
+      );
+    }
+
+    // If this is marked as primary, unset other primaries
+    if (createImageDto.isPrimary) {
+      const where: any = {};
+      if (createImageDto.productId) {
+        where.productId = createImageDto.productId;
+      }
+      if (createImageDto.variantId) {
+        where.variantId = createImageDto.variantId;
+      }
+      await this.prisma.productImage.updateMany({
+        where,
         data: { isPrimary: false },
       });
     }
 
-    const image = await this.prisma.itemImage.create({
-      data: createItemImageDto,
+    const image = await this.prisma.productImage.create({
+      data: createImageDto,
+      include: {
+        file: {
+          select: {
+            id: true,
+            url: true,
+            secureUrl: true,
+            originalName: true,
+            format: true,
+            width: true,
+            height: true,
+          },
+        },
+      },
     });
 
-    return this.mapToItemImageResponse(image);
+    return this.mapToProductImageResponse(image);
   }
 
-  async updateItemImage(
+  async updateProductImage(
     id: string,
-    updateItemImageDto: UpdateItemImageDto
-  ): Promise<ItemImageResponseDto> {
-    // Check if image exists
-    const existingImage = await this.prisma.itemImage.findUnique({
+    updateImageDto: UpdateProductImageDto
+  ): Promise<ProductImageResponseDto> {
+    const existingImage = await this.prisma.productImage.findUnique({
       where: { id },
     });
 
     if (!existingImage) {
-      throw new NotFoundException(`Image with ID '${id}' not found`);
+      throw new NotFoundException(`Product image with ID ${id} not found`);
     }
 
-    // If this is being set as primary, unset other primary images
-    if (updateItemImageDto.isPrimary) {
-      await this.prisma.itemImage.updateMany({
-        where: { itemId: existingImage.itemId, isPrimary: true },
+    // If setting as primary, unset other primaries
+    if (updateImageDto.isPrimary) {
+      const where: any = {};
+      if (existingImage.productId) {
+        where.productId = existingImage.productId;
+      }
+      if (existingImage.variantId) {
+        where.variantId = existingImage.variantId;
+      }
+      where.id = { not: id };
+
+      await this.prisma.productImage.updateMany({
+        where,
         data: { isPrimary: false },
       });
     }
 
-    const updatedImage = await this.prisma.itemImage.update({
+    const image = await this.prisma.productImage.update({
       where: { id },
-      data: updateItemImageDto,
-    });
-
-    return this.mapToItemImageResponse(updatedImage);
-  }
-
-  async deleteItemImage(id: string): Promise<void> {
-    // Check if image exists
-    const existingImage = await this.prisma.itemImage.findUnique({
-      where: { id },
-    });
-
-    if (!existingImage) {
-      throw new NotFoundException(`Image with ID '${id}' not found`);
-    }
-
-    await this.prisma.itemImage.delete({
-      where: { id },
-    });
-  }
-
-  // ===== REVIEW OPERATIONS =====
-
-  async createReview(
-    userId: string,
-    createReviewDto: CreateReviewDto
-  ): Promise<ReviewResponseDto> {
-    // Check if item exists
-    const item = await this.prisma.item.findUnique({
-      where: { id: createReviewDto.itemId },
-    });
-
-    if (!item) {
-      throw new NotFoundException(
-        `Item with ID '${createReviewDto.itemId}' not found`
-      );
-    }
-
-    // Check if user already reviewed this item
-    const existingReview = await this.prisma.review.findUnique({
-      where: { itemId_userId: { itemId: createReviewDto.itemId, userId } },
-    });
-
-    if (existingReview) {
-      throw new ConflictException(`You have already reviewed this item`);
-    }
-
-    const review = await this.prisma.review.create({
-      data: {
-        ...createReviewDto,
-        userId,
-      },
+      data: updateImageDto,
       include: {
-        user: {
-          select: { id: true, name: true, email: true },
-        },
-      },
-    });
-
-    return this.mapToReviewResponse(review);
-  }
-
-  async updateReview(
-    id: string,
-    userId: string,
-    updateReviewDto: UpdateReviewDto
-  ): Promise<ReviewResponseDto> {
-    // Check if review exists and belongs to user
-    const existingReview = await this.prisma.review.findUnique({
-      where: { id },
-    });
-
-    if (!existingReview) {
-      throw new NotFoundException(`Review with ID '${id}' not found`);
-    }
-
-    if (existingReview.userId !== userId) {
-      throw new BadRequestException(`You can only update your own reviews`);
-    }
-
-    const updatedReview = await this.prisma.review.update({
-      where: { id },
-      data: updateReviewDto,
-      include: {
-        user: {
-          select: { id: true, name: true, email: true },
-        },
-      },
-    });
-
-    return this.mapToReviewResponse(updatedReview);
-  }
-
-  async adminUpdateReview(
-    id: string,
-    updateReviewDto: AdminUpdateReviewDto
-  ): Promise<ReviewResponseDto> {
-    // Check if review exists
-    const existingReview = await this.prisma.review.findUnique({
-      where: { id },
-    });
-
-    if (!existingReview) {
-      throw new NotFoundException(`Review with ID '${id}' not found`);
-    }
-
-    const updatedReview = await this.prisma.review.update({
-      where: { id },
-      data: updateReviewDto,
-      include: {
-        user: {
-          select: { id: true, name: true, email: true },
-        },
-      },
-    });
-
-    return this.mapToReviewResponse(updatedReview);
-  }
-
-  async deleteReview(id: string, userId: string): Promise<void> {
-    // Check if review exists and belongs to user
-    const existingReview = await this.prisma.review.findUnique({
-      where: { id },
-    });
-
-    if (!existingReview) {
-      throw new NotFoundException(`Review with ID '${id}' not found`);
-    }
-
-    if (existingReview.userId !== userId) {
-      throw new BadRequestException(`You can only delete your own reviews`);
-    }
-
-    await this.prisma.review.delete({
-      where: { id },
-    });
-  }
-
-  // ===== RATING OPERATIONS =====
-
-  async createRating(
-    userId: string,
-    createRatingDto: CreateRatingDto
-  ): Promise<RatingResponseDto> {
-    // Check if item exists
-    const item = await this.prisma.item.findUnique({
-      where: { id: createRatingDto.itemId },
-    });
-
-    if (!item) {
-      throw new NotFoundException(
-        `Item with ID '${createRatingDto.itemId}' not found`
-      );
-    }
-
-    // Check if user already rated this item
-    const existingRating = await this.prisma.rating.findUnique({
-      where: { itemId_userId: { itemId: createRatingDto.itemId, userId } },
-    });
-
-    if (existingRating) {
-      throw new ConflictException(`You have already rated this item`);
-    }
-
-    const rating = await this.prisma.rating.create({
-      data: {
-        ...createRatingDto,
-        userId,
-      },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true },
-        },
-      },
-    });
-
-    return this.mapToRatingResponse(rating);
-  }
-
-  async updateRating(
-    id: string,
-    userId: string,
-    updateRatingDto: UpdateRatingDto
-  ): Promise<RatingResponseDto> {
-    // Check if rating exists and belongs to user
-    const existingRating = await this.prisma.rating.findUnique({
-      where: { id },
-    });
-
-    if (!existingRating) {
-      throw new NotFoundException(`Rating with ID '${id}' not found`);
-    }
-
-    if (existingRating.userId !== userId) {
-      throw new BadRequestException(`You can only update your own ratings`);
-    }
-
-    const updatedRating = await this.prisma.rating.update({
-      where: { id },
-      data: updateRatingDto,
-      include: {
-        user: {
-          select: { id: true, name: true, email: true },
-        },
-      },
-    });
-
-    return this.mapToRatingResponse(updatedRating);
-  }
-
-  async deleteRating(id: string, userId: string): Promise<void> {
-    // Check if rating exists and belongs to user
-    const existingRating = await this.prisma.rating.findUnique({
-      where: { id },
-    });
-
-    if (!existingRating) {
-      throw new NotFoundException(`Rating with ID '${id}' not found`);
-    }
-
-    if (existingRating.userId !== userId) {
-      throw new BadRequestException(`You can only delete your own ratings`);
-    }
-
-    await this.prisma.rating.delete({
-      where: { id },
-    });
-  }
-
-  // ===== FAVORITE OPERATIONS =====
-
-  async addToFavorites(
-    userId: string,
-    createFavoriteDto: CreateFavoriteDto
-  ): Promise<FavoriteResponseDto> {
-    // Check if item exists
-    const item = await this.prisma.item.findUnique({
-      where: { id: createFavoriteDto.itemId },
-    });
-
-    if (!item) {
-      throw new NotFoundException(
-        `Item with ID '${createFavoriteDto.itemId}' not found`
-      );
-    }
-
-    // Check if already in favorites
-    const existingFavorite = await this.prisma.favorite.findUnique({
-      where: { itemId_userId: { itemId: createFavoriteDto.itemId, userId } },
-    });
-
-    if (existingFavorite) {
-      throw new ConflictException(`Item is already in your favorites`);
-    }
-
-    const favorite = await this.prisma.favorite.create({
-      data: {
-        ...createFavoriteDto,
-        userId,
-      },
-      include: {
-        item: {
-          select: { id: true, name: true, description: true },
-        },
-      },
-    });
-
-    return this.mapToFavoriteResponse(favorite);
-  }
-
-  async removeFromFavorites(userId: string, itemId: string): Promise<void> {
-    // Check if favorite exists
-    const existingFavorite = await this.prisma.favorite.findUnique({
-      where: { itemId_userId: { itemId, userId } },
-    });
-
-    if (!existingFavorite) {
-      throw new NotFoundException(`Item is not in your favorites`);
-    }
-
-    await this.prisma.favorite.delete({
-      where: { itemId_userId: { itemId, userId } },
-    });
-  }
-
-  async getUserFavorites(userId: string): Promise<FavoriteResponseDto[]> {
-    const favorites = await this.prisma.favorite.findMany({
-      where: { userId },
-      include: {
-        item: {
-          select: { id: true, name: true, description: true },
-        },
-      },
-    });
-
-    return favorites.map((favorite) => this.mapToFavoriteResponse(favorite));
-  }
-
-  // ===== FEATURED ITEMS =====
-
-  async getFeaturedItems(
-    userId?: string,
-    limit = 10
-  ): Promise<ItemResponseDto[]> {
-    const items = await this.prisma.item.findMany({
-      where: {
-        isFeatured: true,
-        isActive: true,
-      },
-      include: {
-        category: {
-          select: { id: true, name: true, slug: true },
-        },
-        subcategory: {
-          select: { id: true, name: true, slug: true },
-        },
-        prices: true,
-        stock: true,
-        images: {
-          orderBy: { sortOrder: 'asc' },
-        },
-        reviews: {
-          where: { isApproved: true },
-        },
-        ratings: true,
-        favorites: userId
-          ? {
-              where: { userId },
-            }
-          : false,
-      },
-      orderBy: { sortOrder: 'asc' },
-      take: limit,
-    });
-
-    return items.map((item) => this.mapToItemResponse(item));
-  }
-
-  async getBestSellingItems(
-    userId?: string,
-    limit = 10
-  ): Promise<ItemResponseDto[]> {
-    // Get items with high ratings and good reviews
-    const items = await this.prisma.item.findMany({
-      where: {
-        isActive: true,
-        ratings: {
-          some: {
-            rating: { gte: 4 }, // Items with 4+ star ratings
+        file: {
+          select: {
+            id: true,
+            url: true,
+            secureUrl: true,
+            originalName: true,
+            format: true,
+            width: true,
+            height: true,
           },
         },
       },
-      include: {
-        category: {
-          select: { id: true, name: true, slug: true },
-        },
-        subcategory: {
-          select: { id: true, name: true, slug: true },
-        },
-        prices: true,
-        stock: true,
-        images: {
-          orderBy: { sortOrder: 'asc' },
-        },
-        reviews: {
-          where: { isApproved: true },
-        },
-        ratings: true,
-        favorites: userId
-          ? {
-              where: { userId },
-            }
-          : false,
-      },
-      orderBy: [
-        { ratings: { _count: 'desc' } }, // Most rated first
-        { sortOrder: 'asc' }, // Then by sort order
-      ],
-      take: limit,
     });
 
-    return items.map((item) => this.mapToItemResponse(item));
+    return this.mapToProductImageResponse(image);
   }
 
-  async getItemsByRating(
-    userId?: string,
-    minRating = 4,
-    limit = 10
-  ): Promise<ItemResponseDto[]> {
-    const items = await this.prisma.item.findMany({
-      where: {
-        isActive: true,
-        ratings: {
-          some: {
-            rating: { gte: minRating },
+  async deleteProductImage(id: string): Promise<void> {
+    const image = await this.prisma.productImage.findUnique({
+      where: { id },
+    });
+
+    if (!image) {
+      throw new NotFoundException(`Product image with ID ${id} not found`);
+    }
+
+    await this.prisma.productImage.delete({
+      where: { id },
+    });
+  }
+
+  async getImagesByProduct(
+    productId: string
+  ): Promise<ProductImageResponseDto[]> {
+    const images = await this.prisma.productImage.findMany({
+      where: { productId },
+      include: {
+        file: {
+          select: {
+            id: true,
+            url: true,
+            secureUrl: true,
+            originalName: true,
+            format: true,
+            width: true,
+            height: true,
           },
         },
       },
-      include: {
-        category: {
-          select: { id: true, name: true, slug: true },
-        },
-        subcategory: {
-          select: { id: true, name: true, slug: true },
-        },
-        prices: true,
-        stock: true,
-        images: {
-          orderBy: { sortOrder: 'asc' },
-        },
-        reviews: {
-          where: { isApproved: true },
-        },
-        ratings: true,
-        favorites: userId
-          ? {
-              where: { userId },
-            }
-          : false,
-      },
-      orderBy: [{ ratings: { _count: 'desc' } }, { sortOrder: 'asc' }],
-      take: limit,
+      orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
     });
 
-    return items.map((item) => this.mapToItemResponse(item));
+    return images.map((img) => this.mapToProductImageResponse(img));
   }
 
-  async getNewArrivalItems(
-    userId?: string,
-    limit = 8
-  ): Promise<ItemResponseDto[]> {
-    // Get recently created items
-    const items = await this.prisma.item.findMany({
-      where: {
-        isActive: true,
-      },
+  async getImagesByVariant(
+    variantId: string
+  ): Promise<ProductImageResponseDto[]> {
+    const images = await this.prisma.productImage.findMany({
+      where: { variantId },
       include: {
-        category: {
-          select: { id: true, name: true, slug: true },
+        file: {
+          select: {
+            id: true,
+            url: true,
+            secureUrl: true,
+            originalName: true,
+            format: true,
+            width: true,
+            height: true,
+          },
         },
-        subcategory: {
-          select: { id: true, name: true, slug: true },
-        },
-        prices: true,
-        stock: true,
-        images: {
-          orderBy: { sortOrder: 'asc' },
-        },
-        reviews: {
-          where: { isApproved: true },
-        },
-        ratings: true,
-        favorites: userId
-          ? {
-              where: { userId },
-            }
-          : false,
       },
-      orderBy: [
-        { createdAt: 'desc' }, // Most recent first
-        { sortOrder: 'asc' }, // Then by sort order
-      ],
-      take: limit,
+      orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
     });
 
-    return items.map((item) => this.mapToItemResponse(item));
+    return images.map((img) => this.mapToProductImageResponse(img));
   }
 
-  // ===== HELPER METHODS =====
+  // ==================== MAPPING METHODS ====================
 
-  private mapToItemResponse(item: any): ItemResponseDto {
-    const currentPrice =
-      Number(item.prices?.find((p: any) => p.isActive)?.price) || 0;
-    const salePrice =
-      Number(item.prices?.find((p: any) => p.isActive)?.salePrice) || 0;
+  private mapToProductResponse(product: any): ProductResponseDto {
     const averageRating =
-      item.ratings?.length > 0
-        ? item.ratings.reduce((sum: number, r: any) => sum + r.rating, 0) /
-          item.ratings.length
+      product.ratings && product.ratings.length > 0
+        ? product.ratings.reduce((sum: number, r: any) => sum + r.rating, 0) /
+          product.ratings.length
         : 0;
-    const totalReviews = item.reviews?.length || 0;
-    const isFavorite = item.favorites?.length > 0;
 
     return {
-      id: item.id,
-      name: item.name,
-      description: item.description,
-      sku: item.sku,
-      isActive: item.isActive,
-      isFeatured: item.isFeatured,
-      sortOrder: item.sortOrder,
-      categoryId: item.categoryId,
-      subcategoryId: item.subcategoryId,
-      createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
-      category: item.category,
-      subcategory: item.subcategory,
-      prices: item.prices?.map((p: any) => this.mapToPriceResponse(p)),
-      stock: item.stock ? this.mapToStockResponse(item.stock) : undefined,
-      images: item.images?.map((i: any) => this.mapToItemImageResponse(i)),
-      reviews: item.reviews?.map((r: any) => this.mapToReviewResponse(r)),
-      ratings: item.ratings?.map((r: any) => this.mapToRatingResponse(r)),
-      favorites: item.favorites?.map((f: any) => this.mapToFavoriteResponse(f)),
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      sku: product.sku,
+      isActive: product.isActive,
+      isFeatured: product.isFeatured,
+      sortOrder: product.sortOrder,
+      categoryId: product.categoryId,
+      subcategoryId: product.subcategoryId,
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt,
+      category: product.category,
+      subcategory: product.subcategory,
+      variants: product.variants?.map((v: any) => this.mapToVariantResponse(v)),
       averageRating: Math.round(averageRating * 10) / 10,
-      totalReviews,
-      isFavorite,
+      totalReviews: product.reviews?.length || 0,
+      totalVariants: product.variants?.length || 0,
+    };
+  }
+
+  private mapToVariantResponse(variant: any): VariantResponseDto {
+    const activePrice = variant.prices?.find((p: any) => p.isActive);
+    const currentPrice = activePrice ? Number(activePrice.price) : 0;
+    const salePrice = activePrice?.salePrice
+      ? Number(activePrice.salePrice)
+      : undefined;
+
+    return {
+      id: variant.id,
+      productId: variant.productId,
+      sku: variant.sku,
+      name: variant.name,
+      attributes: variant.attributes,
+      isDefault: variant.isDefault,
+      isActive: variant.isActive,
+      sortOrder: variant.sortOrder,
+      createdAt: variant.createdAt,
+      updatedAt: variant.updatedAt,
+      prices: variant.prices?.map((p: any) => this.mapToPriceResponse(p)),
+      stock: variant.stock ? this.mapToStockResponse(variant.stock) : undefined,
+      images: variant.images?.map((img: any) =>
+        this.mapToProductImageResponse(img)
+      ),
       currentPrice,
       salePrice,
-      isOnSale:
-        Boolean(salePrice) &&
-        Number(salePrice) < Number(currentPrice) &&
-        Number(salePrice) > 0,
+      isOnSale: salePrice ? salePrice < currentPrice : false,
     };
   }
 
   private mapToPriceResponse(price: any): PriceResponseDto {
     return {
       id: price.id,
-      itemId: price.itemId,
+      variantId: price.variantId,
       price: Number(price.price),
       salePrice: price.salePrice ? Number(price.salePrice) : undefined,
       currency: price.currency,
@@ -1045,7 +903,7 @@ export class ProductsService {
   private mapToStockResponse(stock: any): StockResponseDto {
     return {
       id: stock.id,
-      itemId: stock.itemId,
+      variantId: stock.variantId,
       quantity: stock.quantity,
       reserved: stock.reserved,
       minThreshold: stock.minThreshold,
@@ -1056,53 +914,18 @@ export class ProductsService {
     };
   }
 
-  private mapToItemImageResponse(image: any): ItemImageResponseDto {
+  private mapToProductImageResponse(image: any): ProductImageResponseDto {
     return {
       id: image.id,
-      itemId: image.itemId,
+      productId: image.productId,
+      variantId: image.variantId,
       fileId: image.fileId,
       altText: image.altText,
       isPrimary: image.isPrimary,
       sortOrder: image.sortOrder,
       createdAt: image.createdAt,
       updatedAt: image.updatedAt,
-    };
-  }
-
-  private mapToReviewResponse(review: any): ReviewResponseDto {
-    return {
-      id: review.id,
-      itemId: review.itemId,
-      userId: review.userId,
-      title: review.title,
-      content: review.content,
-      rating: review.rating,
-      isApproved: review.isApproved,
-      createdAt: review.createdAt,
-      updatedAt: review.updatedAt,
-      user: review.user,
-    };
-  }
-
-  private mapToRatingResponse(rating: any): RatingResponseDto {
-    return {
-      id: rating.id,
-      itemId: rating.itemId,
-      userId: rating.userId,
-      rating: rating.rating,
-      createdAt: rating.createdAt,
-      updatedAt: rating.updatedAt,
-      user: rating.user,
-    };
-  }
-
-  private mapToFavoriteResponse(favorite: any): FavoriteResponseDto {
-    return {
-      id: favorite.id,
-      itemId: favorite.itemId,
-      userId: favorite.userId,
-      createdAt: favorite.createdAt,
-      item: favorite.item,
+      file: image.file,
     };
   }
 }

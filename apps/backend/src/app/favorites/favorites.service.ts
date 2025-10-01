@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -9,7 +13,7 @@ export class FavoritesService {
     const favorites = await this.prisma.favorite.findMany({
       where: { userId },
       include: {
-        item: {
+        product: {
           include: {
             category: {
               select: { id: true, name: true, slug: true },
@@ -17,15 +21,20 @@ export class FavoritesService {
             subcategory: {
               select: { id: true, name: true, slug: true },
             },
-            prices: {
-              where: { isActive: true },
-              orderBy: { price: 'asc' },
-              take: 1,
-            },
-            stock: true,
-            images: {
-              orderBy: { sortOrder: 'asc' },
-              take: 1,
+            variants: {
+              include: {
+                prices: {
+                  where: { isActive: true },
+                  orderBy: { price: 'asc' },
+                  take: 1,
+                },
+                stock: true,
+                images: {
+                  include: { file: true },
+                  orderBy: { sortOrder: 'asc' },
+                  take: 1,
+                },
+              },
             },
             reviews: {
               where: { isApproved: true },
@@ -37,45 +46,45 @@ export class FavoritesService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return favorites.map(fav => ({
+    return favorites.map((fav) => ({
       id: fav.id,
-      item: fav.item,
+      product: fav.product,
       createdAt: fav.createdAt,
     }));
   }
 
-  async addToFavorites(userId: string, itemId: string) {
-    // Check if item exists
-    const item = await this.prisma.item.findUnique({
-      where: { id: itemId },
+  async addToFavorites(userId: string, productId: string) {
+    // Check if product exists
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
     });
 
-    if (!item) {
-      throw new NotFoundException('Item not found');
+    if (!product) {
+      throw new NotFoundException('Product not found');
     }
 
     // Check if already favorited
     const existingFavorite = await this.prisma.favorite.findUnique({
       where: {
-        itemId_userId: {
-          itemId,
+        productId_userId: {
+          productId,
           userId,
         },
       },
     });
 
     if (existingFavorite) {
-      throw new ConflictException('Item is already in favorites');
+      throw new ConflictException('Product is already in favorites');
     }
 
     // Add to favorites
     const favorite = await this.prisma.favorite.create({
       data: {
         userId,
-        itemId,
+        productId,
       },
       include: {
-        item: {
+        product: {
           include: {
             category: {
               select: { id: true, name: true, slug: true },
@@ -83,15 +92,20 @@ export class FavoritesService {
             subcategory: {
               select: { id: true, name: true, slug: true },
             },
-            prices: {
-              where: { isActive: true },
-              orderBy: { price: 'asc' },
-              take: 1,
-            },
-            stock: true,
-            images: {
-              orderBy: { sortOrder: 'asc' },
-              take: 1,
+            variants: {
+              include: {
+                prices: {
+                  where: { isActive: true },
+                  orderBy: { price: 'asc' },
+                  take: 1,
+                },
+                stock: true,
+                images: {
+                  include: { file: true },
+                  orderBy: { sortOrder: 'asc' },
+                  take: 1,
+                },
+              },
             },
             reviews: {
               where: { isApproved: true },
@@ -104,16 +118,16 @@ export class FavoritesService {
 
     return {
       id: favorite.id,
-      item: favorite.item,
+      product: favorite.product,
       createdAt: favorite.createdAt,
     };
   }
 
-  async removeFromFavorites(userId: string, itemId: string) {
+  async removeFromFavorites(userId: string, productId: string) {
     const favorite = await this.prisma.favorite.findUnique({
       where: {
-        itemId_userId: {
-          itemId,
+        productId_userId: {
+          productId,
           userId,
         },
       },
@@ -125,8 +139,8 @@ export class FavoritesService {
 
     await this.prisma.favorite.delete({
       where: {
-        itemId_userId: {
-          itemId,
+        productId_userId: {
+          productId,
           userId,
         },
       },
@@ -135,11 +149,11 @@ export class FavoritesService {
     return { message: 'Removed from favorites' };
   }
 
-  async checkFavoriteStatus(userId: string, itemId: string) {
+  async checkFavoriteStatus(userId: string, productId: string) {
     const favorite = await this.prisma.favorite.findUnique({
       where: {
-        itemId_userId: {
-          itemId,
+        productId_userId: {
+          productId,
           userId,
         },
       },

@@ -10,7 +10,7 @@ function ResourceView() {
   };
 
   const handleEdit = (resource: Resource) => {
-    navigate(`/management/resources/edit/${resource.id}`);
+    navigate(`/management/resources/${resource.id}/edit`);
   };
 
   return (
