@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGetCategoriesQuery } from '@/apis/services/categoryApi';
+import { useGetSubcategoriesByCategoryQuery } from '@/apis/services/subcategoryApi';
 import { useGetProductByIdQuery } from '@/apis/services/productApi';
 import { ArrowRightIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
@@ -39,6 +40,14 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
     sortOrder: 0,
   });
 
+  // Fetch subcategories when a category is selected
+  const { data: subcategories } = useGetSubcategoriesByCategoryQuery(
+    formData.categoryId,
+    {
+      skip: !formData.categoryId,
+    }
+  );
+
   // Load existing product data if editing
   useEffect(() => {
     if (existingProduct) {
@@ -53,8 +62,6 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
       });
     }
   }, [existingProduct]);
-
-  const selectedCategory = categories?.find((c) => c.id === formData.categoryId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +106,8 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
           className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow resize-none"
         />
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Provide a detailed description to help customers understand your product
+          Provide a detailed description to help customers understand your
+          product
         </p>
       </div>
 
@@ -154,7 +162,7 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
             className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-shadow"
           >
             <option value="">Select Subcategory</option>
-            {selectedCategory?.subcategories?.map((sub: any) => (
+            {subcategories?.map((sub) => (
               <option key={sub.id} value={sub.id}>
                 {sub.name}
               </option>
@@ -168,7 +176,7 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
         <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
           Additional Settings
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex items-start">
             <div className="flex items-center h-5">
@@ -200,7 +208,9 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
             <input
               type="number"
               value={formData.sortOrder}
-              onChange={(e) => updateField('sortOrder', parseInt(e.target.value) || 0)}
+              onChange={(e) =>
+                updateField('sortOrder', parseInt(e.target.value) || 0)
+              }
               min="0"
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
@@ -234,4 +244,3 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
 };
 
 export default ProductBasicInfoForm;
-

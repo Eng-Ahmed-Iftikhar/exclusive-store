@@ -109,8 +109,11 @@ export const subcategoryApi = createApi({
         params: {
           categoryId,
           includeInactive: false,
+          limit: 100, // Get all subcategories for a category
         },
       }),
+      transformResponse: (response: SubcategoryListResponse) =>
+        response.subcategories,
       providesTags: (result, error, categoryId) => [
         { type: 'Subcategory', id: `category-${categoryId}` },
       ],
