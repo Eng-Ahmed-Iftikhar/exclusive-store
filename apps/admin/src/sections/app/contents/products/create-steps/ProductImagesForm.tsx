@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   useCreateProductImageMutation,
   useGetProductByIdQuery,
+  useGetImagesByProductQuery,
 } from '@/apis/services/productApi';
 import { useUploadFileMutation } from '@/apis/services/fileApi';
-import { ArrowRightIcon, ArrowLeftIcon, PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowRightIcon,
+  ArrowLeftIcon,
+  PhotoIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 
 interface ProductImagesFormProps {
   productId: string;
@@ -17,10 +23,18 @@ const ProductImagesForm: React.FC<ProductImagesFormProps> = ({
   onComplete,
   onBack,
 }) => {
-  const { data: product, refetch } = useGetProductByIdQuery(productId);
+  const { refetch } = useGetProductByIdQuery(productId, {
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
+  });
+  const { data: productImages, refetch: refetchImages } =
+    useGetImagesByProductQuery(productId, {
+      refetchOnMountOrArgChange: true,
+      refetchOnFocus: true,
+    });
   const [createProductImage] = useCreateProductImageMutation();
+
   const [uploadFile] = useUploadFileMutation();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedImages, setSelectedImages] = useState<
     Array<{ file: File; preview: string; altText: string }>
@@ -47,7 +61,7 @@ const ProductImagesForm: React.FC<ProductImagesFormProps> = ({
 
     setUploading(true);
     try {
-      const existingImagesCount = product?.images?.length || 0;
+      const existingImagesCount = productImages?.length || 0;
 
       for (let i = 0; i < selectedImages.length; i++) {
         const image = selectedImages[i];
@@ -65,6 +79,7 @@ const ProductImagesForm: React.FC<ProductImagesFormProps> = ({
       }
 
       await refetch();
+      await refetchImages();
       setSelectedImages([]);
       onComplete();
     } catch (error) {
@@ -83,16 +98,23 @@ const ProductImagesForm: React.FC<ProductImagesFormProps> = ({
     onComplete();
   };
 
+  // Auto-refresh images when productId changes
+  useEffect(() => {
+    if (productId) {
+      refetchImages();
+    }
+  }, [productId, refetchImages]);
+
   return (
     <div className="space-y-6">
       {/* Existing Images */}
-      {product?.images && product.images.length > 0 && (
+      {productImages && productImages.length > 0 && (
         <div>
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-            Existing Images ({product.images.length})
+            Existing Images ({productImages.length})
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {product.images.map((img: any, idx) => (
+            {productImages.map((img, idx) => (
               <div
                 key={img.id}
                 className="relative bg-gray-100 dark:bg-gray-700 rounded-lg p-2"
@@ -215,7 +237,11 @@ const ProductImagesForm: React.FC<ProductImagesFormProps> = ({
             disabled={uploading}
             className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
           >
-            {uploading ? 'Uploading...' : selectedImages.length > 0 ? 'Save & Continue' : 'Continue'}
+            {uploading
+              ? 'Uploading...'
+              : selectedImages.length > 0
+              ? 'Save & Continue'
+              : 'Continue'}
             <ArrowRightIcon className="h-5 w-5 ml-2" />
           </button>
         </div>
@@ -225,4 +251,3 @@ const ProductImagesForm: React.FC<ProductImagesFormProps> = ({
 };
 
 export default ProductImagesForm;
-

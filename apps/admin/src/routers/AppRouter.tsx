@@ -31,6 +31,10 @@ import CreateProductVariantsPage from '@/pages/app/contents/products/CreateProdu
 import CreateProductImagesPage from '@/pages/app/contents/products/CreateProductImagesPage';
 import CreateProductReviewPage from '@/pages/app/contents/products/CreateProductReviewPage';
 import EditProductPage from '@/pages/app/contents/EditProductPage';
+import EditProductBasicInfoPage from '@/pages/app/contents/products/EditProductBasicInfoPage';
+import EditProductVariantsPage from '@/pages/app/contents/products/EditProductVariantsPage';
+import EditProductImagesPage from '@/pages/app/contents/products/EditProductImagesPage';
+import EditProductReviewPage from '@/pages/app/contents/products/EditProductReviewPage';
 import Login from '@/pages/auth/LoginPage';
 import SetupPasswordPage from '@/pages/auth/SetupPasswordPage';
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
@@ -69,6 +73,10 @@ const COMPONENT_MAP = {
   CreateProductImages: CreateProductImagesPage,
   CreateProductReview: CreateProductReviewPage,
   EditProduct: EditProductPage,
+  EditProductBasic: EditProductBasicInfoPage,
+  EditProductVariants: EditProductVariantsPage,
+  EditProductImages: EditProductImagesPage,
+  EditProductReview: EditProductReviewPage,
   Login: Login,
   SetupPassword: SetupPasswordPage,
   ForgotPassword: ForgotPasswordPage,
@@ -83,6 +91,14 @@ const AppRouter: React.FC = () => {
     ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CREATE_PRODUCT_VARIANTS,
     ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CREATE_PRODUCT_IMAGES,
     ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CREATE_PRODUCT_REVIEW,
+  ];
+
+  // Product edit routes that need ProductFormContext
+  const productEditRoutes = [
+    ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_EDIT_PRODUCT_BASIC,
+    ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_EDIT_PRODUCT_VARIANTS,
+    ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_EDIT_PRODUCT_IMAGES,
+    ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_EDIT_PRODUCT_REVIEW,
   ];
 
   return (
@@ -123,9 +139,30 @@ const AppRouter: React.FC = () => {
         })}
       </Route>
 
+      {/* Product Edit Routes with Context Provider */}
+      <Route
+        element={
+          <ProtectedRoute requireAuth={true} redirectTo={ROUTES.LOGIN}>
+            <ProductCreationLayout />
+          </ProtectedRoute>
+        }
+      >
+        {ADMIN_ROUTES.filter((route) =>
+          productEditRoutes.includes(route.path)
+        ).map((route) => {
+          const Component =
+            COMPONENT_MAP[route.element as keyof typeof COMPONENT_MAP];
+          return (
+            <Route key={route.path} path={route.path} element={<Component />} />
+          );
+        })}
+      </Route>
+
       {/* Other Admin Pages (without ProductCreationContext) */}
       {ADMIN_ROUTES.filter(
-        (route) => !productCreationRoutes.includes(route.path)
+        (route) =>
+          !productCreationRoutes.includes(route.path) &&
+          !productEditRoutes.includes(route.path)
       ).map((route) => {
         const Component =
           COMPONENT_MAP[route.element as keyof typeof COMPONENT_MAP];

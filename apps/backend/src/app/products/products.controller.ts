@@ -153,7 +153,6 @@ export class ProductsController {
     return this.productsService.getProductById(id);
   }
 
-  @Put(':id')
   @Patch(':id')
   @ApiOperation({
     summary: 'Update product',
@@ -249,7 +248,6 @@ export class ProductsController {
   }
 
   @Put('variants/:id')
-  @Patch('variants/:id')
   @ApiOperation({
     summary: 'Update variant',
     description: 'Update variant information and attributes',
@@ -323,7 +321,6 @@ export class ProductsController {
   }
 
   @Put('prices/:id')
-  @Patch('prices/:id')
   @ApiOperation({
     summary: 'Update price',
     description: 'Update pricing information',
@@ -400,7 +397,6 @@ export class ProductsController {
   }
 
   @Put('stock/:id')
-  @Patch('stock/:id')
   @ApiOperation({
     summary: 'Update stock',
     description: 'Update inventory quantities and thresholds',
@@ -484,7 +480,6 @@ export class ProductsController {
   }
 
   @Put('images/:id')
-  @Patch('images/:id')
   @ApiOperation({
     summary: 'Update product image',
     description: 'Update image metadata (alt text, primary status, sort order)',

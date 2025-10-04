@@ -32,6 +32,10 @@ const CONTENT_ROUTES = {
   ADMIN_CREATE_PRODUCT_IMAGES: '/products/create/images',
   ADMIN_CREATE_PRODUCT_REVIEW: '/products/create/review',
   ADMIN_EDIT_PRODUCT: '/products/:id/edit',
+  ADMIN_EDIT_PRODUCT_BASIC: '/products/:id/edit/basic-info',
+  ADMIN_EDIT_PRODUCT_VARIANTS: '/products/:id/edit/variants',
+  ADMIN_EDIT_PRODUCT_IMAGES: '/products/:id/edit/images',
+  ADMIN_EDIT_PRODUCT_REVIEW: '/products/:id/edit/review',
 };
 
 const AUTH_ROUTES = {
@@ -93,6 +97,10 @@ export const ROUTE_NAMES = {
   CREATE_PRODUCT_IMAGES: 'Create Product - Images',
   CREATE_PRODUCT_REVIEW: 'Create Product - Review',
   EDIT_PRODUCT: 'Edit Product',
+  EDIT_PRODUCT_BASIC: 'Edit Product - Basic Info',
+  EDIT_PRODUCT_VARIANTS: 'Edit Product - Variants',
+  EDIT_PRODUCT_IMAGES: 'Edit Product - Images',
+  EDIT_PRODUCT_REVIEW: 'Edit Product - Review',
   SETUP_PASSWORD: 'Setup Password',
   FORGOT_PASSWORD: 'Forgot Password',
   RESET_PASSWORD: 'Reset Password',
@@ -298,6 +306,30 @@ export const ADMIN_ROUTES = [
     name: ROUTE_NAMES.EDIT_PRODUCT,
     element: 'EditProduct',
     icon: 'edit-product',
+  },
+  {
+    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_EDIT_PRODUCT_BASIC,
+    name: ROUTE_NAMES.EDIT_PRODUCT_BASIC,
+    element: 'EditProductBasic',
+    icon: 'edit-product-basic',
+  },
+  {
+    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_EDIT_PRODUCT_VARIANTS,
+    name: ROUTE_NAMES.EDIT_PRODUCT_VARIANTS,
+    element: 'EditProductVariants',
+    icon: 'edit-product-variants',
+  },
+  {
+    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_EDIT_PRODUCT_IMAGES,
+    name: ROUTE_NAMES.EDIT_PRODUCT_IMAGES,
+    element: 'EditProductImages',
+    icon: 'edit-product-images',
+  },
+  {
+    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_EDIT_PRODUCT_REVIEW,
+    name: ROUTE_NAMES.EDIT_PRODUCT_REVIEW,
+    element: 'EditProductReview',
+    icon: 'edit-product-review',
   },
 ];
 

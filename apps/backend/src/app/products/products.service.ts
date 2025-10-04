@@ -204,6 +204,22 @@ export class ProductsService {
           },
           orderBy: { sortOrder: 'asc' },
         },
+        images: {
+          include: {
+            file: {
+              select: {
+                id: true,
+                url: true,
+                secureUrl: true,
+                originalName: true,
+                format: true,
+                width: true,
+                height: true,
+              },
+            },
+          },
+          orderBy: { sortOrder: 'asc' },
+        },
         reviews: { where: { isApproved: true } },
         ratings: true,
       },
@@ -850,6 +866,9 @@ export class ProductsService {
       category: product.category,
       subcategory: product.subcategory,
       variants: product.variants?.map((v: any) => this.mapToVariantResponse(v)),
+      images: product.images?.map((img: any) =>
+        this.mapToProductImageResponse(img)
+      ),
       averageRating: Math.round(averageRating * 10) / 10,
       totalReviews: product.reviews?.length || 0,
       totalVariants: product.variants?.length || 0,

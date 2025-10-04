@@ -3,7 +3,11 @@ import {
   useGetProductByIdQuery,
   useUpdateProductMutation,
 } from '@/apis/services/productApi';
-import { ArrowLeftIcon, CheckCircleIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  DocumentTextIcon,
+} from '@heroicons/react/24/outline';
 
 interface ProductReviewFormProps {
   productId: string;
@@ -16,7 +20,10 @@ const ProductReviewForm: React.FC<ProductReviewFormProps> = ({
   onPublish,
   onBack,
 }) => {
-  const { data: product, isLoading } = useGetProductByIdQuery(productId);
+  const { data: product, isLoading } = useGetProductByIdQuery(productId, {
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
+  });
   const [updateProduct] = useUpdateProductMutation();
   const [isPublishing, setIsPublishing] = useState(false);
 
@@ -65,7 +72,8 @@ const ProductReviewForm: React.FC<ProductReviewFormProps> = ({
   const totalVariants = product.variants?.length || 0;
   const totalImages =
     (product.images?.length || 0) +
-    (product.variants?.reduce((sum, v) => sum + (v.images?.length || 0), 0) || 0);
+    (product.variants?.reduce((sum, v) => sum + (v.images?.length || 0), 0) ||
+      0);
 
   return (
     <div className="space-y-6">
@@ -77,33 +85,43 @@ const ProductReviewForm: React.FC<ProductReviewFormProps> = ({
         </h3>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div>
-            <dt className="text-gray-600 dark:text-gray-400 font-medium">Name</dt>
+            <dt className="text-gray-600 dark:text-gray-400 font-medium">
+              Name
+            </dt>
             <dd className="text-gray-900 dark:text-white text-lg font-semibold mt-1">
               {product.name}
             </dd>
           </div>
           <div>
-            <dt className="text-gray-600 dark:text-gray-400 font-medium">SKU</dt>
+            <dt className="text-gray-600 dark:text-gray-400 font-medium">
+              SKU
+            </dt>
             <dd className="text-gray-900 dark:text-white mt-1">
               {product.sku || 'N/A'}
             </dd>
           </div>
           {product.description && (
             <div className="md:col-span-2">
-              <dt className="text-gray-600 dark:text-gray-400 font-medium">Description</dt>
+              <dt className="text-gray-600 dark:text-gray-400 font-medium">
+                Description
+              </dt>
               <dd className="text-gray-900 dark:text-white mt-1 leading-relaxed">
                 {product.description}
               </dd>
             </div>
           )}
           <div>
-            <dt className="text-gray-600 dark:text-gray-400 font-medium">Category</dt>
+            <dt className="text-gray-600 dark:text-gray-400 font-medium">
+              Category
+            </dt>
             <dd className="text-gray-900 dark:text-white mt-1">
               {product.category?.name || 'N/A'}
             </dd>
           </div>
           <div>
-            <dt className="text-gray-600 dark:text-gray-400 font-medium">Subcategory</dt>
+            <dt className="text-gray-600 dark:text-gray-400 font-medium">
+              Subcategory
+            </dt>
             <dd className="text-gray-900 dark:text-white mt-1">
               {product.subcategory?.name || 'N/A'}
             </dd>
@@ -150,7 +168,9 @@ const ProductReviewForm: React.FC<ProductReviewFormProps> = ({
             ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-500 dark:text-gray-400">No variants created</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            No variants created
+          </p>
         )}
       </div>
 
@@ -161,7 +181,10 @@ const ProductReviewForm: React.FC<ProductReviewFormProps> = ({
         </h3>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           {product.images?.length || 0} product images,{' '}
-          {product.variants?.reduce((sum, v) => sum + (v.images?.length || 0), 0) || 0}{' '}
+          {product.variants?.reduce(
+            (sum, v) => sum + (v.images?.length || 0),
+            0
+          ) || 0}{' '}
           variant images
         </p>
       </div>
@@ -172,8 +195,8 @@ const ProductReviewForm: React.FC<ProductReviewFormProps> = ({
           Ready to Publish?
         </h3>
         <p className="text-sm text-amber-800 dark:text-amber-300 leading-relaxed">
-          Publishing will make this product visible to customers. You can also save it as
-          a draft to review and publish later.
+          Publishing will make this product visible to customers. You can also
+          save it as a draft to review and publish later.
         </p>
       </div>
 
@@ -214,4 +237,3 @@ const ProductReviewForm: React.FC<ProductReviewFormProps> = ({
 };
 
 export default ProductReviewForm;
-

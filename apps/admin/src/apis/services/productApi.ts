@@ -219,6 +219,14 @@ export const productApi = createApi({
       providesTags: ['Product'],
     }),
 
+    // Get product images by product ID
+    getImagesByProduct: builder.query<ProductImage[], string>({
+      query: (productId) => `/products/${productId}/images`,
+      providesTags: (result, error, productId) => [
+        { type: 'ProductImage', id: productId },
+      ],
+    }),
+
     // Get top rated products
     getTopRatedProducts: builder.query<
       Product[],
@@ -484,7 +492,10 @@ export const productApi = createApi({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['Product'],
+      invalidatesTags: (result, error, arg) => [
+        { type: 'Product', id: arg.productId },
+        { type: 'Product', id: arg.variantId },
+      ],
     }),
 
     // Update product image
@@ -655,6 +666,7 @@ export const {
   useCreateProductImageMutation,
   useUpdateProductImageMutation,
   useDeleteProductImageMutation,
+  useGetImagesByProductQuery,
   useCreateReviewMutation,
   useUpdateReviewMutation,
   useAdminUpdateReviewMutation,

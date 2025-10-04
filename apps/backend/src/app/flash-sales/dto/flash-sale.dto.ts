@@ -3,6 +3,7 @@ import {
   IsOptional,
   IsBoolean,
   IsInt,
+  IsNumber,
   IsDateString,
   IsArray,
   ValidateNested,
@@ -15,11 +16,11 @@ export class CreateFlashSaleItemDto {
   @IsString()
   productId!: string;
 
-  @IsInt()
+  @IsNumber()
   @Min(0)
   salePrice!: number;
 
-  @IsInt()
+  @IsNumber()
   @Min(0)
   originalPrice!: number;
 
@@ -88,12 +89,12 @@ export class UpdateFlashSaleDto {
 
 export class UpdateFlashSaleItemDto {
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   @Min(0)
   salePrice?: number;
 
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   @Min(0)
   originalPrice?: number;
 

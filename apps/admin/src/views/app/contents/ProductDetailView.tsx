@@ -23,6 +23,8 @@ const ProductDetailView: React.FC = () => {
     error: productError,
   } = useGetProductByIdQuery(id || '', {
     skip: !id,
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
   });
 
   const handleEdit = () => {

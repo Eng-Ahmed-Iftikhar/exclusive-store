@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export interface ProductCreationState {
@@ -31,7 +25,9 @@ interface ProductCreationContextType {
   setProductId: (id: string) => void;
   setCurrentStep: (step: number) => void;
   markStepComplete: (step: number) => void;
-  updateProductData: (data: any) => void;
+  updateProductData: (
+    data: Partial<ProductCreationState['productData']>
+  ) => void;
   resetCreation: () => void;
   navigateToStep: (step: number) => void;
 }
@@ -39,8 +35,6 @@ interface ProductCreationContextType {
 const ProductCreationContext = createContext<
   ProductCreationContextType | undefined
 >(undefined);
-
-const STORAGE_KEY = 'product_creation_state';
 
 const INITIAL_STATE: ProductCreationState = {
   productId: null,
@@ -53,23 +47,7 @@ export const ProductCreationProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const navigate = useNavigate();
-  const [state, setState] = useState<ProductCreationState>(() => {
-    // Load from localStorage on mount
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return INITIAL_STATE;
-      }
-    }
-    return INITIAL_STATE;
-  });
-
-  // Persist to localStorage whenever state changes
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
+  const [state, setState] = useState<ProductCreationState>(INITIAL_STATE);
 
   const setProductId = (id: string) => {
     setState((prev) => ({ ...prev, productId: id }));
@@ -100,16 +78,19 @@ export const ProductCreationProvider: React.FC<{ children: ReactNode }> = ({
     return isStepCompleted(step - 1);
   };
 
-  const updateProductData = (data: any) => {
+  const updateProductData = (
+    data: Partial<ProductCreationState['productData']>
+  ) => {
     setState((prev) => ({
       ...prev,
-      productData: { ...prev.productData, ...data },
+      productData: prev.productData
+        ? { ...prev.productData, ...data }
+        : (data as ProductCreationState['productData']),
     }));
   };
 
   const resetCreation = () => {
     setState(INITIAL_STATE);
-    localStorage.removeItem(STORAGE_KEY);
   };
 
   const navigateToStep = (step: number) => {

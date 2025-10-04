@@ -211,6 +211,13 @@ export class ProductResponseDto {
   })
   variants?: any[];
 
+  @ApiProperty({
+    description: 'Product images',
+    type: 'array',
+    required: false,
+  })
+  images?: any[];
+
   @ApiProperty({ description: 'Average rating', required: false })
   averageRating?: number;
 

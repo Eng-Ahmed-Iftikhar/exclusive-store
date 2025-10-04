@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsBoolean,
   IsInt,
+  IsNumber,
   IsObject,
   IsNotEmpty,
   IsArray,
@@ -228,7 +229,7 @@ export class CreatePriceDto {
     description: 'Regular price',
     example: 29.99,
   })
-  @IsInt()
+  @IsNumber()
   @Min(0)
   price!: number;
 
@@ -238,7 +239,7 @@ export class CreatePriceDto {
     required: false,
   })
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   @Min(0)
   salePrice?: number;
 
@@ -268,7 +269,7 @@ export class UpdatePriceDto {
     required: false,
   })
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   @Min(0)
   price?: number;
 
@@ -278,7 +279,7 @@ export class UpdatePriceDto {
     required: false,
   })
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   @Min(0)
   salePrice?: number;
 
