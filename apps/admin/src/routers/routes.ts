@@ -1,3 +1,12 @@
+import { RouteProps } from 'react-router-dom';
+
+export type AppRoute = RouteProps & {
+  name: string;
+  icon?: string;
+  childrens?: AppRoute[];
+  provider?: string;
+};
+
 const MANAGEMENT_ROUTES = {
   ADMIN_MANAGEMENT: '/management',
   ADMIN_PERMISSIONS: '/permissions',
@@ -25,17 +34,17 @@ const CONTENT_ROUTES = {
   ADMIN_CREATE_SUBCATEGORY: '/subcategories/create',
   ADMIN_EDIT_SUBCATEGORY: '/subcategories/:id/edit',
   ADMIN_PRODUCTS: '/products',
-  ADMIN_PRODUCT_DETAIL: '/products/:id',
-  ADMIN_CREATE_PRODUCT: '/products/create',
-  ADMIN_CREATE_PRODUCT_BASIC: '/products/create/basic-info',
-  ADMIN_CREATE_PRODUCT_VARIANTS: '/products/create/variants',
-  ADMIN_CREATE_PRODUCT_IMAGES: '/products/create/images',
-  ADMIN_CREATE_PRODUCT_REVIEW: '/products/create/review',
-  ADMIN_EDIT_PRODUCT: '/products/:id/edit',
-  ADMIN_EDIT_PRODUCT_BASIC: '/products/:id/edit/basic-info',
-  ADMIN_EDIT_PRODUCT_VARIANTS: '/products/:id/edit/variants',
-  ADMIN_EDIT_PRODUCT_IMAGES: '/products/:id/edit/images',
-  ADMIN_EDIT_PRODUCT_REVIEW: '/products/:id/edit/review',
+  ADMIN_PRODUCT_DETAIL: '/products/:productId',
+  ADMIN_CREATE_PRODUCT: '/products/create/*',
+  ADMIN_CREATE_PRODUCT_BASIC: '/basic-info',
+  ADMIN_CREATE_PRODUCT_VARIANTS: '/variants',
+  ADMIN_CREATE_PRODUCT_IMAGES: '/images',
+  ADMIN_CREATE_PRODUCT_REVIEW: '/review',
+  ADMIN_EDIT_PRODUCT: '/products/:productId/edit/*',
+  ADMIN_EDIT_PRODUCT_BASIC: '/basic-info',
+  ADMIN_EDIT_PRODUCT_VARIANTS: '/variants',
+  ADMIN_EDIT_PRODUCT_IMAGES: '/images',
+  ADMIN_EDIT_PRODUCT_REVIEW: '/review',
 };
 
 const AUTH_ROUTES = {
@@ -107,31 +116,36 @@ export const ROUTE_NAMES = {
 } as const;
 
 // Public Routes Array
-export const PUBLIC_ROUTES = [
+export const PUBLIC_ROUTES: AppRoute[] = [
   {
     path: ROUTES.LOGIN,
+    icon: 'login',
     name: ROUTE_NAMES.LOGIN,
     element: 'Login',
+    index: true,
   },
   {
     path: ROUTES.ADMIN_SETUP_PASSWORD,
+    icon: 'setup-password',
     name: ROUTE_NAMES.SETUP_PASSWORD,
     element: 'SetupPassword',
   },
   {
     path: ROUTES.ADMIN_FORGOT_PASSWORD,
+    icon: 'forgot-password',
     name: ROUTE_NAMES.FORGOT_PASSWORD,
     element: 'ForgotPassword',
   },
   {
     path: ROUTES.ADMIN_RESET_PASSWORD,
+    icon: 'reset-password',
     name: ROUTE_NAMES.RESET_PASSWORD,
     element: 'ResetPassword',
   },
 ];
 
 // Admin Routes Array
-export const ADMIN_ROUTES = [
+export const ADMIN_ROUTES: AppRoute[] = [
   {
     path: ROUTES.ADMIN,
     name: ROUTE_NAMES.DASHBOARD,
@@ -274,62 +288,79 @@ export const ADMIN_ROUTES = [
   {
     path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CREATE_PRODUCT,
     name: ROUTE_NAMES.CREATE_PRODUCT,
-    element: 'CreateProduct',
-    icon: 'create-product',
+    provider: 'ProductProvider',
+    childrens: [
+      {
+        path: '/',
+        name: ROUTE_NAMES.CREATE_PRODUCT,
+        element: 'CreateProduct',
+        icon: 'create-product',
+        index: true,
+      },
+      {
+        path: ROUTES.ADMIN_CREATE_PRODUCT_BASIC,
+        name: ROUTE_NAMES.CREATE_PRODUCT_BASIC,
+        element: 'CreateProductBasic',
+        icon: 'create-product-basic',
+      },
+      {
+        path: ROUTES.ADMIN_CREATE_PRODUCT_VARIANTS,
+        name: ROUTE_NAMES.CREATE_PRODUCT_VARIANTS,
+        element: 'CreateProductVariants',
+        icon: 'create-product-variants',
+      },
+      {
+        path: ROUTES.ADMIN_CREATE_PRODUCT_IMAGES,
+        name: ROUTE_NAMES.CREATE_PRODUCT_IMAGES,
+        element: 'CreateProductImages',
+        icon: 'create-product-images',
+      },
+      {
+        path: ROUTES.ADMIN_CREATE_PRODUCT_REVIEW,
+        name: ROUTE_NAMES.CREATE_PRODUCT_REVIEW,
+        element: 'CreateProductReview',
+        icon: 'create-product-review',
+      },
+    ],
   },
-  {
-    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CREATE_PRODUCT_BASIC,
-    name: ROUTE_NAMES.CREATE_PRODUCT_BASIC,
-    element: 'CreateProductBasic',
-    icon: 'create-product-basic',
-  },
-  {
-    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CREATE_PRODUCT_VARIANTS,
-    name: ROUTE_NAMES.CREATE_PRODUCT_VARIANTS,
-    element: 'CreateProductVariants',
-    icon: 'create-product-variants',
-  },
-  {
-    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CREATE_PRODUCT_IMAGES,
-    name: ROUTE_NAMES.CREATE_PRODUCT_IMAGES,
-    element: 'CreateProductImages',
-    icon: 'create-product-images',
-  },
-  {
-    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_CREATE_PRODUCT_REVIEW,
-    name: ROUTE_NAMES.CREATE_PRODUCT_REVIEW,
-    element: 'CreateProductReview',
-    icon: 'create-product-review',
-  },
+
   {
     path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_EDIT_PRODUCT,
     name: ROUTE_NAMES.EDIT_PRODUCT,
-    element: 'EditProduct',
-    icon: 'edit-product',
-  },
-  {
-    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_EDIT_PRODUCT_BASIC,
-    name: ROUTE_NAMES.EDIT_PRODUCT_BASIC,
-    element: 'EditProductBasic',
-    icon: 'edit-product-basic',
-  },
-  {
-    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_EDIT_PRODUCT_VARIANTS,
-    name: ROUTE_NAMES.EDIT_PRODUCT_VARIANTS,
-    element: 'EditProductVariants',
-    icon: 'edit-product-variants',
-  },
-  {
-    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_EDIT_PRODUCT_IMAGES,
-    name: ROUTE_NAMES.EDIT_PRODUCT_IMAGES,
-    element: 'EditProductImages',
-    icon: 'edit-product-images',
-  },
-  {
-    path: ROUTES.ADMIN_CONTENT + ROUTES.ADMIN_EDIT_PRODUCT_REVIEW,
-    name: ROUTE_NAMES.EDIT_PRODUCT_REVIEW,
-    element: 'EditProductReview',
-    icon: 'edit-product-review',
+    provider: 'ProductProvider',
+    childrens: [
+      {
+        path: '/',
+        name: ROUTE_NAMES.EDIT_PRODUCT,
+        element: 'EditProduct',
+        icon: 'edit-product',
+        index: true,
+      },
+      {
+        path: ROUTES.ADMIN_EDIT_PRODUCT_BASIC,
+        name: ROUTE_NAMES.EDIT_PRODUCT_BASIC,
+        element: 'EditProductBasic',
+        icon: 'edit-product-basic',
+      },
+      {
+        path: ROUTES.ADMIN_EDIT_PRODUCT_VARIANTS,
+        name: ROUTE_NAMES.EDIT_PRODUCT_VARIANTS,
+        element: 'EditProductVariants',
+        icon: 'edit-product-variants',
+      },
+      {
+        path: ROUTES.ADMIN_EDIT_PRODUCT_IMAGES,
+        name: ROUTE_NAMES.EDIT_PRODUCT_IMAGES,
+        element: 'EditProductImages',
+        icon: 'edit-product-images',
+      },
+      {
+        path: ROUTES.ADMIN_EDIT_PRODUCT_REVIEW,
+        name: ROUTE_NAMES.EDIT_PRODUCT_REVIEW,
+        element: 'EditProductReview',
+        icon: 'edit-product-review',
+      },
+    ],
   },
 ];
 

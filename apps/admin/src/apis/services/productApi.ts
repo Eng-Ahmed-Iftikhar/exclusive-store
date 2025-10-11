@@ -223,7 +223,7 @@ export const productApi = createApi({
     getImagesByProduct: builder.query<ProductImage[], string>({
       query: (productId) => `/products/${productId}/images`,
       providesTags: (result, error, productId) => [
-        { type: 'ProductImage', id: productId },
+        { type: 'Product', id: productId },
       ],
     }),
 
@@ -643,6 +643,7 @@ export const productApi = createApi({
 export const {
   useGetProductsQuery,
   useGetProductByIdQuery,
+  useLazyGetProductByIdQuery,
   useGetFeaturedProductsQuery,
   useGetBestSellingProductsQuery,
   useGetTopRatedProductsQuery,
