@@ -59,7 +59,7 @@
         <template #prepend>
           <v-icon icon="mdi-cart-check" size="16" />
         </template>
-        This item is already in your cart ({{ cartItemQuantity }} {{ cartItemQuantity === 1 ? 'item' : 'items' }})
+        This product is already in your cart ({{ cartProductQuantity }} {{ cartProductQuantity === 1 ? 'item' : 'items' }})
       </v-alert>
     </div>
   </div>
@@ -68,8 +68,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
-interface ItemModalActionsProps {
-  item: any;
+interface ProductModalActionsProps {
+  product: any;
   quantity: number;
   isInStock: boolean;
   isFavorited: boolean;
@@ -77,18 +77,23 @@ interface ItemModalActionsProps {
   favoriteLoading: boolean;
 }
 
-const props = defineProps<ItemModalActionsProps>();
+const props = defineProps<ProductModalActionsProps>();
 const emit = defineEmits<{
   'update:quantity': [quantity: number];
-  'add-to-cart': [item: any, quantity: number];
+  'add-to-cart': [product: any, quantity: number];
   'favorite-click': [];
 }>();
 
 // Computed properties
 const maxQuantity = computed(() => {
-  const stock = props.item.stock;
-  const availableStock = stock ? stock.quantity : 0;
-  return Math.min(availableStock, 10); // Max 10 items per order
+  // Get stock from default variant
+  if (props.product.variants && props.product.variants.length > 0) {
+    const defaultVariant = props.product.variants.find((v: any) => v.isDefault) || props.product.variants[0];
+    const stock = defaultVariant.stock;
+    const availableStock = stock ? stock.quantity : 0;
+    return Math.min(availableStock, 10); // Max 10 items per order
+  }
+  return 0;
 });
 
 const isInCart = computed(() => {
@@ -96,7 +101,7 @@ const isInCart = computed(() => {
   return false; // Placeholder, will be overridden by parent
 });
 
-const cartItemQuantity = computed(() => {
+const cartProductQuantity = computed(() => {
   // This will be passed from parent component
   return 0; // Placeholder, will be overridden by parent
 });
@@ -115,7 +120,7 @@ const decreaseQuantity = () => {
 };
 
 const handleAddToCart = () => {
-  emit('add-to-cart', props.item, props.quantity);
+  emit('add-to-cart', props.product, props.quantity);
 };
 
 const handleFavoriteClick = () => {
@@ -197,3 +202,4 @@ const handleFavoriteClick = () => {
   }
 }
 </style>
+

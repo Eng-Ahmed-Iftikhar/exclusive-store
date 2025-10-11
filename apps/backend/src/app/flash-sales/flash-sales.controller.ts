@@ -31,8 +31,6 @@ import { FlashSaleItemDto } from './dto/flash-sale.dto';
 
 @Controller('flash-sales')
 @ApiTags('FlashSales')
-@ApiBearerAuth('JWT-auth')
-@UseGuards(JwtAuthGuard)
 export class FlashSalesController {
   constructor(private readonly flashSalesService: FlashSalesService) {}
 
@@ -68,6 +66,8 @@ export class FlashSalesController {
   // ===== ADMIN ENDPOINTS =====
 
   @Post()
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async createFlashSale(
     @Body() createFlashSaleDto: CreateFlashSaleDto
@@ -76,6 +76,8 @@ export class FlashSalesController {
   }
 
   @Put(':id')
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
   async updateFlashSale(
     @Param('id') id: string,
     @Body() updateFlashSaleDto: UpdateFlashSaleDto
@@ -84,6 +86,8 @@ export class FlashSalesController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteFlashSale(@Param('id') id: string): Promise<void> {
     return this.flashSalesService.deleteFlashSale(id);
@@ -92,6 +96,8 @@ export class FlashSalesController {
   // ===== FLASH SALE ITEMS =====
 
   @Post(':id/items')
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async addItemToFlashSale(
     @Param('id') flashSaleId: string,
@@ -104,6 +110,8 @@ export class FlashSalesController {
   }
 
   @Put('items/:id')
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
   async updateFlashSaleItem(
     @Param('id') id: string,
     @Body() updateFlashSaleItemDto: UpdateFlashSaleItemDto
@@ -115,6 +123,8 @@ export class FlashSalesController {
   }
 
   @Delete('items/:id')
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeItemFromFlashSale(@Param('id') id: string): Promise<void> {
     return this.flashSalesService.removeItemFromFlashSale(id);

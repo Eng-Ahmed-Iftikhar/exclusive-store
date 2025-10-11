@@ -2,22 +2,16 @@
   <div class="related-products-section mt-8">
     <h2 class="section-title">Related Products</h2>
     <v-row>
-      <v-col 
-        v-for="relatedProduct in products" 
-        :key="relatedProduct.id"
-        cols="12" 
-        sm="6" 
-        md="4" 
-        lg="3"
-      >
-        <ItemCard :item="relatedProduct" />
+      <v-col v-for="relatedProduct in products" :key="relatedProduct.id" cols="12" sm="6" md="4" lg="3">
+        <ProductCard :product="relatedProduct" />
       </v-col>
     </v-row>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ItemCard } from '../../shared/components';
+import ProductCard from '../../../components/ProductCard.vue';
+
 
 interface Product {
   id: string;

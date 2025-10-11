@@ -4,7 +4,7 @@ const BASE_URL =
 
 const AUTH_BASE_URL = BASE_URL + '/auth';
 const CART_BASE_URL = BASE_URL + '/cart';
-const ITEMS_BASE_URL = BASE_URL + '/items';
+const PRODUCTS_BASE_URL = BASE_URL + '/products';
 const CATEGORIES_BASE_URL = BASE_URL + '/categories';
 const FAVORITES_BASE_URL = BASE_URL + '/favorites';
 const FLASH_SALES_BASE_URL = BASE_URL + '/flash-sales';
@@ -16,7 +16,7 @@ export const BaseUrls = {
   BASE_URL,
   AUTH_BASE_URL,
   CART_BASE_URL,
-  ITEMS_BASE_URL,
+  PRODUCTS_BASE_URL,
   CATEGORIES_BASE_URL,
   FAVORITES_BASE_URL,
   FLASH_SALES_BASE_URL,

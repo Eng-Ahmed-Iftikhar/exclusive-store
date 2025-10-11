@@ -33,13 +33,14 @@ import {
 } from './dto/subcategory.dto';
 
 @ApiTags('Subcategories')
-@ApiBearerAuth('JWT-auth')
 @Controller('subcategories')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class SubcategoryController {
   constructor(private readonly subcategoryService: SubcategoryService) {}
 
   @Post()
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
   @CanManageCategories('create')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
@@ -213,6 +214,8 @@ export class SubcategoryController {
   }
 
   @Put(':id')
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
   @CanManageCategories('edit')
   @ApiOperation({
     summary: 'Update subcategory',
@@ -261,6 +264,8 @@ export class SubcategoryController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
   @CanManageCategories('delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({

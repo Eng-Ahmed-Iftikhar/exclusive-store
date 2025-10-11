@@ -1,6 +1,6 @@
 <template>
   <v-dialog v-model="isOpen" max-width="900" persistent>
-    <v-card class="item-modal">
+    <v-card class="product-modal">
       <!-- Header -->
       <v-card-title class="modal-header">
         <h2 class="modal-title">Product Details</h2>
@@ -8,10 +8,10 @@
       </v-card-title>
 
       <v-card-text class="modal-content">
-        <div class="item-details">
+        <div class="product-details">
           <!-- Left Side - Images -->
-          <ItemModalImages 
-            :item="item"
+          <ProductModalImages 
+            :product="product"
             :current-image-index="currentImageIndex"
             @update:current-image-index="updateCurrentImageIndex"
           />
@@ -19,11 +19,11 @@
           <!-- Right Side - Details and Actions -->
           <div class="right-section">
             <!-- Product Details -->
-            <ItemModalDetails :item="item" />
+            <ProductModalDetails :product="product" />
             
             <!-- Actions (Quantity + Buttons) -->
-            <ItemModalActions
-              :item="item"
+            <ProductModalActions
+              :product="product"
               :quantity="quantity"
               :is-in-stock="isInStock"
               :is-favorited="isFavorited"
@@ -43,19 +43,19 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useFavoritesStore, useCartStore } from '../stores/index';
-import ItemModalImages from './ItemModalImages.vue';
-import ItemModalDetails from './ItemModalDetails.vue';
-import ItemModalActions from './ItemModalActions.vue';
+import ProductModalImages from './ProductModalImages.vue';
+import ProductModalDetails from './ProductModalDetails.vue';
+import ProductModalActions from './ProductModalActions.vue';
 
-interface ItemModalProps {
+interface ProductModalProps {
   modelValue: boolean;
-  item: any;
+  product: any;
 }
 
-const props = defineProps<ItemModalProps>();
+const props = defineProps<ProductModalProps>();
 const emit = defineEmits<{
   'update:modelValue': [value: boolean];
-  'add-to-cart': [item: any, quantity: number];
+  'add-to-cart': [product: any, quantity: number];
 }>();
 
 const favoritesStore = useFavoritesStore();
@@ -75,20 +75,25 @@ const favoriteLoading = ref(false);
 
 // Computed properties
 const isInStock = computed(() => {
-  const stock = props.item.stock;
-  return stock && stock.quantity > 0;
+  // Check if any variant has stock
+  if (props.product.variants && props.product.variants.length > 0) {
+    const defaultVariant = props.product.variants.find((v: any) => v.isDefault) || props.product.variants[0];
+    const stock = defaultVariant.stock;
+    return stock && stock.quantity > 0;
+  }
+  return false;
 });
 
 const isFavorited = computed(() => {
-  return favoritesStore.isItemFavorite(props.item.id);
+  return favoritesStore.isProductFavorite(props.product.id);
 });
 
 const isInCart = computed(() => {
-  return cartStore.isItemInCart(props.item.id);
+  return cartStore.isProductInCart(props.product.id);
 });
 
-const cartItemQuantity = computed(() => {
-  return cartStore.getItemQuantity(props.item.id);
+const cartProductQuantity = computed(() => {
+  return cartStore.getProductQuantity(props.product.id);
 });
 
 // Methods
@@ -112,17 +117,17 @@ const handleAddToCart = async () => {
     addToCartLoading.value = true;
     
     if (isInCart.value) {
-      // Update existing cart item
-      const cartItem = cartStore.getCartItem(props.item.id);
-      if (cartItem) {
-        await cartStore.updateCartItemQuantity(cartItem.id, quantity.value);
+      // Update existing cart product
+      const cartProduct = cartStore.getCartProduct(props.product.id);
+      if (cartProduct) {
+        await cartStore.updateCartProductQuantity(cartProduct.id, quantity.value);
       }
     } else {
-      // Add new item to cart
-      await cartStore.addToCart(props.item.id, quantity.value);
+      // Add new product to cart
+      await cartStore.addToCart(props.product.id, quantity.value);
     }
     
-    emit('add-to-cart', props.item, quantity.value);
+    emit('add-to-cart', props.product, quantity.value);
     // Close modal after adding to cart
     closeModal();
   } catch (error) {
@@ -135,7 +140,7 @@ const handleAddToCart = async () => {
 const handleFavoriteClick = async () => {
   try {
     favoriteLoading.value = true;
-    await favoritesStore.toggleFavorite(props.item.id);
+    await favoritesStore.toggleFavorite(props.product.id);
   } catch (error) {
     // Error toggling favorite
   } finally {
@@ -147,9 +152,9 @@ const handleFavoriteClick = async () => {
 watch(() => props.modelValue, (newValue) => {
   if (newValue) {
     currentImageIndex.value = 0;
-    // Set quantity to current cart quantity if item is in cart
+    // Set quantity to current cart quantity if product is in cart
     if (isInCart.value) {
-      quantity.value = cartItemQuantity.value;
+      quantity.value = cartProductQuantity.value;
     } else {
       quantity.value = 1;
     }
@@ -158,7 +163,7 @@ watch(() => props.modelValue, (newValue) => {
 </script>
 
 <style scoped>
-.item-modal {
+.product-modal {
   border-radius: 0px;
 }
 
@@ -181,7 +186,7 @@ watch(() => props.modelValue, (newValue) => {
   padding: 24px;
 }
 
-.item-details {
+.product-details {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 40px;
@@ -195,7 +200,7 @@ watch(() => props.modelValue, (newValue) => {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .item-details {
+  .product-details {
     grid-template-columns: 1fr;
     gap: 24px;
   }
@@ -205,3 +210,4 @@ watch(() => props.modelValue, (newValue) => {
   }
 }
 </style>
+

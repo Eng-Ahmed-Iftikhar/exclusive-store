@@ -25,8 +25,6 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @Controller('categories')
 @ApiTags('Categories')
-@ApiBearerAuth('JWT-auth')
-@UseGuards(JwtAuthGuard)
 export class CategoryController {
   constructor(
     private readonly categoryService: CategoryService,
@@ -36,6 +34,8 @@ export class CategoryController {
   // ===== CATEGORY ENDPOINTS =====
 
   @Post()
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
   @CanManageCategories('create')
   @HttpCode(HttpStatus.CREATED)
   async createCategory(
@@ -77,6 +77,8 @@ export class CategoryController {
   }
 
   @Put(':id')
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
   @CanManageCategories('edit')
   async updateCategory(
     @Param('id') id: string,
@@ -86,6 +88,8 @@ export class CategoryController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
   @CanManageCategories('delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteCategory(@Param('id') id: string): Promise<void> {

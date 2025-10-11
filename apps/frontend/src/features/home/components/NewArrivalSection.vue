@@ -24,12 +24,7 @@
       </div>
 
       <div v-else-if="newArrivalItems.length > 0" class="products-container">
-        <ItemCard 
-          v-for="item in newArrivalItems" 
-          :key="item.id" 
-          :item="item"
-          :show-sale-tag="true"
-        />
+        <ProductCard v-for="product in newArrivalProducts" :key="product.id" :product="product" :show-sale-tag="true" />
       </div>
 
       <div v-else class="empty-state">
@@ -42,11 +37,12 @@
 
 <script setup lang="ts">
 import { onMounted, computed } from 'vue';
-import { useItemsStore } from '../../../stores/modules/items';
-import { ItemCard } from '../../shared/components';
-import { Item } from '../../../stores/modules/items/items.interface';
+import { useProductsStore } from '../../../stores/modules/products';
+import ProductCard from '../../../components/ProductCard.vue';
 
-const itemsStore = useItemsStore();
+import { Product } from '../../../stores/modules/products/products.interface';
+
+const productsStore = useProductsStore();
 
 // Fetch new arrival items on component mount
 onMounted(async () => {
@@ -220,21 +216,21 @@ const error = computed(() => itemsStore.error);
     height: auto;
     gap: 16px;
   }
-  
+
   .promo-block {
     padding: 30px;
     min-height: 200px;
   }
-  
+
   .promo-block.large {
     grid-column: span 1;
     grid-row: span 1;
   }
-  
+
   .promo-image img {
     max-width: 150px;
   }
-  
+
   .promo-block.large .promo-image img {
     max-width: 180px;
   }
@@ -244,33 +240,33 @@ const error = computed(() => itemsStore.error);
   .new-arrival-section {
     padding: 40px 0;
   }
-  
+
   .section-title {
     font-size: 24px;
   }
-  
+
   .promo-block {
     padding: 20px;
     min-height: 180px;
   }
-  
+
   .promo-title {
     font-size: 20px;
   }
-  
+
   .promo-description {
     font-size: 12px;
   }
-  
+
   .shop-now-btn {
     padding: 10px 20px;
     font-size: 14px;
   }
-  
+
   .promo-image img {
     max-width: 120px;
   }
-  
+
   .promo-block.large .promo-image img {
     max-width: 150px;
   }

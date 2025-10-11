@@ -1,6 +1,22 @@
+export interface ProductVariant {
+  id: string;
+  productId: string;
+  sku: string;
+  name: string;
+  attributes?: Record<string, any>;
+  isDefault: boolean;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  prices?: Price[];
+  stock?: Stock;
+  images?: ProductImage[];
+}
+
 export interface Price {
   id: string;
-  itemId: string;
+  variantId: string;
   price: number;
   salePrice?: number;
   currency: string;
@@ -13,7 +29,7 @@ export interface Price {
 
 export interface Stock {
   id: string;
-  itemId: string;
+  variantId: string;
   quantity: number;
   reserved: number;
   minThreshold: number;
@@ -23,20 +39,27 @@ export interface Stock {
   updatedAt: string;
 }
 
-export interface ItemImage {
+export interface ProductImage {
   id: string;
-  itemId: string;
-  url: string;
+  productId?: string;
+  variantId?: string;
+  fileId: string;
   altText?: string;
   isPrimary: boolean;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
+  file?: {
+    id: string;
+    url: string;
+    secureUrl: string;
+    originalName: string;
+  };
 }
 
 export interface Review {
   id: string;
-  itemId: string;
+  productId: string;
   userId: string;
   title?: string;
   content: string;
@@ -53,7 +76,7 @@ export interface Review {
 
 export interface Rating {
   id: string;
-  itemId: string;
+  productId: string;
   userId: string;
   rating: number;
   createdAt: string;
@@ -67,17 +90,17 @@ export interface Rating {
 
 export interface Favorite {
   id: string;
-  itemId: string;
+  productId: string;
   userId: string;
   createdAt: string;
-  item?: {
+  product?: {
     id: string;
     name: string;
     description?: string;
   };
 }
 
-export interface Item {
+export interface Product {
   id: string;
   name: string;
   description?: string;
@@ -101,9 +124,8 @@ export interface Item {
     name: string;
     slug: string;
   };
-  prices?: Price[];
-  stock?: Stock;
-  images?: ItemImage[];
+  variants?: ProductVariant[];
+  images?: ProductImage[];
   reviews?: Review[];
   ratings?: Rating[];
   favorites?: Favorite[];
@@ -111,27 +133,26 @@ export interface Item {
   // Computed fields
   averageRating?: number;
   totalReviews?: number;
+  totalVariants?: number;
   isFavorite?: boolean;
-  currentPrice?: number;
-  salePrice?: number;
-  isOnSale?: boolean;
 }
 
-export interface ItemsResponse {
-  items: Item[];
+export interface ProductsResponse {
+  products: Product[];
   total: number;
   page: number;
   limit: number;
   totalPages: number;
 }
 
-export interface ItemsState {
-  items: Item[];
-  featuredItems: Item[];
-  bestSellingItems: Item[];
+export interface ProductsState {
+  products: Product[];
+  featuredProducts: Product[];
+  bestSellingProducts: Product[];
+  newArrivalProducts: Product[];
   loading: boolean;
   error: string | null;
-  selectedItem: Item | null;
+  selectedProduct: Product | null;
   pagination: {
     total: number;
     page: number;
@@ -140,7 +161,7 @@ export interface ItemsState {
   };
 }
 
-export interface ItemQueryParams {
+export interface ProductQueryParams {
   search?: string;
   categoryId?: string;
   subcategoryId?: string;
@@ -154,3 +175,4 @@ export interface ItemQueryParams {
   maxPrice?: number;
   minRating?: number;
 }
+

@@ -8,15 +8,8 @@
       </v-row>
 
       <v-row v-if="favorites.length > 0">
-        <v-col 
-          v-for="favorite in favorites" 
-          :key="favorite.id"
-          cols="12" 
-          sm="6" 
-          md="4" 
-          lg="3"
-        >
-          <ItemCard :item="favorite" />
+        <v-col v-for="favorite in favorites" :key="favorite.id" cols="12" sm="6" md="4" lg="3">
+          <ProductCard :product="favorite" />
         </v-col>
       </v-row>
 
@@ -27,12 +20,7 @@
           <p class="text-body-1 text-medium-emphasis mb-6">
             Start adding products to your favorites to see them here
           </p>
-          <v-btn 
-            color="primary" 
-            variant="flat" 
-            size="large"
-            to="/products"
-          >
+          <v-btn color="primary" variant="flat" size="large" to="/products">
             Browse Products
           </v-btn>
         </v-col>
@@ -42,8 +30,10 @@
 </template>
 
 <script setup lang="ts">
+import ProductCard from '../../../components/ProductCard.vue';
 import { ref, onMounted } from 'vue';
-import { ItemCard } from '../../shared/components';
+
+
 
 const favorites = ref([]);
 

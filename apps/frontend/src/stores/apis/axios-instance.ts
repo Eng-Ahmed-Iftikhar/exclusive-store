@@ -127,11 +127,6 @@ apiClient.interceptors.response.use(
         localStorage.removeItem('accessToken');
         processQueue(refreshError, null);
 
-        // Redirect to login page
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
-
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

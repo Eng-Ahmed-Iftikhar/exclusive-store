@@ -32,13 +32,8 @@
 
       <!-- Products Carousel -->
       <div class="products-carousel">
-        <v-btn 
-          icon="mdi-chevron-left" 
-          variant="outlined" 
-          class="carousel-nav-btn prev-btn"
-          size="large"
-        />
-        
+        <v-btn icon="mdi-chevron-left" variant="outlined" class="carousel-nav-btn prev-btn" size="large" />
+
         <!-- Loading State -->
         <div v-if="loading" class="loading-state">
           <v-progress-circular indeterminate color="primary" size="64" />
@@ -55,14 +50,10 @@
         </div>
 
         <!-- Products Container -->
-        <div v-else-if="flashSaleItems?.length > 0" class="products-container">
-      
-          <ItemCard 
-            v-for="item in flashSaleItems" 
-            :key="item.id" 
-            :item="item"
-            :show-sale-tag="true"
-          />
+        <div v-else-if="flashSaleProducts?.length > 0" class="products-container">
+
+          <ProductCard v-for="product in flashSaleProducts" :key="product.id" :product="product"
+            :show-sale-tag="true" />
         </div>
 
         <!-- Empty State -->
@@ -71,23 +62,12 @@
           <p>No flash sales available at the moment</p>
         </div>
 
-        <v-btn 
-          icon="mdi-chevron-right" 
-          variant="outlined" 
-          class="carousel-nav-btn next-btn"
-          size="large"
-        />
+        <v-btn icon="mdi-chevron-right" variant="outlined" class="carousel-nav-btn next-btn" size="large" />
       </div>
 
       <!-- View All Button -->
       <div class="view-all-container">
-        <v-btn 
-          color="error" 
-          variant="flat" 
-          size="large"
-          class="view-all-btn"
-          to="/products"
-        >
+        <v-btn color="error" variant="flat" size="large" class="view-all-btn" to="/products">
           View All Products
         </v-btn>
       </div>
@@ -97,7 +77,8 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
-import { ItemCard } from '../../shared/components';
+import ProductCard from '../../../components/ProductCard.vue';
+
 import { useFlashSaleTimerStore } from '../../../stores';
 import { IFlashSales } from '../../../stores/modules/flash-sales';
 import { useFlashSalesStore } from '../../../stores/modules/flash-sales/flash-sales.store';
@@ -121,7 +102,7 @@ const handleRetry = () => {
 
 // Get flash sale items
 const flashSales = computed(() => flashSalesStore.flashSales as unknown as IFlashSales.FlashSale[]);
-const flashSaleItems= computed(() => flashSales?.value[0]?.items as unknown as IFlashSales.FlashSaleItem[]);
+const flashSaleItems = computed(() => flashSales?.value[0]?.items as unknown as IFlashSales.FlashSaleItem[]);
 
 // Loading and error states
 const loading = computed(() => flashSalesStore.loading);
@@ -271,11 +252,11 @@ const error = computed(() => flashSalesStore.error);
     gap: 24px;
     text-align: center;
   }
-  
+
   .countdown-timer {
     justify-content: center;
   }
-  
+
   .products-container {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
@@ -285,24 +266,24 @@ const error = computed(() => flashSalesStore.error);
   .flash-sales-section {
     padding: 40px 0;
   }
-  
+
   .section-title {
     font-size: 24px;
   }
-  
+
   .timer-item {
     min-width: 50px;
     padding: 12px 8px;
   }
-  
+
   .timer-number {
     font-size: 20px;
   }
-  
+
   .products-container {
     grid-template-columns: 1fr;
   }
-  
+
   .carousel-nav-btn {
     display: none;
   }

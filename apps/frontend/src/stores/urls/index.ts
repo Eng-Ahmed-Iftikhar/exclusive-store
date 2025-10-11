@@ -4,7 +4,7 @@ export { CartUrls } from './cart';
 export { CategoriesUrls } from './categories';
 export { FavoritesUrls } from './favorites';
 export { FlashSalesUrls } from './flash-sales';
-export { ItemsUrls } from './items';
+export { ProductsUrls } from './products';
 export { OrdersUrls } from './orders';
 export { SearchUrls } from './search';
 export { UserUrls } from './user';

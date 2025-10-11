@@ -1,50 +1,50 @@
 <template>
-  <div class="item-card" @click="navigateToProduct">
-    <div class="item-image">
+  <div class="product-card" @click="navigateToProduct">
+    <div class="product-image">
       <!-- Image Slideshow -->
       <div v-if="hasMultipleImages" class="image-slideshow">
-        <img :src="currentImage.url" :alt="currentImage.altText || item.name" class="slideshow-image" />
+        <img :src="currentImage.url" :alt="currentImage.altText || product.name" class="slideshow-image" />
 
         <!-- Image Indicators -->
         <div v-if="hasMultipleImages" class="image-indicators">
-          <button v-for="(image, index) in itemImages" :key="index" @click.stop="goToImage(index)" class="indicator-dot"
-            :class="{ active: currentImageIndex === index }" type="button" />
+          <button v-for="(image, index) in productImages" :key="index" @click.stop="goToImage(index)"
+            class="indicator-dot" :class="{ active: currentImageIndex === index }" type="button" />
         </div>
       </div>
 
       <!-- Single Image Display -->
-      <img v-else :src="getPrimaryImage(item)" :alt="item.name" class="single-image" />
+      <img v-else :src="getPrimaryImage(product)" :alt="product.name" class="single-image" />
 
       <!-- Action Icons Overlay -->
       <div class="action-overlay">
         <v-btn :icon="isFavorited ? 'mdi-heart' : 'mdi-heart-outline'" variant="text" size="small"
           class="overlay-btn favorite-btn" :class="{ 'favorited': isFavorited }" @click.stop="handleFavoriteClick"
           :loading="favoriteLoading" />
-        <v-btn icon="mdi-eye" variant="text" size="small" class="overlay-btn" @click.stop="openItemModal" />
+        <v-btn icon="mdi-eye" variant="text" size="small" class="overlay-btn" @click.stop="openProductModal" />
       </div>
 
       <div v-if="showSaleTag && isOnSale" class="sale-badge">Sale</div>
     </div>
 
-    <div class="item-info">
-      <div class="item-header">
-        <h3 class="item-name">{{ item.name }}</h3>
-        <div class="item-rating">
+    <div class="product-info">
+      <div class="product-header">
+        <h3 class="product-name">{{ product.name }}</h3>
+        <div class="product-rating">
           <div class="stars">
             <v-icon v-for="star in 5" :key="star" icon="mdi-star" size="14"
-              :color="star <= getAverageRating(item) ? '#FFD700' : '#E0E0E0'" />
+              :color="star <= getAverageRating(product) ? '#FFD700' : '#E0E0E0'" />
           </div>
-          <span class="rating-count">({{ getReviewCount(item) }} reviews)</span>
+          <span class="rating-count">({{ getReviewCount(product) }} reviews)</span>
         </div>
       </div>
 
-      <div class="item-price">
-        <span v-if="isOnSale" class="current-price">${{ getSalePrice(item) }}</span>
-        <span v-else class="current-price">${{ getOriginalPrice(item) }}</span>
-        <span v-if="isOnSale" class="original-price">${{ getOriginalPrice(item) }}</span>
+      <div class="product-price">
+        <span v-if="isOnSale" class="current-price">${{ getSalePrice(product) }}</span>
+        <span v-else class="current-price">${{ getOriginalPrice(product) }}</span>
+        <span v-if="isOnSale" class="original-price">${{ getOriginalPrice(product) }}</span>
       </div>
 
-      <div class="item-actions">
+      <div class="product-actions">
         <!-- Add to Cart Button (when not in cart) -->
         <v-btn v-if="!isInCart" color="primary" variant="flat" size="small" class="add-to-cart-btn"
           :loading="cartLoading" @click.stop="handleAddToCart" block>
@@ -74,8 +74,8 @@
     </div>
   </div>
 
-  <!-- Item Modal -->
-  <ItemModal v-model="showItemModal" :item="item" @add-to-cart="handleAddToCart" />
+  <!-- Product Modal -->
+  <ProductModal v-model="showProductModal" :product="product" @add-to-cart="handleAddToCart" />
 </template>
 
 <script setup lang="ts">
@@ -83,14 +83,14 @@ import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useFavoritesStore, useNotificationsStore, useCartStore, useAuthStore } from '../stores/index';
-import ItemModal from './ItemModal.vue';
+import ProductModal from './ProductModal.vue';
 
-interface ItemCardProps {
-  item: any;
+interface ProductCardProps {
+  product: any;
   showSaleTag?: boolean;
 }
 
-const props = withDefaults(defineProps<ItemCardProps>(), {
+const props = withDefaults(defineProps<ProductCardProps>(), {
   showSaleTag: true
 });
 
@@ -106,48 +106,48 @@ const currentImageIndex = ref(0);
 const favoriteLoading = ref(false);
 const cartLoading = ref(false);
 const localFavoriteStatus = ref(false);
-const showItemModal = ref(false);
+const showProductModal = ref(false);
 let autoSlideInterval: ReturnType<typeof setInterval> | null = null;
 
 // Computed properties
 const isOnSale = computed(() => {
   // Check if the API provides computed isOnSale
-  if (props.item.isOnSale !== undefined) {
-    return props.item.isOnSale;
+  if (props.product.isOnSale !== undefined) {
+    return props.product.isOnSale;
   }
   // Fallback to price comparison
-  const salePrice = getSalePrice(props.item);
-  const originalPrice = getOriginalPrice(props.item);
+  const salePrice = getSalePrice(props.product);
+  const originalPrice = getOriginalPrice(props.product);
   return salePrice < originalPrice && salePrice > 0;
 });
 
-const itemImages = computed(() => {
-  return props.item.images || [];
+const productImages = computed(() => {
+  return props.product.images || [];
 });
 
 const hasMultipleImages = computed(() => {
-  return itemImages.value.length > 1;
+  return productImages.value.length > 1;
 });
 
 const currentImage = computed(() => {
-  if (itemImages.value.length > 0) {
-    return itemImages.value[currentImageIndex.value];
+  if (productImages.value.length > 0) {
+    return productImages.value[currentImageIndex.value];
   }
-  return { url: 'https://picsum.photos/400/300?random=16', altText: props.item.name };
+  return { url: 'https://picsum.photos/400/300?random=16', altText: props.product.name };
 });
 
 // Favorite functionality
 const isFavorited = computed(() => {
   // First check local state, then fallback to store
-  return localFavoriteStatus.value || favoritesStore.isItemFavorite(props.item.id);
+  return localFavoriteStatus.value || favoritesStore.isProductFavorite(props.product.id);
 });
 
 // Cart functionality
 const isInCart = computed(() => {
-  return cartStore.isItemInCart(props.item.id);
+  return cartStore.isProductInCart(props.product.id);
 });
 
-// Check favorite status for this item
+// Check favorite status for this product
 const checkFavoriteStatus = async () => {
   if (!authStore.isAuthenticated) {
     localFavoriteStatus.value = false;
@@ -155,11 +155,8 @@ const checkFavoriteStatus = async () => {
   }
 
   try {
-    const status = await favoritesStore.checkFavoriteStatus(props.item.id);
-
+    const status = await favoritesStore.checkFavoriteStatus(props.product.id);
     localFavoriteStatus.value = status;
-
-
   } catch (error) {
     // Error checking favorite status
   }
@@ -176,15 +173,15 @@ const handleFavoriteClick = async () => {
   try {
     favoriteLoading.value = true;
 
-    await favoritesStore.toggleFavorite(props.item.id);
+    await favoritesStore.toggleFavorite(props.product.id);
     // Update local state after toggle
     localFavoriteStatus.value = !localFavoriteStatus.value;
 
     // Show notification
     if (localFavoriteStatus.value) {
-      notificationsStore.showSuccess(`${props.item.name} ${t('notifications.favorites.added')}`);
+      notificationsStore.showSuccess(`${props.product.name} ${t('notifications.favorites.added')}`);
     } else {
-      notificationsStore.showInfo(`${props.item.name} ${t('notifications.favorites.removed')}`);
+      notificationsStore.showInfo(`${props.product.name} ${t('notifications.favorites.removed')}`);
     }
   } catch (error) {
     // Error toggling favorite
@@ -197,8 +194,8 @@ const handleFavoriteClick = async () => {
 const handleAddToCart = async () => {
   try {
     cartLoading.value = true;
-    await cartStore.addToCart(props.item.id, 1);
-    showItemModal.value = false;
+    await cartStore.addToCart(props.product.id, 1);
+    showProductModal.value = false;
   } catch (error) {
     // Error adding to cart
   } finally {
@@ -210,7 +207,7 @@ const handleAddToCart = async () => {
 const handleRemoveFromCart = async () => {
   try {
     cartLoading.value = true;
-    const cartItem = cartStore.getCartItem(props.item.id);
+    const cartItem = cartStore.getCartItem(props.product.id);
     if (cartItem) {
       await cartStore.removeFromCart(cartItem.id);
     }
@@ -221,25 +218,23 @@ const handleRemoveFromCart = async () => {
   }
 };
 
-const openItemModal = () => {
-  showItemModal.value = true;
+const openProductModal = () => {
+  showProductModal.value = true;
 };
 
 const navigateToProduct = () => {
-  router.push({ name: 'single-product', params: { id: props.item.id } });
+  router.push({ name: 'single-product', params: { id: props.product.id } });
 };
 
 // Slideshow functions
 const nextImage = () => {
   if (hasMultipleImages.value) {
-    currentImageIndex.value = (currentImageIndex.value + 1) % itemImages.value.length;
+    currentImageIndex.value = (currentImageIndex.value + 1) % productImages.value.length;
   }
 };
 
-
-
 const goToImage = (index: number) => {
-  if (index >= 0 && index < itemImages.value.length) {
+  if (index >= 0 && index < productImages.value.length) {
     currentImageIndex.value = index;
   }
 };
@@ -272,74 +267,76 @@ onUnmounted(() => {
 });
 
 // Helper function to get primary image
-const getPrimaryImage = (item: any) => {
-  // Check if images are at root level first
-  if (item.images && item.images.length > 0) {
-    const primaryImage = item.images.find((img: any) => img.isPrimary);
-    return primaryImage ? primaryImage.url : item.images[0].url;
+const getPrimaryImage = (product: any) => {
+  // Check if images exist
+  if (product.images && product.images.length > 0) {
+    const primaryImage = product.images.find((img: any) => img.isPrimary);
+    return primaryImage ? (primaryImage.file?.secureUrl || primaryImage.file?.url) : (product.images[0].file?.secureUrl || product.images[0].file?.url);
+  }
+  // Check variants for images
+  if (product.variants && product.variants.length > 0) {
+    const defaultVariant = product.variants.find((v: any) => v.isDefault) || product.variants[0];
+    if (defaultVariant.images && defaultVariant.images.length > 0) {
+      const primaryImage = defaultVariant.images.find((img: any) => img.isPrimary);
+      return primaryImage ? (primaryImage.file?.secureUrl || primaryImage.file?.url) : (defaultVariant.images[0].file?.secureUrl || defaultVariant.images[0].file?.url);
+    }
   }
   return 'https://picsum.photos/400/300?random=16';
 };
 
 // Helper function to get average rating
-const getAverageRating = (item: any) => {
-  // Check if the API provides computed averageRating
-  if (item.averageRating !== undefined) {
-    return item.averageRating;
+const getAverageRating = (product: any) => {
+  if (product.averageRating !== undefined) {
+    return product.averageRating;
   }
-  // Check if reviews are at root level first
-  if (item.reviews && item.reviews.length > 0) {
-    const totalRating = item.reviews.reduce((sum: number, review: any) => sum + review.rating, 0);
-    return Math.round(totalRating / item.reviews.length);
+  if (product.reviews && product.reviews.length > 0) {
+    const totalRating = product.reviews.reduce((sum: number, review: any) => sum + review.rating, 0);
+    return Math.round(totalRating / product.reviews.length);
   }
   return 0;
 };
 
 // Helper function to get review count
-const getReviewCount = (item: any) => {
-  // Check if the API provides computed totalReviews
-  if (item.totalReviews !== undefined) {
-    return item.totalReviews;
+const getReviewCount = (product: any) => {
+  if (product.totalReviews !== undefined) {
+    return product.totalReviews;
   }
-  // Check if reviews are at root level first
-  if (item.reviews) {
-    return item.reviews.length;
+  if (product.reviews) {
+    return product.reviews.length;
   }
   return 0;
 };
 
-// Helper function to get original price (regular price)
-const getOriginalPrice = (item: any) => {
-  // Check if the API provides computed currentPrice
-  if (item.currentPrice) {
-    return item.currentPrice;
-  }
-  // Fallback to prices array
-  if (item.prices && item.prices.length > 0) {
-    const activePrice = item.prices.find((price: any) => price.isActive);
-    return activePrice ? activePrice.price : item.prices[0].price;
+// Helper function to get original price from variants
+const getOriginalPrice = (product: any) => {
+  // Get price from default variant or first variant
+  if (product.variants && product.variants.length > 0) {
+    const defaultVariant = product.variants.find((v: any) => v.isDefault) || product.variants[0];
+    if (defaultVariant.prices && defaultVariant.prices.length > 0) {
+      const activePrice = defaultVariant.prices.find((price: any) => price.isActive);
+      return activePrice ? activePrice.price : defaultVariant.prices[0].price;
+    }
   }
   return 0;
 };
 
-// Helper function to get sale price
-const getSalePrice = (item: any) => {
-  // Check if the API provides computed salePrice
-  if (item.salePrice) {
-    return item.salePrice;
+// Helper function to get sale price from variants
+const getSalePrice = (product: any) => {
+  // Get sale price from default variant or first variant
+  if (product.variants && product.variants.length > 0) {
+    const defaultVariant = product.variants.find((v: any) => v.isDefault) || product.variants[0];
+    if (defaultVariant.prices && defaultVariant.prices.length > 0) {
+      const activePrice = defaultVariant.prices.find((price: any) => price.isActive);
+      const salePrice = activePrice ? activePrice.salePrice : defaultVariant.prices[0].salePrice;
+      return salePrice || getOriginalPrice(product);
+    }
   }
-  // Fallback to prices array
-  if (item.prices && item.prices.length > 0) {
-    const activePrice = item.prices.find((price: any) => price.isActive);
-    return activePrice ? activePrice.salePrice : item.prices[0].salePrice;
-  }
-  // If no sale price, return original price
-  return getOriginalPrice(item);
+  return getOriginalPrice(product);
 };
 </script>
 
 <style scoped>
-.item-card {
+.product-card {
   background: #fff;
   border: 1px solid #f0f0f0;
   border-radius: 12px;
@@ -356,12 +353,12 @@ const getSalePrice = (item: any) => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-.item-card:hover {
+.product-card:hover {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
   transform: translateY(-4px);
 }
 
-.item-image {
+.product-image {
   position: relative;
   height: 220px;
   background: #f8f8f8;
@@ -372,14 +369,14 @@ const getSalePrice = (item: any) => {
   overflow: hidden;
 }
 
-.item-image img {
+.product-image img {
   max-width: 100%;
   max-height: 100%;
   object-fit: cover !important;
   transition: transform 0.3s ease;
 }
 
-.item-card:hover .item-image img {
+.product-card:hover .product-image img {
   transform: scale(1.05);
 }
 
@@ -395,7 +392,7 @@ const getSalePrice = (item: any) => {
   transition: opacity 0.3s ease;
 }
 
-.item-card:hover .action-overlay {
+.product-card:hover .action-overlay {
   opacity: 1;
 }
 
@@ -496,7 +493,7 @@ const getSalePrice = (item: any) => {
   box-shadow: 0 2px 4px rgba(219, 68, 68, 0.3);
 }
 
-.item-info {
+.product-info {
   padding: 20px;
   flex: 1;
   display: flex;
@@ -504,7 +501,7 @@ const getSalePrice = (item: any) => {
   justify-content: space-between;
 }
 
-.item-header {
+.product-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -512,7 +509,7 @@ const getSalePrice = (item: any) => {
   gap: 12px;
 }
 
-.item-name {
+.product-name {
   font-size: 15px;
   font-weight: 600;
   color: #1a1a1a;
@@ -526,7 +523,7 @@ const getSalePrice = (item: any) => {
   flex: 1;
 }
 
-.item-rating {
+.product-rating {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -545,7 +542,7 @@ const getSalePrice = (item: any) => {
   white-space: nowrap;
 }
 
-.item-price {
+.product-price {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -564,7 +561,7 @@ const getSalePrice = (item: any) => {
   text-decoration: line-through;
 }
 
-.item-actions {
+.product-actions {
   margin-top: auto;
 }
 
@@ -637,15 +634,15 @@ const getSalePrice = (item: any) => {
 
 /* Responsive Design */
 @media (max-width: 600px) {
-  .item-image {
+  .product-image {
     height: 160px;
   }
 
-  .item-info {
+  .product-info {
     padding: 16px;
   }
 
-  .item-name {
+  .product-name {
     font-size: 14px;
   }
 

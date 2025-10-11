@@ -38,7 +38,7 @@ import { ref, onMounted, computed, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCartStore } from '../../../stores/modules/cart';
 import { useFavoritesStore } from '../../../stores/modules/favorites';
-import { useItemsStore } from '../../../stores/modules/items';
+import { useProductsStore } from '../../../stores/modules/products';
 import { usePageTitle } from '../../../composables/usePageTitle';
 
 // Components
@@ -53,7 +53,7 @@ const route = useRoute();
 const router = useRouter();
 const cartStore = useCartStore();
 const favoritesStore = useFavoritesStore();
-const itemsStore = useItemsStore();
+const productsStore = useProductsStore();
 
 // Refs
 const relatedProducts = ref<any[]>([]);

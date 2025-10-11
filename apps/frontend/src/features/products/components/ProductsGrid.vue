@@ -19,7 +19,7 @@
     <div v-else-if="products.length > 0" class="products-content">
       <!-- Products Display -->
       <div class="products-grid">
-        <ItemCard v-for="product in products" :key="product.id" :item="product" :show-sale-tag="true"
+        <ProductCard v-for="product in products" :key="product.id" :product="product" :show-sale-tag="true"
           class="product-card" />
       </div>
 
@@ -46,7 +46,8 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { ItemCard } from '../../shared/components';
+import ProductCard from '../../../components/ProductCard.vue';
+
 
 interface Product {
   id: string;

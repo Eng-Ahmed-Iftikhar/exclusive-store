@@ -16,7 +16,7 @@
 
         <div class="products-container">
           <div class="products-slider" ref="sliderRef">
-            <ItemCard v-for="product in exploreItems" :key="product.id" :item="product" :show-sale-tag="true"
+            <ProductCard v-for="product in exploreItems" :key="product.id" :product="product" :show-sale-tag="true"
               class="product-slide" />
           </div>
         </div>
@@ -37,27 +37,27 @@
 
 <script setup lang="ts">
 import { onMounted, computed, ref, watch } from 'vue';
-import { IItems, useItemsStore } from '../../../stores/modules/items';
-import { ItemCard } from '../../shared/components';
+import { IProducts, useProductsStore } from '../../../stores/modules/products';
+import ProductCard from '../../../components/ProductCard.vue';
 
-const itemsStore = useItemsStore();
+const productsStore = useProductsStore();
 
 // Carousel functionality
 const sliderRef = ref<HTMLElement | null>(null);
 const currentIndex = ref(0);
 const productsPerView = 3;
 
-// Fetch featured items on component mount
+// Fetch featured products on component mount
 onMounted(async () => {
   try {
-    await itemsStore.fetchFeaturedItems();
+    await productsStore.fetchFeaturedProducts();
   } catch (error) {
-    // Failed to fetch featured items
+    // Failed to fetch featured products
   }
 });
 
-// Get featured items from store
-const exploreItems = computed(() => itemsStore.featuredItems as unknown as IItems.Item[]);
+// Get featured products from store
+const exploreItems = computed(() => productsStore.featuredProducts as unknown as IProducts.Product[]);
 
 // Computed properties for carousel
 const maxIndex = computed(() => {

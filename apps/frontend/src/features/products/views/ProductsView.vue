@@ -33,13 +33,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import { IItems, useItemsStore, ICategories, useCategoriesStore, useFavoritesStore } from '../../../stores';
+import { IProducts, useProductsStore, ICategories, useCategoriesStore, useFavoritesStore } from '../../../stores';
 import ProductsFilters from '../components/ProductsFilters.vue';
 import ProductsGrid from '../components/ProductsGrid.vue';
 import { usePageTitle } from '../../../composables/usePageTitle';
 
 // Stores
-const itemsStore = useItemsStore();
+const productsStore = useProductsStore();
 const categoriesStore = useCategoriesStore();
 const favoritesStore = useFavoritesStore();
 
@@ -55,7 +55,7 @@ const error = ref<string | null>(null);
 
 // Computed properties
 const products = computed(() => {
-  return itemsStore.items as unknown as IItems.IItems.Item[] || [];
+  return productsStore.products as unknown as IProducts.IProducts.Product[] || [];
 });
 
 const categories = computed(() => {
@@ -63,7 +63,7 @@ const categories = computed(() => {
 });
 
 const pagination = computed(() => {
-  const paginationData = itemsStore.pagination as unknown as IItems.IItems.ItemsResponse;
+  const paginationData = productsStore.pagination as unknown as IProducts.IProducts.ProductsResponse;
   if (!paginationData) {
     return {
       total: 0,

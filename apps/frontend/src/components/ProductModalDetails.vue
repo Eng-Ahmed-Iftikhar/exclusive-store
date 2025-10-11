@@ -2,7 +2,7 @@
   <div class="details-section">
     <!-- Basic Info -->
     <div class="basic-info">
-      <h1 class="item-name">{{ item.name }}</h1>
+      <h1 class="product-name">{{ product.name }}</h1>
       
       <!-- Rating -->
       <div class="rating-section">
@@ -12,26 +12,26 @@
             :key="star" 
             icon="mdi-star" 
             size="20" 
-            :color="star <= getAverageRating(item) ? '#FFD700' : '#E0E0E0'"
+            :color="star <= getAverageRating(product) ? '#FFD700' : '#E0E0E0'"
           />
         </div>
         <span class="rating-text">
-          {{ getAverageRating(item) }}/5 ({{ getReviewCount(item) }} reviews)
+          {{ getAverageRating(product) }}/5 ({{ getReviewCount(product) }} reviews)
         </span>
       </div>
 
       <!-- Price -->
       <div class="price-section">
         <div v-if="isOnSale" class="price-row">
-          <span class="current-price">${{ getSalePrice(item) }}</span>
-          <span class="original-price">${{ getOriginalPrice(item) }}</span>
+          <span class="current-price">${{ getSalePrice(product) }}</span>
+          <span class="original-price">${{ getOriginalPrice(product) }}</span>
           <span class="discount-badge">
-            - {{ Math.round(((getOriginalPrice(item) - getSalePrice(item)) / getOriginalPrice(item)) * 100) }}%
+            - {{ Math.round(((getOriginalPrice(product) - getSalePrice(product)) / getOriginalPrice(product)) * 100) }}%
           </span>
         </div>
     
         <div v-else class="price-row">
-          <span class="current-price">${{ getOriginalPrice(item) }}</span>
+          <span class="current-price">${{ getOriginalPrice(product) }}</span>
         </div>
       </div>
     </div>
@@ -40,7 +40,7 @@
     <div class="description-section">
       <h3>Description</h3>
       <p class="description-text">
-        {{ item.description || 'No description available.' }}
+        {{ product.description || 'No description available.' }}
       </p>
     </div>
 
@@ -48,13 +48,14 @@
     <div class="category-section">
       <div class="category-item">
         <span class="label">Category:</span>
-        <span class="value">{{ item.category?.name || 'N/A' }}</span>
+        <span class="value">{{ product.category?.name || 'N/A' }}</span>
       </div>
-      <div v-if="item.subcategory?.name" class="category-item">
+      <div v-if="product.subcategory?.name" class="category-item">
         <span class="label">Subcategory:</span>
-        <span class="value">{{ item.subcategory.name }}</span>
+        <span class="value">{{ product.subcategory.name }}</span>
       </div>
     </div>
+    
     <!-- Stock Info -->
     <div class="stock-section">
       <div class="stock-item">
@@ -74,72 +75,77 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
-interface ItemModalDetailsProps {
-  item: any;
+interface ProductModalDetailsProps {
+  product: any;
 }
 
-const props = defineProps<ItemModalDetailsProps>();
+const props = defineProps<ProductModalDetailsProps>();
 
 // Computed properties
 const isOnSale = computed(() => {
-  if (props.item.isOnSale !== undefined) {
-    return props.item.isOnSale;
-  }
-  const salePrice = getSalePrice(props.item);
-  const originalPrice = getOriginalPrice(props.item);
+  const salePrice = getSalePrice(props.product);
+  const originalPrice = getOriginalPrice(props.product);
   return salePrice < originalPrice && salePrice > 0;
 });
 
 const isInStock = computed(() => {
-  const stock = props.item.stock;
-  return stock && stock.quantity > 0;
+  if (props.product.variants && props.product.variants.length > 0) {
+    const defaultVariant = props.product.variants.find((v: any) => v.isDefault) || props.product.variants[0];
+    const stock = defaultVariant.stock;
+    return stock && stock.quantity > 0;
+  }
+  return false;
 });
 
 const availableStock = computed(() => {
-  const stock = props.item.stock;
-  return stock ? stock.quantity : 0;
+  if (props.product.variants && props.product.variants.length > 0) {
+    const defaultVariant = props.product.variants.find((v: any) => v.isDefault) || props.product.variants[0];
+    const stock = defaultVariant.stock;
+    return stock ? stock.quantity : 0;
+  }
+  return 0;
 });
 
-// Helper function to get original price (regular price)
-const getOriginalPrice = (item: any) => {
-  if (item.currentPrice) {
-    return item.currentPrice;
-  }
-  if (item.prices && item.prices.length > 0) {
-    const activePrice = item.prices.find((price: any) => price.isActive);
-    return activePrice ? activePrice.price : item.prices[0].price;
-  }
-  return 0;
-};
-
-const getSalePrice = (item: any) => {
-  if (item.salePrice) {
-    return item.salePrice;
-  }
-  if (item.prices && item.prices.length > 0) {
-    const activePrice = item.prices.find((price: any) => price.isActive);
-    return activePrice ? activePrice.salePrice : item.prices[0].salePrice;
-  }
-  // If no sale price, return original price
-  return getOriginalPrice(item);
-};
-
-const getAverageRating = (item: any) => {
-  if (item.averageRating !== undefined) {
-    return item.averageRating;
-  }
-  if (item.reviews && item.reviews.length > 0) {
-    const totalRating = item.reviews.reduce((sum: number, review: any) => sum + review.rating, 0);
-    return Math.round(totalRating / item.reviews.length);
+// Helper function to get original price from variant
+const getOriginalPrice = (product: any) => {
+  if (product.variants && product.variants.length > 0) {
+    const defaultVariant = product.variants.find((v: any) => v.isDefault) || product.variants[0];
+    if (defaultVariant.prices && defaultVariant.prices.length > 0) {
+      const activePrice = defaultVariant.prices.find((price: any) => price.isActive);
+      return activePrice ? activePrice.price : defaultVariant.prices[0].price;
+    }
   }
   return 0;
 };
 
-const getReviewCount = (item: any) => {
-  if (item.totalReviews !== undefined) {
-    return item.totalReviews;
+const getSalePrice = (product: any) => {
+  if (product.variants && product.variants.length > 0) {
+    const defaultVariant = product.variants.find((v: any) => v.isDefault) || product.variants[0];
+    if (defaultVariant.prices && defaultVariant.prices.length > 0) {
+      const activePrice = defaultVariant.prices.find((price: any) => price.isActive);
+      const salePrice = activePrice ? activePrice.salePrice : defaultVariant.prices[0].salePrice;
+      return salePrice || getOriginalPrice(product);
+    }
   }
-  return item.reviews?.length || 0;
+  return getOriginalPrice(product);
+};
+
+const getAverageRating = (product: any) => {
+  if (product.averageRating !== undefined) {
+    return product.averageRating;
+  }
+  if (product.reviews && product.reviews.length > 0) {
+    const totalRating = product.reviews.reduce((sum: number, review: any) => sum + review.rating, 0);
+    return Math.round(totalRating / product.reviews.length);
+  }
+  return 0;
+};
+
+const getReviewCount = (product: any) => {
+  if (product.totalReviews !== undefined) {
+    return product.totalReviews;
+  }
+  return product.reviews?.length || 0;
 };
 </script>
 
@@ -156,7 +162,7 @@ const getReviewCount = (item: any) => {
   gap: 16px;
 }
 
-.item-name {
+.product-name {
   font-size: 28px;
   font-weight: 700;
   color: #000;
@@ -263,7 +269,7 @@ const getReviewCount = (item: any) => {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .item-name {
+  .product-name {
     font-size: 24px;
   }
   
@@ -272,3 +278,4 @@ const getReviewCount = (item: any) => {
   }
 }
 </style>
+

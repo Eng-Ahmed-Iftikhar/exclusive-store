@@ -19,7 +19,7 @@
       <div v-else-if="error" class="error-state">
         <v-icon icon="mdi-alert-circle" size="64" color="error" />
         <p>{{ error }}</p>
-        <v-btn @click="itemsStore.fetchBestSellingItems()" color="primary" variant="outlined">
+        <v-btn @click="productsStore.fetchBestSellingProducts()" color="primary" variant="outlined">
           Retry
         </v-btn>
       </div>
@@ -29,7 +29,8 @@
         <v-btn icon="mdi-chevron-left" variant="outlined" class="carousel-nav-btn prev-btn" size="large" />
 
         <div class="products-container">
-          <ItemCard v-for="product in bestSellingProducts" :key="product.id" :item="product" :show-sale-tag="true" />
+          <ProductCard v-for="product in bestSellingProducts" :key="product.id" :product="product"
+            :show-sale-tag="true" />
         </div>
 
         <v-btn icon="mdi-chevron-right" variant="outlined" class="carousel-nav-btn next-btn" size="large" />
@@ -53,28 +54,28 @@
 
 <script setup lang="ts">
 import { onMounted, computed } from 'vue';
-import { useItemsStore } from '../../../stores/modules/items';
-import { ItemCard } from '../../shared/components';
+import { useProductsStore } from '../../../stores/modules/products';
+import ProductCard from '../../../components/ProductCard.vue';
 
-const itemsStore = useItemsStore();
+const productsStore = useProductsStore();
 
 // Fetch best selling items on component mount
 onMounted(async () => {
   try {
-    await itemsStore.fetchBestSellingItems();
+    await productsStore.fetchBestSellingProducts();
   } catch (error) {
     // Failed to fetch best selling items
   }
 });
 
 // Get best selling products from store
-const bestSellingProducts = computed(() => itemsStore.bestSellingItems);
+const bestSellingProducts = computed(() => productsStore.bestSellingProducts);
 
 // Loading state
-const loading = computed(() => itemsStore.loading);
+const loading = computed(() => productsStore.loading);
 
 // Error state
-const error = computed(() => itemsStore.error);
+const error = computed(() => productsStore.error);
 
 
 </script>
