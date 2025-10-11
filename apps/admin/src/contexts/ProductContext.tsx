@@ -2,44 +2,47 @@ import {
   Product,
   useLazyGetProductByIdQuery,
 } from '@/apis/services/productApi';
+import { basicInfoFormSchema } from '@/sections/app/contents/products/ProductBasicInfoForm';
 import React, {
   createContext,
-  useContext,
-  useState,
   ReactNode,
   useCallback,
+  useContext,
   useEffect,
+  useState,
 } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 export interface ProductCreationState {
-  productId: string | null;
-  currentStep: number;
-  completedSteps: number[];
+  currentStep: CURRENT_STEPS;
+  completedSteps: CURRENT_STEPS[];
   productData: Product | null;
+}
+export enum CURRENT_STEPS {
+  BASIC_INFO = 'BASIC_INFO',
+  VARIANTS = 'VARIANTS',
+  IMAGES = 'IMAGES',
+  REVIEW = 'REVIEW',
 }
 
 interface ProductContextType {
   state: ProductCreationState;
-  productId: string | null;
-  currentStep: number;
-  isStepCompleted: (step: number) => boolean;
-  canAccessStep: (step: number) => boolean;
-  setProductId: (id: string) => void;
-  setCurrentStep: (step: number) => void;
-  markStepComplete: (step: number) => void;
+  currentStep: CURRENT_STEPS;
+  isStepCompleted: (step: CURRENT_STEPS) => boolean;
+  canAccessStep: (step: CURRENT_STEPS) => boolean;
+  setCurrentStep: (step: CURRENT_STEPS) => void;
+  markStepComplete: (step: CURRENT_STEPS) => Promise<boolean>;
   updateProductData: (
     data: Partial<ProductCreationState['productData']>
-  ) => void;
+  ) => Promise<boolean>;
   resetCreation: () => void;
-  navigateToStep: (step: number) => void;
+  navigateToStep: (step: CURRENT_STEPS) => void;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
 const INITIAL_STATE: ProductCreationState = {
-  productId: null,
-  currentStep: 1,
+  currentStep: CURRENT_STEPS.BASIC_INFO,
   completedSteps: [],
   productData: null,
 };
@@ -49,81 +52,125 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const navigate = useNavigate();
   const { productId } = useParams();
+  console.log('productId', productId);
   const [getProductById] = useLazyGetProductByIdQuery();
   const [state, setState] = useState<ProductCreationState>(INITIAL_STATE);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const setProductId = (id: string) => {
-    setState((prev) => ({ ...prev, productId: id }));
-  };
-
-  const setCurrentStep = (step: number) => {
+  const setCurrentStep = useCallback((step: CURRENT_STEPS) => {
     setState((prev) => ({ ...prev, currentStep: step }));
-  };
+  }, []);
 
-  const markStepComplete = (step: number) => {
-    setState((prev) => ({
-      ...prev,
-      completedSteps: prev.completedSteps.includes(step)
-        ? prev.completedSteps
-        : [...prev.completedSteps, step].sort(),
-    }));
-  };
+  const markStepComplete = useCallback((step: CURRENT_STEPS) => {
+    return new Promise<boolean>((resolve) => {
+      try {
+        setState((prev) => ({
+          ...prev,
+          completedSteps: [...new Set([...prev.completedSteps, step])],
+        }));
+        resolve(true);
+      } catch (error) {
+        console.error('ProductContext: Failed to mark step complete', error);
+        resolve(false);
+      }
+    });
+  }, []);
 
-  const isStepCompleted = (step: number) => {
-    return state.completedSteps.includes(step);
-  };
+  const isStepCompleted = useCallback(
+    (step: CURRENT_STEPS) => {
+      const productData = state.productData;
 
-  const canAccessStep = (step: number) => {
-    // Can always access step 1
-    if (step === 1) return true;
+      switch (step) {
+        case CURRENT_STEPS.BASIC_INFO:
+          return basicInfoFormSchema.safeParse(productData).success;
+        case CURRENT_STEPS.VARIANTS:
+          return state.completedSteps.includes(CURRENT_STEPS.VARIANTS);
+        case CURRENT_STEPS.IMAGES:
+          return state.completedSteps.includes(CURRENT_STEPS.IMAGES);
+        case CURRENT_STEPS.REVIEW:
+          return state.completedSteps.includes(CURRENT_STEPS.REVIEW);
+        default:
+          return state.completedSteps.includes(step);
+      }
+    },
+    [state.completedSteps, state.productData]
+  );
 
-    // Can access a step if previous step is completed
-    return isStepCompleted(step - 1);
-  };
+  const canAccessStep = useCallback(
+    (newStep: CURRENT_STEPS) => {
+      // Can always access step 1
+      if (newStep === CURRENT_STEPS.BASIC_INFO) return true;
 
-  const updateProductData = (
-    data: Partial<ProductCreationState['productData']>
-  ) => {
-    setState((prev) => ({
-      ...prev,
-      productData: prev.productData
-        ? { ...prev.productData, ...data }
-        : (data as ProductCreationState['productData']),
-    }));
-  };
+      // Can access a step if previous step is completed
+      return !isStepCompleted(newStep);
+    },
+    [isStepCompleted]
+  );
 
-  const resetCreation = () => {
+  const updateProductData = useCallback(
+    (data: Partial<ProductCreationState['productData']>) => {
+      return new Promise<boolean>((resolve) => {
+        try {
+          setState((prev) => ({
+            ...prev,
+            productData: prev.productData
+              ? { ...prev.productData, ...data }
+              : (data as ProductCreationState['productData']),
+          }));
+          resolve(true);
+        } catch (error) {
+          console.error('ProductContext: Failed to update product data', error);
+          resolve(false);
+        }
+      });
+    },
+    []
+  );
+
+  const resetCreation = useCallback(() => {
     setState(INITIAL_STATE);
-  };
+  }, []);
 
-  const navigateToStep = (step: number) => {
-    if (!canAccessStep(step)) {
-      console.warn(
-        `Cannot access step ${step}. Complete previous steps first.`
-      );
+  const navigateToStep = useCallback(
+    (step: CURRENT_STEPS) => {
+      setCurrentStep(step);
+      const createProductRoutes: Record<CURRENT_STEPS, string> = {
+        [CURRENT_STEPS.BASIC_INFO]: '/content/products/create/basic-info',
+        [CURRENT_STEPS.IMAGES]: '/content/products/create/images',
+        [CURRENT_STEPS.REVIEW]: '/content/products/create/review',
+        [CURRENT_STEPS.VARIANTS]: '/content/products/create/variants',
+      };
+      const editProductRoutes: Record<CURRENT_STEPS, string> = {
+        [CURRENT_STEPS.BASIC_INFO]: `/content/products/${productId}/edit/basic-info`,
+        [CURRENT_STEPS.VARIANTS]: `/content/products/${productId}/edit/variants`,
+        [CURRENT_STEPS.IMAGES]: `/content/products/${productId}/edit/images`,
+        [CURRENT_STEPS.REVIEW]: `/content/products/${productId}/edit/review`,
+      };
+      const navRoute = productId
+        ? editProductRoutes[step]
+        : createProductRoutes[step];
+      console.log({ navRoute });
+      navigate(navRoute);
+    },
+    [setCurrentStep, productId, navigate]
+  );
+
+  const getProductByIdCallback = useCallback(async () => {
+    if (!productId) {
+      console.log('No productId, skipping fetch');
       return;
     }
 
-    setCurrentStep(step);
-    const routes = [
-      '',
-      '/content/products/create/basic-info',
-      '/content/products/create/variants',
-      '/content/products/create/images',
-      '/content/products/create/review',
-    ];
-
-    navigate(routes[step]);
-  };
-
-  const getProductByIdCallback = useCallback(async () => {
     setLoading(true);
-    const response = await getProductById(productId as string);
-    console.log('response', response);
-    setState((prev) => ({ ...prev, productData: response.data as Product }));
-    setLoading(false);
-    return response.data;
+    try {
+      const response = await getProductById(productId as string);
+      console.log('ProductContext: Loaded product data', response.data);
+      setState((prev) => ({ ...prev, productData: response.data as Product }));
+    } catch (error) {
+      console.error('ProductContext: Failed to load product', error);
+    } finally {
+      setLoading(false);
+    }
   }, [getProductById, productId]);
 
   useEffect(() => {
@@ -132,17 +179,16 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({
 
   const value: ProductContextType = {
     state,
-    productId: productId as string,
     currentStep: state.currentStep,
     isStepCompleted,
     canAccessStep,
-    setProductId,
     setCurrentStep,
     markStepComplete,
     updateProductData,
     resetCreation,
     navigateToStep,
   };
+
   if (loading) {
     return <div>Loading...</div>;
   }

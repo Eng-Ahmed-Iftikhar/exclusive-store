@@ -4,18 +4,19 @@ import { useNavigate } from 'react-router-dom';
 
 function EditProductPage() {
   const navigate = useNavigate();
-  const { productId } = useProductContext();
+  const { state } = useProductContext();
+  console.log({ state });
 
   useEffect(() => {
-    if (!productId) {
+    if (!state.productData?.id) {
       navigate('/content/products');
       return;
     }
     // Redirect to first step of product creation
-    navigate(`/content/products/${productId}/edit/basic-info`, {
+    navigate(`/content/products/${state.productData?.id}/edit/basic-info`, {
       replace: true,
     });
-  }, [navigate, productId]);
+  }, [navigate, state]);
   console.log('EditProductPage');
 
   return (

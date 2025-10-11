@@ -1,5 +1,5 @@
 import React from 'react';
-import { useProductContext } from '@/contexts/ProductContext';
+import { CURRENT_STEPS, useProductContext } from '@/contexts/ProductContext';
 import {
   CheckCircleIcon,
   DocumentTextIcon,
@@ -9,7 +9,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 interface StepLayoutProps {
-  currentStep: number;
+  currentStep: CURRENT_STEPS;
   title: string;
   description: string;
   children: React.ReactNode;
@@ -17,25 +17,25 @@ interface StepLayoutProps {
 
 const STEPS = [
   {
-    id: 1,
+    id: CURRENT_STEPS.BASIC_INFO,
     name: 'Basic Info',
     icon: DocumentTextIcon,
     path: '/content/products/create/basic-info',
   },
   {
-    id: 2,
+    id: CURRENT_STEPS.VARIANTS,
     name: 'Variants',
     icon: Squares2X2Icon,
     path: '/content/products/create/variants',
   },
   {
-    id: 3,
+    id: CURRENT_STEPS.IMAGES,
     name: 'Images',
     icon: PhotoIcon,
     path: '/content/products/create/images',
   },
   {
-    id: 4,
+    id: CURRENT_STEPS.REVIEW,
     name: 'Review & Publish',
     icon: EyeIcon,
     path: '/content/products/create/review',
@@ -70,7 +70,7 @@ const StepLayout: React.FC<StepLayoutProps> = ({
             <ol className="flex items-center justify-between relative">
               {STEPS.map((step, stepIdx) => {
                 const StepIcon = step.icon;
-                const isCompleted = isStepCompleted(step.id);
+                const isCompleted = isStepCompleted(step.id as CURRENT_STEPS);
                 const isCurrent = currentStep === step.id;
                 const isAccessible = canAccessStep(step.id);
 
@@ -90,7 +90,9 @@ const StepLayout: React.FC<StepLayoutProps> = ({
                     )}
                     <button
                       type="button"
-                      onClick={() => isAccessible && navigateToStep(step.id)}
+                      onClick={() =>
+                        isAccessible && navigateToStep(step.id as CURRENT_STEPS)
+                      }
                       className={`relative flex flex-col items-center w-full transition-opacity ${
                         isAccessible
                           ? 'cursor-pointer'

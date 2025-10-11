@@ -1,24 +1,22 @@
-import React from 'react';
-import { useGetVariantsByProductQuery } from '@/apis/services/productApi';
+import { useProductContext } from '@/contexts/ProductContext';
 import {
-  ArrowRightIcon,
   ArrowLeftIcon,
+  ArrowRightIcon,
   Squares2X2Icon,
 } from '@heroicons/react/24/outline';
+import React from 'react';
 
 interface ProductVariantsFormProps {
-  productId?: string;
   onComplete: () => void;
   onBack: () => void;
 }
 
 const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({
-  productId,
   onComplete,
   onBack,
 }) => {
-  const { data: variants } = useGetVariantsByProductQuery(productId || '');
-
+  const { state } = useProductContext();
+  const variants = state.productData?.variants || [];
   const handleContinue = () => {
     if (!variants || variants.length === 0) {
       alert('Please create at least one product variant before continuing');

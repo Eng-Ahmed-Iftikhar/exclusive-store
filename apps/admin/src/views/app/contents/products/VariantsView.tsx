@@ -1,33 +1,34 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useProductContext } from '@/contexts/ProductContext';
+import { CURRENT_STEPS, useProductContext } from '@/contexts/ProductContext';
 import ProductVariantsForm from '@/sections/app/contents/products/ProductVariantsForm';
 import StepLayout from '@/sections/app/contents/products/StepLayout';
 
 const CreateProductVariantsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { canAccessStep, markStepComplete, navigateToStep } =
+  const { canAccessStep, markStepComplete, navigateToStep, state } =
     useProductContext();
 
   // Redirect if step not accessible
   React.useEffect(() => {
-    if (!canAccessStep(2)) {
-      navigate('/content/products/create/basic-info');
+    console.log('VariantsView', canAccessStep(CURRENT_STEPS.VARIANTS));
+    if (!canAccessStep(CURRENT_STEPS.VARIANTS)) {
+      navigate(`/content/products/edit/${state.productData?.id}/basic-info`);
     }
-  }, [canAccessStep, navigate]);
+  }, [canAccessStep, navigate, state]);
 
   const handleComplete = () => {
-    markStepComplete(2);
-    navigateToStep(3);
+    markStepComplete(CURRENT_STEPS.VARIANTS);
+    navigateToStep(CURRENT_STEPS.IMAGES);
   };
 
   const handleBack = () => {
-    navigateToStep(1);
+    navigateToStep(CURRENT_STEPS.BASIC_INFO);
   };
 
   return (
     <StepLayout
-      currentStep={2}
+      currentStep={CURRENT_STEPS.VARIANTS}
       title="Product Variants"
       description="Create different versions of your product with unique SKUs, pricing, and stock"
     >
