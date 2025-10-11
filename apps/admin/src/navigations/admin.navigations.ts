@@ -73,15 +73,7 @@ const adminNavigations: NavigationItem[] = [
           subject: 'categories',
         },
       },
-      {
-        name: 'Products',
-        path: '/content/products',
-        icon: 'products',
-        permission: {
-          action: 'view',
-          subject: 'products',
-        },
-      },
+
       {
         name: 'Subcategories',
         path: '/content/subcategories',
@@ -89,6 +81,15 @@ const adminNavigations: NavigationItem[] = [
         permission: {
           action: 'view',
           subject: 'subcategories',
+        },
+      },
+      {
+        name: 'Products',
+        path: '/content/products',
+        icon: 'products',
+        permission: {
+          action: 'view',
+          subject: 'products',
         },
       },
     ],
