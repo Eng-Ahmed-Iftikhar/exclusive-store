@@ -361,7 +361,7 @@ export const productApi = createApi({
     >({
       query: ({ id, ...data }) => ({
         url: `/products/variants/${id}`,
-        method: 'PUT',
+        method: 'PATCH',
         body: data,
       }),
       invalidatesTags: ['Product'],

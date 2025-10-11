@@ -1,48 +1,47 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Patch,
-  Delete,
   Body,
-  Param,
-  Query,
-  UseGuards,
+  Controller,
+  Delete,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
   Request,
+  UseGuards,
 } from '@nestjs/common';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiQuery,
   ApiBearerAuth,
   ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
-import { ProductsService } from './products.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   CreateProductDto,
-  UpdateProductDto,
   ProductResponseDto,
+  UpdateProductDto,
 } from './dto/product.dto';
 import {
+  CreatePriceDto,
+  CreateProductImageDto,
+  CreateStockDto,
   CreateVariantDto,
+  PriceResponseDto,
+  ProductImageResponseDto,
+  StockResponseDto,
+  UpdatePriceDto,
+  UpdateProductImageDto,
+  UpdateStockDto,
   UpdateVariantDto,
   VariantResponseDto,
-  CreatePriceDto,
-  UpdatePriceDto,
-  PriceResponseDto,
-  CreateStockDto,
-  UpdateStockDto,
-  StockResponseDto,
-  CreateProductImageDto,
-  UpdateProductImageDto,
-  ProductImageResponseDto,
 } from './dto/variant.dto';
+import { ProductsService } from './products.service';
 
 @ApiTags('Products')
 @ApiBearerAuth('JWT-auth')
@@ -247,7 +246,7 @@ export class ProductsController {
     return this.productsService.getVariantById(id);
   }
 
-  @Put('variants/:id')
+  @Patch('variants/:id')
   @ApiOperation({
     summary: 'Update variant',
     description: 'Update variant information and attributes',
@@ -320,7 +319,7 @@ export class ProductsController {
     return this.productsService.getPricesByVariant(variantId);
   }
 
-  @Put('prices/:id')
+  @Patch('prices/:id')
   @ApiOperation({
     summary: 'Update price',
     description: 'Update pricing information',
@@ -396,7 +395,7 @@ export class ProductsController {
     return this.productsService.getStockByVariant(variantId);
   }
 
-  @Put('stock/:id')
+  @Patch('stock/:id')
   @ApiOperation({
     summary: 'Update stock',
     description: 'Update inventory quantities and thresholds',
@@ -479,7 +478,7 @@ export class ProductsController {
     return this.productsService.getImagesByVariant(variantId);
   }
 
-  @Put('images/:id')
+  @Patch('images/:id')
   @ApiOperation({
     summary: 'Update product image',
     description: 'Update image metadata (alt text, primary status, sort order)',

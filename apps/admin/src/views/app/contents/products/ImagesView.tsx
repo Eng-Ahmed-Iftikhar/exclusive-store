@@ -1,32 +1,23 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useProductContext } from '@/contexts/ProductContext';
+import { CURRENT_STEPS, useProductContext } from '@/contexts/ProductContext';
 import ProductImagesForm from '@/sections/app/contents/products/ProductImagesForm';
 import StepLayout from '@/sections/app/contents/products/StepLayout';
+import React from 'react';
 
 const ImagesPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { canAccessStep, markStepComplete, navigateToStep } =
-    useProductContext();
-
-  React.useEffect(() => {
-    if (!canAccessStep(3)) {
-      navigate('/content/products/create/basic-info');
-    }
-  }, [canAccessStep, navigate]);
+  const { markStepComplete, navigateToStep } = useProductContext();
 
   const handleComplete = () => {
-    markStepComplete(3);
-    navigateToStep(4);
+    markStepComplete(CURRENT_STEPS.IMAGES);
+    navigateToStep(CURRENT_STEPS.REVIEW);
   };
 
   const handleBack = () => {
-    navigateToStep(2);
+    navigateToStep(CURRENT_STEPS.VARIANTS);
   };
 
   return (
     <StepLayout
-      currentStep={3}
+      currentStep={CURRENT_STEPS.IMAGES}
       title="Product Images"
       description="Upload product-level images (optional if variants have images)"
     >

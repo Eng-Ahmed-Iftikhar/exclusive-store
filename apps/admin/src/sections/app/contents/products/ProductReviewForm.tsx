@@ -1,29 +1,24 @@
-import React, { useState } from 'react';
-import {
-  useGetProductByIdQuery,
-  useUpdateProductMutation,
-} from '@/apis/services/productApi';
+import { useUpdateProductMutation } from '@/apis/services/productApi';
+import { useProductContext } from '@/contexts/ProductContext';
 import {
   ArrowLeftIcon,
   CheckCircleIcon,
   DocumentTextIcon,
 } from '@heroicons/react/24/outline';
+import React, { useState } from 'react';
 
 interface ProductReviewFormProps {
-  productId?: string;
   onPublish: () => void;
   onBack: () => void;
 }
 
 const ProductReviewForm: React.FC<ProductReviewFormProps> = ({
-  productId,
   onPublish,
   onBack,
 }) => {
-  const { data: product, isLoading } = useGetProductByIdQuery(productId || '', {
-    refetchOnMountOrArgChange: true,
-    refetchOnFocus: true,
-  });
+  const { state } = useProductContext();
+  const product = state.productData;
+
   const [updateProduct] = useUpdateProductMutation();
   const [isPublishing, setIsPublishing] = useState(false);
 
@@ -31,7 +26,7 @@ const ProductReviewForm: React.FC<ProductReviewFormProps> = ({
     setIsPublishing(true);
     try {
       await updateProduct({
-        id: productId || '',
+        id: product?.id || '',
         data: { isActive: true },
       }).unwrap();
       onPublish();
@@ -47,7 +42,7 @@ const ProductReviewForm: React.FC<ProductReviewFormProps> = ({
     setIsPublishing(true);
     try {
       await updateProduct({
-        id: productId || '',
+        id: product?.id || '',
         data: { isActive: false },
       }).unwrap();
       onPublish();
@@ -59,7 +54,7 @@ const ProductReviewForm: React.FC<ProductReviewFormProps> = ({
     }
   };
 
-  if (isLoading || !product) {
+  if (!product) {
     return (
       <div className="animate-pulse space-y-4">
         <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />

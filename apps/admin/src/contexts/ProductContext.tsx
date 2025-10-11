@@ -35,6 +35,7 @@ interface ProductContextType {
   updateProductData: (
     data: Partial<ProductCreationState['productData']>
   ) => Promise<boolean>;
+  refreshProductData: () => Promise<void>;
   resetCreation: () => void;
   navigateToStep: (step: CURRENT_STEPS) => void;
 }
@@ -52,7 +53,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const navigate = useNavigate();
   const { productId } = useParams();
-  console.log('productId', productId);
+
   const [getProductById] = useLazyGetProductByIdQuery();
   const [state, setState] = useState<ProductCreationState>(INITIAL_STATE);
   const [loading, setLoading] = useState(true);
@@ -78,22 +79,9 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({
 
   const isStepCompleted = useCallback(
     (step: CURRENT_STEPS) => {
-      const productData = state.productData;
-
-      switch (step) {
-        case CURRENT_STEPS.BASIC_INFO:
-          return basicInfoFormSchema.safeParse(productData).success;
-        case CURRENT_STEPS.VARIANTS:
-          return state.completedSteps.includes(CURRENT_STEPS.VARIANTS);
-        case CURRENT_STEPS.IMAGES:
-          return state.completedSteps.includes(CURRENT_STEPS.IMAGES);
-        case CURRENT_STEPS.REVIEW:
-          return state.completedSteps.includes(CURRENT_STEPS.REVIEW);
-        default:
-          return state.completedSteps.includes(step);
-      }
+      return state.completedSteps.includes(step);
     },
-    [state.completedSteps, state.productData]
+    [state]
   );
 
   const canAccessStep = useCallback(
@@ -149,11 +137,37 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({
       const navRoute = productId
         ? editProductRoutes[step]
         : createProductRoutes[step];
-      console.log({ navRoute });
       navigate(navRoute);
     },
     [setCurrentStep, productId, navigate]
   );
+
+  const updateCompletedSteps = useCallback((productData: Product) => {
+    if (basicInfoFormSchema.safeParse(productData).success) {
+      setState((prev) => ({
+        ...prev,
+        completedSteps: [...prev.completedSteps, CURRENT_STEPS.BASIC_INFO],
+      }));
+    }
+    if (productData.variants && productData.variants.length > 0) {
+      setState((prev) => ({
+        ...prev,
+        completedSteps: [...prev.completedSteps, CURRENT_STEPS.VARIANTS],
+      }));
+    }
+    if (productData.images && productData.images.length > 0) {
+      setState((prev) => ({
+        ...prev,
+        completedSteps: [...prev.completedSteps, CURRENT_STEPS.IMAGES],
+      }));
+    }
+    if (productData.reviews && productData.reviews.length > 0) {
+      setState((prev) => ({
+        ...prev,
+        completedSteps: [...prev.completedSteps, CURRENT_STEPS.REVIEW],
+      }));
+    }
+  }, []);
 
   const getProductByIdCallback = useCallback(async () => {
     if (!productId) {
@@ -166,10 +180,25 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({
       const response = await getProductById(productId as string);
       console.log('ProductContext: Loaded product data', response.data);
       setState((prev) => ({ ...prev, productData: response.data as Product }));
+      updateCompletedSteps(response.data as Product);
     } catch (error) {
       console.error('ProductContext: Failed to load product', error);
     } finally {
       setLoading(false);
+    }
+  }, [getProductById, productId, updateCompletedSteps]);
+
+  const refreshProductData = useCallback(async () => {
+    if (!productId) {
+      return;
+    }
+
+    try {
+      const response = await getProductById(productId as string);
+      console.log('ProductContext: Refreshed product data', response.data);
+      setState((prev) => ({ ...prev, productData: response.data as Product }));
+    } catch (error) {
+      console.error('ProductContext: Failed to refresh product', error);
     }
   }, [getProductById, productId]);
 
@@ -185,6 +214,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({
     setCurrentStep,
     markStepComplete,
     updateProductData,
+    refreshProductData,
     resetCreation,
     navigateToStep,
   };
