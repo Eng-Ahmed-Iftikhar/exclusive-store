@@ -297,30 +297,6 @@ export const ADMIN_ROUTES: AppRoute[] = [
         icon: 'create-product',
         index: true,
       },
-      {
-        path: ROUTES.ADMIN_CREATE_PRODUCT_BASIC,
-        name: ROUTE_NAMES.CREATE_PRODUCT_BASIC,
-        element: 'CreateProductBasic',
-        icon: 'create-product-basic',
-      },
-      {
-        path: ROUTES.ADMIN_CREATE_PRODUCT_VARIANTS,
-        name: ROUTE_NAMES.CREATE_PRODUCT_VARIANTS,
-        element: 'CreateProductVariants',
-        icon: 'create-product-variants',
-      },
-      {
-        path: ROUTES.ADMIN_CREATE_PRODUCT_IMAGES,
-        name: ROUTE_NAMES.CREATE_PRODUCT_IMAGES,
-        element: 'CreateProductImages',
-        icon: 'create-product-images',
-      },
-      {
-        path: ROUTES.ADMIN_CREATE_PRODUCT_REVIEW,
-        name: ROUTE_NAMES.CREATE_PRODUCT_REVIEW,
-        element: 'CreateProductReview',
-        icon: 'create-product-review',
-      },
     ],
   },
 

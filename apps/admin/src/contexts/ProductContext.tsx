@@ -172,6 +172,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({
   const getProductByIdCallback = useCallback(async () => {
     if (!productId) {
       console.log('No productId, skipping fetch');
+      setLoading(false);
       return;
     }
 

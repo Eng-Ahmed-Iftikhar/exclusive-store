@@ -293,7 +293,7 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
         </div>
 
         {/* Form Actions */}
-        <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
           <Button
             type="button"
             variant="outline"
@@ -305,8 +305,8 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
           </Button>
 
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : 'Save & Continue'}
-            <ArrowRightIcon className="h-5 w-5 ml-2" />
+            {isSubmitting ? 'Saving...' : 'Save'}
+            {!isSubmitting && <ArrowRightIcon className="h-5 w-5 ml-2" />}
           </Button>
         </div>
       </form>

@@ -6,7 +6,10 @@ import {
   PlusIcon,
   TrashIcon,
   XMarkIcon,
+  PhotoIcon,
+  StarIcon,
 } from '@heroicons/react/24/outline';
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import React, { useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
@@ -19,7 +22,12 @@ import {
   useUpdatePriceMutation,
   useCreateStockMutation,
   useUpdateStockMutation,
+  useCreateProductImageMutation,
+  useUpdateProductImageMutation,
+  useDeleteProductImageMutation,
+  ProductImage,
 } from '@/apis/services/productApi';
+import { useUploadFileMutation } from '@/apis/services/fileApi';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -34,7 +42,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const variantSchema = z.object({
-  id: z.string().optional(),
+  variantId: z.string().optional(),
   name: z.string().min(1, 'Variant name is required'),
   sku: z.string().min(1, 'SKU is required'),
   price: z.number().min(0, 'Price must be positive'),
@@ -75,13 +83,20 @@ const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({
   const [updatePrice] = useUpdatePriceMutation();
   const [createStock] = useCreateStockMutation();
   const [updateStock] = useUpdateStockMutation();
+  const [createProductImage] = useCreateProductImageMutation();
+  const [updateProductImage] = useUpdateProductImageMutation();
+  const [deleteProductImage] = useDeleteProductImageMutation();
+  const [uploadFile] = useUploadFileMutation();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [uploadingImages, setUploadingImages] = useState<{
+    [key: number]: boolean;
+  }>({});
 
   // Transform existing variants to form data
   const initialVariants: VariantFormData[] = existingVariants.map((v) => ({
-    id: v.id,
+    variantId: v.id,
     name: v.name,
     sku: v.sku,
     price: Number(v.prices?.[0]?.price || 0),
@@ -108,7 +123,7 @@ const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({
     control: form.control,
     name: 'variants',
   });
-
+  console.log(fields, 'fields', initialVariants);
   const addNewVariant = () => {
     const newVariant: VariantFormData = {
       name: '',
@@ -176,10 +191,10 @@ const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({
     try {
       setIsSubmitting(true);
 
-      if (variantData.id) {
+      if (variantData.variantId) {
         // Update existing variant
         await updateVariant({
-          id: variantData.id,
+          id: variantData.variantId,
           name: variantData.name,
           sku: variantData.sku,
           isDefault: variantData.isDefault,
@@ -196,7 +211,7 @@ const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({
           }).unwrap();
         } else {
           const priceResult = await createPrice({
-            variantId: variantData.id,
+            variantId: variantData.variantId,
             price: variantData.price,
             salePrice: variantData.salePrice,
             currency: 'USD',
@@ -214,7 +229,7 @@ const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({
           }).unwrap();
         } else {
           const stockResult = await createStock({
-            variantId: variantData.id,
+            variantId: variantData.variantId,
             quantity: variantData.quantity,
             minThreshold: variantData.minThreshold,
           }).unwrap();
@@ -250,7 +265,7 @@ const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({
         // Update the form with the new IDs
         update(index, {
           ...variantData,
-          id: newVariant.id,
+          variantId: newVariant.id,
           priceId: priceResult.id,
           stockId: stockResult.id,
         });
@@ -265,6 +280,95 @@ const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({
       alert('Failed to save variant. Please try again.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Image management functions
+  const handleImageUpload = async (
+    variantId: string,
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const variant = existingVariants.find((v) => v.id === variantId);
+    const existingImages = variant?.images || [];
+
+    setUploadingImages((prev) => ({ ...prev, [index]: true }));
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const uploadResponse = await uploadFile(formData).unwrap();
+
+        await createProductImage({
+          variantId,
+          fileId: uploadResponse.file.id,
+          altText: file.name,
+          isPrimary: existingImages.length === 0 && i === 0,
+          sortOrder: existingImages.length + i,
+        }).unwrap();
+      }
+
+      await refreshProductData();
+    } catch (error) {
+      console.error('Failed to upload images:', error);
+      alert('Failed to upload images. Please try again.');
+    } finally {
+      setUploadingImages((prev) => ({ ...prev, [index]: false }));
+    }
+  };
+
+  const handleSetPrimaryImage = async (imageId: string, variantId: string) => {
+    try {
+      const variant = existingVariants.find((v) => v.id === variantId);
+      const primaryImage = variant?.images?.find((img) => img.isPrimary);
+
+      // Remove primary from old image
+      if (primaryImage && primaryImage.id !== imageId) {
+        await updateProductImage({
+          id: primaryImage.id,
+          isPrimary: false,
+        }).unwrap();
+      }
+
+      // Set new primary
+      await updateProductImage({
+        id: imageId,
+        isPrimary: true,
+      }).unwrap();
+
+      await refreshProductData();
+    } catch (error) {
+      console.error('Failed to set primary image:', error);
+      alert('Failed to set primary image. Please try again.');
+    }
+  };
+
+  const handleDeleteImage = async (imageId: string, variantId: string) => {
+    const variant = existingVariants.find((v) => v.id === variantId);
+    const image = variant?.images?.find((img) => img.id === imageId);
+
+    if (image?.isPrimary) {
+      alert(
+        'Cannot delete primary image. Please set another image as primary first.'
+      );
+      return;
+    }
+
+    if (!window.confirm('Are you sure you want to delete this image?')) {
+      return;
+    }
+
+    try {
+      await deleteProductImage(imageId).unwrap();
+      await refreshProductData();
+    } catch (error) {
+      console.error('Failed to delete image:', error);
+      alert('Failed to delete image. Please try again.');
     }
   };
 
@@ -307,7 +411,7 @@ const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({
           <div className="space-y-4">
             {fields.map((field, index) => (
               <div
-                key={field.id}
+                key={field.variantId}
                 className="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4"
               >
                 {editingIndex === index ? (
@@ -315,7 +419,7 @@ const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({
                   <div className="space-y-4">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {field.id ? 'Edit Variant' : 'New Variant'}
+                        {field.variantId ? 'Edit Variant' : 'New Variant'}
                       </h3>
                       <div className="flex gap-2">
                         <Button
@@ -547,60 +651,245 @@ const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({
                         )}
                       />
                     </div>
+
+                    {/* Variant Images Section */}
+                    {field.variantId && (
+                      <div className="border-t border-gray-200 dark:border-gray-600 pt-4 mt-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                            Variant Images
+                          </h4>
+                          <label
+                            htmlFor={`variant-image-upload-${index}`}
+                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer disabled:opacity-50"
+                          >
+                            <PhotoIcon className="h-4 w-4 mr-1" />
+                            {uploadingImages[index]
+                              ? 'Uploading...'
+                              : 'Add Images'}
+                            <input
+                              id={`variant-image-upload-${index}`}
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              className="sr-only"
+                              onChange={(e) =>
+                                field.variantId &&
+                                handleImageUpload(field.variantId, index, e)
+                              }
+                              disabled={uploadingImages[index]}
+                            />
+                          </label>
+                        </div>
+
+                        {(() => {
+                          const variant = existingVariants.find(
+                            (v) => v.id === field.variantId
+                          );
+                          const variantImages = variant?.images || [];
+                          console.log(existingVariants, field);
+                          return variantImages.length > 0 ? (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              {variantImages.map((img: ProductImage) => (
+                                <div
+                                  key={img.id}
+                                  className="relative group bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 p-2"
+                                >
+                                  <div className="relative">
+                                    <img
+                                      src={img.file?.secureUrl || img.file?.url}
+                                      alt={img.altText || 'Variant image'}
+                                      className="w-full h-24 object-cover rounded"
+                                    />
+
+                                    {/* Primary Badge */}
+                                    {img.isPrimary ? (
+                                      <div className="absolute top-1 left-1 flex items-center px-1.5 py-0.5 bg-indigo-600 text-white text-xs font-medium rounded shadow-lg">
+                                        <StarIconSolid className="h-3 w-3 mr-0.5" />
+                                        Primary
+                                      </div>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          field.variantId &&
+                                          handleSetPrimaryImage(
+                                            img.id,
+                                            field.variantId
+                                          )
+                                        }
+                                        className="absolute top-1 left-1 px-1.5 py-0.5 bg-gray-800/70 hover:bg-indigo-600 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                        title="Set as primary"
+                                      >
+                                        <StarIcon className="h-3 w-3 inline mr-0.5" />
+                                        Set Primary
+                                      </button>
+                                    )}
+
+                                    {/* Delete Button */}
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        field.variantId &&
+                                        handleDeleteImage(
+                                          img.id,
+                                          field.variantId
+                                        )
+                                      }
+                                      disabled={img.isPrimary}
+                                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg disabled:opacity-30 disabled:cursor-not-allowed"
+                                      title={
+                                        img.isPrimary
+                                          ? 'Set another image as primary first'
+                                          : 'Delete image'
+                                      }
+                                    >
+                                      <TrashIcon className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate">
+                                    {img.altText || 'No description'}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
+                              <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
+                              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                No images yet. Click "Add Images" to upload.
+                              </p>
+                            </div>
+                          );
+                        })()}
+
+                        {(() => {
+                          const variant = existingVariants.find(
+                            (v) => v.id === field.variantId
+                          );
+                          const variantImages = variant?.images || [];
+                          const hasPrimary = variantImages.some(
+                            (img) => img.isPrimary
+                          );
+
+                          return (
+                            hasPrimary &&
+                            variantImages.length > 1 && (
+                              <div className="mt-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs rounded">
+                                <span role="img" aria-label="tip">
+                                  💡
+                                </span>{' '}
+                                To delete the primary image, first set another
+                                image as primary.
+                              </div>
+                            )
+                          );
+                        })()}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   // View Mode
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-                        {field.name}
-                      </h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                        SKU: {field.sku}
-                      </p>
-                      <div className="flex gap-4 text-xs">
-                        <span className="text-gray-600 dark:text-gray-400">
-                          Price: ${field.price.toFixed(2)}
-                          {field.salePrice && (
-                            <span className="ml-2 text-red-500">
-                              Sale: ${field.salePrice.toFixed(2)}
-                            </span>
-                          )}
-                        </span>
-                        <span className="text-gray-600 dark:text-gray-400">
-                          Stock: {field.quantity} units
-                        </span>
-                        <span
-                          className={`px-2 py-0.5 rounded ${
-                            field.isActive
-                              ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-                              : 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200'
-                          }`}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex-1">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                          {field.name}
+                        </h3>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                          SKU: {field.sku}
+                        </p>
+                        <div className="flex gap-4 text-xs">
+                          <span className="text-gray-600 dark:text-gray-400">
+                            Price: ${field.price.toFixed(2)}
+                            {field.salePrice && (
+                              <span className="ml-2 text-red-500">
+                                Sale: ${field.salePrice.toFixed(2)}
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-gray-600 dark:text-gray-400">
+                            Stock: {field.quantity} units
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded ${
+                              field.isActive
+                                ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                                : 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200'
+                            }`}
+                          >
+                            {field.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditVariant(index)}
+                          disabled={editingIndex !== null}
                         >
-                          {field.isActive ? 'Active' : 'Inactive'}
-                        </span>
+                          <PencilIcon className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteVariant(index)}
+                          disabled={editingIndex !== null}
+                        >
+                          <TrashIcon className="h-4 w-4 text-red-500" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditVariant(index)}
-                        disabled={editingIndex !== null}
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteVariant(index)}
-                        disabled={editingIndex !== null}
-                      >
-                        <TrashIcon className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
+
+                    {/* Show images in view mode */}
+                    {field.variantId &&
+                      (() => {
+                        const variant = existingVariants.find(
+                          (v) => v.id === field.variantId
+                        );
+                        const variantImages = variant?.images || [];
+
+                        return (
+                          variantImages.length > 0 && (
+                            <div className="border-t border-gray-200 dark:border-gray-600 pt-3 mt-3">
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                Images ({variantImages.length})
+                              </p>
+                              <div className="flex gap-2 overflow-x-auto">
+                                {variantImages
+                                  .slice(0, 4)
+                                  .map((img: ProductImage) => (
+                                    <div
+                                      key={img.id}
+                                      className="relative flex-shrink-0"
+                                    >
+                                      <img
+                                        src={
+                                          img.file?.secureUrl || img.file?.url
+                                        }
+                                        alt={img.altText || 'Variant image'}
+                                        className="w-16 h-16 object-cover rounded border border-gray-200 dark:border-gray-600"
+                                      />
+                                      {img.isPrimary && (
+                                        <div className="absolute -top-1 -right-1 bg-indigo-600 rounded-full p-0.5">
+                                          <StarIconSolid className="h-3 w-3 text-white" />
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                {variantImages.length > 4 && (
+                                  <div className="flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-xs text-gray-500">
+                                    +{variantImages.length - 4}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )
+                        );
+                      })()}
                   </div>
                 )}
               </div>
