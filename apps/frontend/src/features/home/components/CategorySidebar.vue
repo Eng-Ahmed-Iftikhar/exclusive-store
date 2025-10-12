@@ -32,7 +32,7 @@
 
           <!-- Subcategories Dropdown -->
           <transition name="subcategory-dropdown">
-            <div v-if="category.isExpanded" class="subcategories-dropdown">
+            <div v-if="category.isExpanded && category.subcategories.length > 0" class="subcategories-dropdown">
               <ul class="subcategories-list">
                 <li v-for="subcategory in category.subcategories" :key="subcategory.id" class="subcategory-item"
                   @click="selectSubcategory(category.id, subcategory.id)">
@@ -56,7 +56,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useCategoriesStore } from '../../../stores/modules/categories';
+import { useCategoriesStore } from '../../../stores/modules/categories/categories.store';
 
 const router = useRouter();
 const categoriesStore = useCategoriesStore();
@@ -73,7 +73,7 @@ onMounted(async () => {
   }
 });
 
-// Get categories from store
+// Get categories from store with subcategories already included
 const categories = computed(() => {
   return categoriesStore.activeCategories.map(category => ({
     ...category,

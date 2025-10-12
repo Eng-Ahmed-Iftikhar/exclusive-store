@@ -95,6 +95,27 @@ export class ProductsController {
     description: 'Search term',
     example: 't-shirt',
   })
+  @ApiQuery({
+    name: 'isActive',
+    required: false,
+    type: Boolean,
+    description: 'Filter by active status (true for active products only)',
+    example: true,
+  })
+  @ApiQuery({
+    name: 'categoryId',
+    required: false,
+    type: String,
+    description: 'Filter by category ID',
+    example: 'clxxxxx123456789',
+  })
+  @ApiQuery({
+    name: 'subcategoryId',
+    required: false,
+    type: String,
+    description: 'Filter by subcategory ID',
+    example: 'clxxxxx123456789',
+  })
   @ApiResponse({
     status: 200,
     description: 'Products retrieved successfully',
@@ -115,7 +136,10 @@ export class ProductsController {
   async getAllProducts(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-    @Query('search') search?: string
+    @Query('search') search?: string,
+    @Query('isActive') isActive?: string,
+    @Query('categoryId') categoryId?: string,
+    @Query('subcategoryId') subcategoryId?: string
   ): Promise<{
     products: ProductResponseDto[];
     total: number;
@@ -126,7 +150,10 @@ export class ProductsController {
     return this.productsService.getAllProducts(
       parseInt(page || '1'),
       parseInt(limit || '20'),
-      search || ''
+      search || '',
+      isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      categoryId,
+      subcategoryId
     );
   }
 

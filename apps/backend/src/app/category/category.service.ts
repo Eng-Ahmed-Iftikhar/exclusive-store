@@ -52,6 +52,22 @@ export class CategoryService {
       where: includeInactive ? {} : { isActive: true },
       orderBy: { sortOrder: 'asc' },
       include: {
+        subcategories: {
+          where: includeInactive ? {} : { isActive: true },
+          orderBy: { sortOrder: 'asc' },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true,
+            iconFileId: true,
+            isActive: true,
+            sortOrder: true,
+            categoryId: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
         _count: {
           select: {
             subcategories: true,
@@ -176,6 +192,7 @@ export class CategoryService {
       isActive: category.isActive,
       sortOrder: category.sortOrder,
       subcategoryCount: category._count?.subcategories || 0,
+      subcategories: category.subcategories || [],
       createdAt: category.createdAt,
       updatedAt: category.updatedAt,
     };

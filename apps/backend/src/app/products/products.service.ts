@@ -102,7 +102,10 @@ export class ProductsService {
   async getAllProducts(
     page = 1,
     limit = 20,
-    search = ''
+    search = '',
+    isActive?: boolean,
+    categoryId?: string,
+    subcategoryId?: string
   ): Promise<{
     products: ProductResponseDto[];
     total: number;
@@ -113,6 +116,22 @@ export class ProductsService {
     const skip = (page - 1) * limit;
 
     const where: any = {};
+
+    // Filter by active status if specified
+    if (isActive !== undefined) {
+      where.isActive = isActive;
+    }
+
+    // Filter by category if specified
+    if (categoryId) {
+      where.categoryId = categoryId;
+    }
+
+    // Filter by subcategory if specified
+    if (subcategoryId) {
+      where.subcategoryId = subcategoryId;
+    }
+
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
@@ -856,6 +875,9 @@ export class ProductsService {
       name: product.name,
       description: product.description,
       sku: product.sku,
+      price: product.price ? Number(product.price) : undefined,
+      salePrice: product.salePrice ? Number(product.salePrice) : undefined,
+      currency: product.currency,
       isActive: product.isActive,
       isFeatured: product.isFeatured,
       sortOrder: product.sortOrder,

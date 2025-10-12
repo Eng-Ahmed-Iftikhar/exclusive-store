@@ -33,7 +33,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import { IProducts, useProductsStore, ICategories, useCategoriesStore, useFavoritesStore } from '../../../stores';
+import type { Product, ProductsResponse } from '../../../stores/modules/products/products.interface';
+import type { Category } from '../../../stores/modules/categories/categories.interface';
+import { useProductsStore } from '../../../stores/modules/products/products.store';
+import { useCategoriesStore } from '../../../stores/modules/categories/categories.store';
+import { useFavoritesStore } from '../../../stores/modules/favorites/favorites.store';
 import ProductsFilters from '../components/ProductsFilters.vue';
 import ProductsGrid from '../components/ProductsGrid.vue';
 import { usePageTitle } from '../../../composables/usePageTitle';
@@ -55,15 +59,15 @@ const error = ref<string | null>(null);
 
 // Computed properties
 const products = computed(() => {
-  return productsStore.products as unknown as IProducts.IProducts.Product[] || [];
+  return productsStore.products as Product[] || [];
 });
 
 const categories = computed(() => {
-  return categoriesStore.categories as unknown as ICategories.ICategories.Category[] || [];
+  return categoriesStore.categories as Category[] || [];
 });
 
 const pagination = computed(() => {
-  const paginationData = productsStore.pagination as unknown as IProducts.IProducts.ProductsResponse;
+  const paginationData = productsStore.pagination as ProductsResponse;
   if (!paginationData) {
     return {
       total: 0,

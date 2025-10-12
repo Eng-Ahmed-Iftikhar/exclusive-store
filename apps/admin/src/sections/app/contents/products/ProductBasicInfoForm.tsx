@@ -31,6 +31,8 @@ export const basicInfoFormSchema = z.object({
   name: z.string().min(1, { message: 'Product name is required' }),
   description: z.string(),
   sku: z.string(),
+  price: z.number().min(0).optional(),
+  salePrice: z.number().min(0).optional(),
   categoryId: z.string(),
   subcategoryId: z.string(),
   isFeatured: z.boolean(),
@@ -41,6 +43,8 @@ interface ProductBasicInfoFormData {
   name: string;
   description: string;
   sku: string;
+  price?: number;
+  salePrice?: number;
   categoryId: string;
   subcategoryId: string;
   isFeatured: boolean;
@@ -68,6 +72,8 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
       name: productData?.name || '',
       description: productData?.description || '',
       sku: productData?.sku || '',
+      price: productData?.price || undefined,
+      salePrice: productData?.salePrice || undefined,
       categoryId: productData?.categoryId || '',
       subcategoryId: productData?.subcategoryId || '',
       isFeatured: productData?.isFeatured || false,
@@ -83,6 +89,8 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
           name: productData.name || '',
           description: productData.description || '',
           sku: productData.sku || '',
+          price: productData.price || undefined,
+          salePrice: productData.salePrice || undefined,
           categoryId: productData.categoryId || '',
           subcategoryId: productData.subcategoryId || '',
           isFeatured: productData.isFeatured || false,
@@ -173,6 +181,61 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
             </FormItem>
           )}
         />
+
+        {/* Price & Sale Price */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Base Product Price</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="29.99"
+                    {...field}
+                    onChange={(e) =>
+                      field.onChange(parseFloat(e.target.value) || undefined)
+                    }
+                  />
+                </FormControl>
+                <FormDescription>
+                  Base price for the product (variants can override)
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="salePrice"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Sale Price</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="19.99"
+                    {...field}
+                    onChange={(e) =>
+                      field.onChange(parseFloat(e.target.value) || undefined)
+                    }
+                  />
+                </FormControl>
+                <FormDescription>
+                  Optional sale price (leave empty for no sale)
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         {/* Category & Subcategory */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

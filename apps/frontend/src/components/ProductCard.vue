@@ -1,9 +1,12 @@
 <template>
   <div class="product-card" @click="navigateToProduct">
     <div class="product-image">
-      <!-- Image Slideshow -->
-      <div v-if="hasMultipleImages" class="image-slideshow">
-        <img :src="currentImage.url" :alt="currentImage.altText || product.name" class="slideshow-image" />
+      <!-- Image Display -->
+      <div class="image-container">
+        <img v-if="productImages.length > 0" :src="currentImage.url" :alt="currentImage.altText || product.name"
+          class="product-image-img" @error="handleImageError" />
+        <img v-else src="https://picsum.photos/400/300?random=16" :alt="product.name"
+          class="product-image-img placeholder-image" />
 
         <!-- Image Indicators -->
         <div v-if="hasMultipleImages" class="image-indicators">
@@ -11,9 +14,6 @@
             class="indicator-dot" :class="{ active: currentImageIndex === index }" type="button" />
         </div>
       </div>
-
-      <!-- Single Image Display -->
-      <img v-else :src="getPrimaryImage(product)" :alt="product.name" class="single-image" />
 
       <!-- Action Icons Overlay -->
       <div class="action-overlay">
@@ -39,9 +39,9 @@
       </div>
 
       <div class="product-price">
-        <span v-if="isOnSale" class="current-price">${{ getSalePrice(product) }}</span>
-        <span v-else class="current-price">${{ getOriginalPrice(product) }}</span>
-        <span v-if="isOnSale" class="original-price">${{ getOriginalPrice(product) }}</span>
+        <span v-if="isOnSale" class="current-price">${{ getSalePrice(product).toFixed(2) }}</span>
+        <span v-else class="current-price">${{ getOriginalPrice(product).toFixed(2) }}</span>
+        <span v-if="isOnSale" class="original-price">${{ getOriginalPrice(product).toFixed(2) }}</span>
       </div>
 
       <div class="product-actions">
@@ -122,7 +122,7 @@ const isOnSale = computed(() => {
 });
 
 const productImages = computed(() => {
-  return props.product.images || [];
+  return getProductImages(props.product);
 });
 
 const hasMultipleImages = computed(() => {
@@ -130,11 +130,17 @@ const hasMultipleImages = computed(() => {
 });
 
 const currentImage = computed(() => {
-  if (productImages.value.length > 0) {
+  if (productImages.value.length > 0 && productImages.value[currentImageIndex.value]) {
     return productImages.value[currentImageIndex.value];
   }
   return { url: 'https://picsum.photos/400/300?random=16', altText: props.product.name };
 });
+
+// Handle image load errors
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement;
+  img.src = 'https://picsum.photos/400/300?random=' + props.product.id;
+};
 
 // Favorite functionality
 const isFavorited = computed(() => {
@@ -266,20 +272,62 @@ onUnmounted(() => {
   stopAutoSlide();
 });
 
+// Get default variant for the product
+const getDefaultVariant = (product: any) => {
+  if (!product.variants || product.variants.length === 0) return null;
+
+  // First try to find the default variant
+  const defaultVariant = product.variants.find((v: any) => v.isDefault);
+  if (defaultVariant) return defaultVariant;
+
+  // If no default, find the first variant with images
+  const variantWithImages = product.variants.find((v: any) => v.images && v.images.length > 0);
+  if (variantWithImages) return variantWithImages;
+
+  // Otherwise return the first variant
+  return product.variants[0];
+};
+
+// Helper function to get product images (prioritize variant images, then product images)
+const getProductImages = (product: any) => {
+  const images: any[] = [];
+
+  // First, try to get images from the default variant
+  const defaultVariant = getDefaultVariant(product);
+  if (defaultVariant?.images && defaultVariant.images.length > 0) {
+    images.push(...defaultVariant.images.map((img: any) => ({
+      url: img.file?.secureUrl || img.file?.url || '',
+      altText: img.altText || product.name,
+      isPrimary: img.isPrimary,
+      sortOrder: img.sortOrder
+    })));
+  }
+
+  // If no variant images, try product-level images
+  if (images.length === 0 && product.images && product.images.length > 0) {
+    images.push(...product.images.map((img: any) => ({
+      url: img.file?.secureUrl || img.file?.url || '',
+      altText: img.altText || product.name,
+      isPrimary: img.isPrimary,
+      sortOrder: img.sortOrder
+    })));
+  }
+
+  // Filter out invalid images and sort
+  return images
+    .filter(img => img.url && img.url.trim() !== '')
+    .sort((a, b) => {
+      if (a.isPrimary && !b.isPrimary) return -1;
+      if (!a.isPrimary && b.isPrimary) return 1;
+      return (a.sortOrder || 0) - (b.sortOrder || 0);
+    });
+};
+
 // Helper function to get primary image
 const getPrimaryImage = (product: any) => {
-  // Check if images exist
-  if (product.images && product.images.length > 0) {
-    const primaryImage = product.images.find((img: any) => img.isPrimary);
-    return primaryImage ? (primaryImage.file?.secureUrl || primaryImage.file?.url) : (product.images[0].file?.secureUrl || product.images[0].file?.url);
-  }
-  // Check variants for images
-  if (product.variants && product.variants.length > 0) {
-    const defaultVariant = product.variants.find((v: any) => v.isDefault) || product.variants[0];
-    if (defaultVariant.images && defaultVariant.images.length > 0) {
-      const primaryImage = defaultVariant.images.find((img: any) => img.isPrimary);
-      return primaryImage ? (primaryImage.file?.secureUrl || primaryImage.file?.url) : (defaultVariant.images[0].file?.secureUrl || defaultVariant.images[0].file?.url);
-    }
+  const images = getProductImages(product);
+  if (images.length > 0) {
+    return images[0].url;
   }
   return 'https://picsum.photos/400/300?random=16';
 };
@@ -307,30 +355,42 @@ const getReviewCount = (product: any) => {
   return 0;
 };
 
-// Helper function to get original price from variants
+// Helper function to get original price (product price or variant price)
 const getOriginalPrice = (product: any) => {
-  // Get price from default variant or first variant
-  if (product.variants && product.variants.length > 0) {
-    const defaultVariant = product.variants.find((v: any) => v.isDefault) || product.variants[0];
-    if (defaultVariant.prices && defaultVariant.prices.length > 0) {
-      const activePrice = defaultVariant.prices.find((price: any) => price.isActive);
-      return activePrice ? activePrice.price : defaultVariant.prices[0].price;
-    }
+  // First check if product has a base price
+  if (product.price && Number(product.price) > 0) {
+    return Number(product.price);
   }
+
+  // Otherwise get price from default variant
+  const defaultVariant = getDefaultVariant(product);
+  if (defaultVariant?.prices && defaultVariant.prices.length > 0) {
+    const activePrice = defaultVariant.prices.find((price: any) => price.isActive);
+    if (activePrice) {
+      return Number(activePrice.price);
+    }
+    return Number(defaultVariant.prices[0].price);
+  }
+
   return 0;
 };
 
-// Helper function to get sale price from variants
+// Helper function to get sale price (product sale price or variant sale price)
 const getSalePrice = (product: any) => {
-  // Get sale price from default variant or first variant
-  if (product.variants && product.variants.length > 0) {
-    const defaultVariant = product.variants.find((v: any) => v.isDefault) || product.variants[0];
-    if (defaultVariant.prices && defaultVariant.prices.length > 0) {
-      const activePrice = defaultVariant.prices.find((price: any) => price.isActive);
-      const salePrice = activePrice ? activePrice.salePrice : defaultVariant.prices[0].salePrice;
-      return salePrice || getOriginalPrice(product);
+  // First check if product has a base sale price
+  if (product.salePrice && Number(product.salePrice) > 0) {
+    return Number(product.salePrice);
+  }
+
+  // Otherwise get sale price from default variant
+  const defaultVariant = getDefaultVariant(product);
+  if (defaultVariant?.prices && defaultVariant.prices.length > 0) {
+    const activePrice = defaultVariant.prices.find((price: any) => price.isActive);
+    if (activePrice?.salePrice && Number(activePrice.salePrice) > 0) {
+      return Number(activePrice.salePrice);
     }
   }
+
   return getOriginalPrice(product);
 };
 </script>
@@ -362,21 +422,32 @@ const getSalePrice = (product: any) => {
   position: relative;
   height: 220px;
   background: #f8f8f8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   flex-shrink: 0;
   overflow: hidden;
 }
 
-.product-image img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: cover !important;
+.image-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.product-image-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   transition: transform 0.3s ease;
 }
 
-.product-card:hover .product-image img {
+.product-image-img.placeholder-image {
+  object-fit: contain;
+  padding: 20px;
+}
+
+.product-card:hover .product-image-img {
   transform: scale(1.05);
 }
 
@@ -422,32 +493,6 @@ const getSalePrice = (product: any) => {
   background: rgba(219, 68, 68, 0.2) !important;
 }
 
-/* Slideshow Styles */
-.image-slideshow {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.slideshow-image {
-  max-width: 100%;
-  max-height: 100%;
-  width: 100%;
-  height: 100%;
-  object-fit: cover !important;
-  transition: opacity 0.3s ease;
-}
-
-.single-image {
-  max-width: 100%;
-  max-height: 100%;
-  width: 100%;
-  height: 100%;
-  object-fit: cover !important;
-}
 
 .image-indicators {
   position: absolute;

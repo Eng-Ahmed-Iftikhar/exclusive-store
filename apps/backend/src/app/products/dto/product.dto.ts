@@ -5,6 +5,8 @@ import {
   IsBoolean,
   IsInt,
   IsNotEmpty,
+  IsNumber,
+  Min,
 } from 'class-validator';
 
 // ==================== PRODUCT DTOs ====================
@@ -35,6 +37,35 @@ export class CreateProductDto {
   @IsOptional()
   @IsString()
   sku?: string;
+
+  @ApiProperty({
+    description: 'Base product price',
+    example: 29.99,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  price?: number;
+
+  @ApiProperty({
+    description: 'Base product sale price',
+    example: 19.99,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  salePrice?: number;
+
+  @ApiProperty({
+    description: 'Currency code',
+    example: 'USD',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  currency?: string;
 
   @ApiProperty({
     description: 'Whether the product is active',
@@ -111,6 +142,35 @@ export class UpdateProductDto {
   sku?: string;
 
   @ApiProperty({
+    description: 'Base product price',
+    example: 29.99,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  price?: number;
+
+  @ApiProperty({
+    description: 'Base product sale price',
+    example: 19.99,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  salePrice?: number;
+
+  @ApiProperty({
+    description: 'Currency code',
+    example: 'USD',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  currency?: string;
+
+  @ApiProperty({
     description: 'Whether the product is active',
     example: true,
     required: false,
@@ -168,6 +228,15 @@ export class ProductResponseDto {
 
   @ApiProperty({ description: 'Base SKU' })
   sku?: string;
+
+  @ApiProperty({ description: 'Base product price' })
+  price?: number;
+
+  @ApiProperty({ description: 'Base product sale price' })
+  salePrice?: number;
+
+  @ApiProperty({ description: 'Currency code' })
+  currency?: string;
 
   @ApiProperty({ description: 'Whether the product is active' })
   isActive!: boolean;

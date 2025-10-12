@@ -38,7 +38,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { useAuthStore } from '../../../stores'
+import { useAuthStore } from '../../../stores/modules/auth/auth.store'
 import { useCheckoutStore } from '../../../stores/modules/checkout/checkout.store'
 import {
   SuccessIcon,

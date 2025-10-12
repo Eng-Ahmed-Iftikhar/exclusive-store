@@ -12,7 +12,10 @@ export const productsApi = {
     totalPages: number;
   }> {
     const response = await axiosInstance.get(ProductsUrls.GET_PRODUCTS, {
-      params,
+      params: {
+        ...params,
+        isActive: true, // Always fetch only active products on frontend
+      },
     });
     return response.data;
   },
@@ -82,7 +85,7 @@ export const productsApi = {
   }> {
     const response = await axiosInstance.get(
       ProductsUrls.GET_PRODUCTS_BY_CATEGORY(categoryId),
-      { params }
+      { params: { ...params, isActive: true } }
     );
     return response.data;
   },
@@ -100,7 +103,7 @@ export const productsApi = {
   }> {
     const response = await axiosInstance.get(
       ProductsUrls.GET_PRODUCTS_BY_SUBCATEGORY(subcategoryId),
-      { params }
+      { params: { ...params, isActive: true } }
     );
     return response.data;
   },
@@ -114,7 +117,7 @@ export const productsApi = {
     totalPages: number;
   }> {
     const response = await axiosInstance.get(ProductsUrls.SEARCH_PRODUCTS, {
-      params,
+      params: { ...params, isActive: true },
     });
     return response.data;
   },

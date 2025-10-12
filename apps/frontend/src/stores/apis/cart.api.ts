@@ -1,4 +1,4 @@
-import { CartUrls } from "../urls";
+import { CartUrls } from '../urls';
 import axiosInstance from './axios-instance';
 
 export interface CartItem {
@@ -44,25 +44,40 @@ export const cartApi = {
   },
 
   // Add item to cart
-  addToCart: async (cartId: string, data: AddToCartRequest): Promise<CartResponse> => {
+  addToCart: async (
+    cartId: string,
+    data: AddToCartRequest
+  ): Promise<CartResponse> => {
     const response = await axiosInstance.post(CartUrls.ADD_TO_CART(cartId), {
-      itemId: data.itemId,
-      quantity: data.quantity
+      variantId: data.variantId,
+      quantity: data.quantity,
     });
     return response.data;
   },
 
   // Update cart item quantity
-  updateCartItem: async (cartId: string, cartItemId: string, data: UpdateCartItemRequest): Promise<CartResponse> => {
-    const response = await axiosInstance.put(CartUrls.UPDATE_CART_ITEM(cartId, cartItemId), {
-      quantity: data.quantity
-    });
+  updateCartItem: async (
+    cartId: string,
+    cartItemId: string,
+    data: UpdateCartItemRequest
+  ): Promise<CartResponse> => {
+    const response = await axiosInstance.put(
+      CartUrls.UPDATE_CART_ITEM(cartId, cartItemId),
+      {
+        quantity: data.quantity,
+      }
+    );
     return response.data;
   },
 
   // Remove item from cart
-  removeFromCart: async (cartId: string, cartItemId: string): Promise<CartResponse> => {
-    const response = await axiosInstance.delete(CartUrls.REMOVE_FROM_CART(cartId, cartItemId));
+  removeFromCart: async (
+    cartId: string,
+    cartItemId: string
+  ): Promise<CartResponse> => {
+    const response = await axiosInstance.delete(
+      CartUrls.REMOVE_FROM_CART(cartId, cartItemId)
+    );
     return response.data;
   },
 
@@ -86,7 +101,9 @@ export const cartApi = {
 
   // Recalculate cart prices (useful when sale prices change)
   recalculateCartPrices: async (cartId: string): Promise<CartResponse> => {
-    const response = await axiosInstance.post(CartUrls.RECALCULATE_PRICES(cartId));
+    const response = await axiosInstance.post(
+      CartUrls.RECALCULATE_PRICES(cartId)
+    );
     return response.data;
   },
 };

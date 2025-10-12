@@ -30,17 +30,19 @@ export const useCartStore = defineStore('cart', () => {
   // Total with shipping and tax from backend cart API
   const totalWithShipping = computed(() => cart.value?.total || 0);
 
-  const isItemInCart = (itemId: string): boolean => {
-    return cartItems.value.some((item) => item.itemId === itemId);
+  const isItemInCart = (variantId: string): boolean => {
+    return cartItems.value.some((item) => item.variantId === variantId);
   };
 
-  const getItemQuantity = (itemId: string): number => {
-    const cartItem = cartItems.value.find((item) => item.itemId === itemId);
+  const getItemQuantity = (variantId: string): number => {
+    const cartItem = cartItems.value.find(
+      (item) => item.variantId === variantId
+    );
     return cartItem ? cartItem.quantity : 0;
   };
 
-  const getCartItem = (itemId: string) => {
-    return cartItems.value.find((item) => item.itemId === itemId);
+  const getCartItem = (variantId: string) => {
+    return cartItems.value.find((item) => item.variantId === variantId);
   };
 
   const updateCartItemQuantity = async (
@@ -173,7 +175,7 @@ export const useCartStore = defineStore('cart', () => {
     }
   };
 
-  const addToCart = async (itemId: string, quantity = 1): Promise<void> => {
+  const addToCart = async (variantId: string, quantity = 1): Promise<void> => {
     if (!cartId.value) {
       await initializeCart();
     }
@@ -188,7 +190,7 @@ export const useCartStore = defineStore('cart', () => {
       error.value = null;
 
       const updatedCart = await CartActions.addToCart(cartId.value, {
-        itemId,
+        variantId,
         quantity,
       });
       cart.value = updatedCart;

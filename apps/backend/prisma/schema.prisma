@@ -249,6 +249,9 @@ model Product {
   name          String
   description   String?
   sku           String?  @unique  // Base SKU for the product
+  price         Decimal? @db.Decimal(10, 2)  // Base product price
+  salePrice     Decimal? @db.Decimal(10, 2)  // Base product sale price
+  currency      String   @default("USD")
   isActive      Boolean  @default(true)
   isFeatured    Boolean  @default(false)
   sortOrder     Int      @default(0)

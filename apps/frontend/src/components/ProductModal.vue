@@ -10,29 +10,20 @@
       <v-card-text class="modal-content">
         <div class="product-details">
           <!-- Left Side - Images -->
-          <ProductModalImages 
-            :product="product"
-            :current-image-index="currentImageIndex"
-            @update:current-image-index="updateCurrentImageIndex"
-          />
+          <ProductModalImages :product="product" :selected-variant="selectedVariant"
+            :current-image-index="currentImageIndex" @update:current-image-index="updateCurrentImageIndex" />
 
           <!-- Right Side - Details and Actions -->
           <div class="right-section">
             <!-- Product Details -->
-            <ProductModalDetails :product="product" />
-            
+            <ProductModalDetails :product="product" :selected-variant-id="selectedVariantId"
+              @variant-change="handleVariantChange" />
+
             <!-- Actions (Quantity + Buttons) -->
-            <ProductModalActions
-              :product="product"
-              :quantity="quantity"
-              :is-in-stock="isInStock"
-              :is-favorited="isFavorited"
-              :add-to-cart-loading="addToCartLoading"
-              :favorite-loading="favoriteLoading"
-              @update:quantity="updateQuantity"
-              @add-to-cart="handleAddToCart"
-              @favorite-click="handleFavoriteClick"
-            />
+            <ProductModalActions :product="product" :selected-variant="selectedVariant" :quantity="quantity"
+              :is-in-stock="isInStock" :is-favorited="isFavorited" :add-to-cart-loading="addToCartLoading"
+              :favorite-loading="favoriteLoading" @update:quantity="updateQuantity" @add-to-cart="handleAddToCart"
+              @favorite-click="handleFavoriteClick" />
           </div>
         </div>
       </v-card-text>
@@ -70,30 +61,37 @@ const isOpen = computed({
 // Local state
 const currentImageIndex = ref(0);
 const quantity = ref(1);
+const selectedVariantId = ref<string | null>(null);
 const addToCartLoading = ref(false);
 const favoriteLoading = ref(false);
 
+// Don't initialize selected variant - user must choose
+
 // Computed properties
+const selectedVariant = computed(() => {
+  if (!selectedVariantId.value) return null;
+  return props.product.variants?.find((v: any) => v.id === selectedVariantId.value);
+});
+
 const isInStock = computed(() => {
-  // Check if any variant has stock
-  if (props.product.variants && props.product.variants.length > 0) {
-    const defaultVariant = props.product.variants.find((v: any) => v.isDefault) || props.product.variants[0];
-    const stock = defaultVariant.stock;
-    return stock && stock.quantity > 0;
+  // If no variant selected, check if any variant is in stock
+  if (!selectedVariantId.value) {
+    return props.product.variants?.some((v: any) => v.stock?.quantity > 0) || false;
+  }
+  // Check selected variant stock
+  if (selectedVariant.value?.stock) {
+    return selectedVariant.value.stock.quantity > 0;
   }
   return false;
 });
 
 const isFavorited = computed(() => {
-  return favoritesStore.isProductFavorite(props.product.id);
+  return favoritesStore.isItemFavorite(props.product.id);
 });
 
 const isInCart = computed(() => {
-  return cartStore.isProductInCart(props.product.id);
-});
-
-const cartProductQuantity = computed(() => {
-  return cartStore.getProductQuantity(props.product.id);
+  if (!selectedVariantId.value) return false;
+  return cartStore.isItemInCart(selectedVariantId.value);
 });
 
 // Methods
@@ -112,26 +110,38 @@ const updateQuantity = (newQuantity: number) => {
   quantity.value = newQuantity;
 };
 
+const handleVariantChange = (variantId: string) => {
+  selectedVariantId.value = variantId || null;
+  // Update images when variant changes
+  currentImageIndex.value = 0;
+};
+
 const handleAddToCart = async () => {
+  if (!selectedVariantId.value) {
+    // Show error - user must select a variant
+    alert('Please select a variant before adding to cart');
+    return;
+  }
+
   try {
     addToCartLoading.value = true;
-    
+
     if (isInCart.value) {
-      // Update existing cart product
-      const cartProduct = cartStore.getCartProduct(props.product.id);
-      if (cartProduct) {
-        await cartStore.updateCartProductQuantity(cartProduct.id, quantity.value);
+      // Update existing cart item
+      const cartItem = cartStore.getCartItem(selectedVariantId.value);
+      if (cartItem) {
+        await cartStore.updateCartItemQuantity(cartItem.id, quantity.value);
       }
     } else {
-      // Add new product to cart
-      await cartStore.addToCart(props.product.id, quantity.value);
+      // Add selected variant to cart
+      await cartStore.addToCart(selectedVariantId.value, quantity.value);
     }
-    
+
     emit('add-to-cart', props.product, quantity.value);
     // Close modal after adding to cart
     closeModal();
   } catch (error) {
-    // Error adding to cart
+    console.error('Error adding to cart:', error);
   } finally {
     addToCartLoading.value = false;
   }
@@ -151,13 +161,10 @@ const handleFavoriteClick = async () => {
 // Watch for modal open to reset state
 watch(() => props.modelValue, (newValue) => {
   if (newValue) {
+    // Don't auto-select variant - user must choose
+    selectedVariantId.value = null;
     currentImageIndex.value = 0;
-    // Set quantity to current cart quantity if product is in cart
-    if (isInCart.value) {
-      quantity.value = cartProductQuantity.value;
-    } else {
-      quantity.value = 1;
-    }
+    quantity.value = 1;
   }
 });
 </script>
@@ -204,10 +211,9 @@ watch(() => props.modelValue, (newValue) => {
     grid-template-columns: 1fr;
     gap: 24px;
   }
-  
+
   .modal-content {
     padding: 16px;
   }
 }
 </style>
-

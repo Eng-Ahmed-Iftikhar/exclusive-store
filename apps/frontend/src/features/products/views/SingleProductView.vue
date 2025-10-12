@@ -36,9 +36,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useCartStore } from '../../../stores/modules/cart';
-import { useFavoritesStore } from '../../../stores/modules/favorites';
-import { useProductsStore } from '../../../stores/modules/products';
+import { useCartStore } from '../../../stores/modules/cart/cart.store';
+import { useFavoritesStore } from '../../../stores/modules/favorites/favorites.store';
+import { useProductsStore } from '../../../stores/modules/products/products.store';
 
 // Components
 import ProductBreadcrumbs from '../components/ProductBreadcrumbs.vue';

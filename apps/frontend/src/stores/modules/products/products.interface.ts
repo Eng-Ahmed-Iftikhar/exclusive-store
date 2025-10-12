@@ -105,6 +105,9 @@ export interface Product {
   name: string;
   description?: string;
   sku?: string;
+  price?: number;
+  salePrice?: number;
+  currency?: string;
   isActive: boolean;
   isFeatured: boolean;
   sortOrder: number;
@@ -112,7 +115,7 @@ export interface Product {
   subcategoryId?: string;
   createdAt: string;
   updatedAt: string;
-  
+
   // Relations
   category?: {
     id: string;
@@ -129,7 +132,7 @@ export interface Product {
   reviews?: Review[];
   ratings?: Rating[];
   favorites?: Favorite[];
-  
+
   // Computed fields
   averageRating?: number;
   totalReviews?: number;
@@ -175,4 +178,3 @@ export interface ProductQueryParams {
   maxPrice?: number;
   minRating?: number;
 }
-
