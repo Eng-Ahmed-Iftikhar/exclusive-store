@@ -15,7 +15,7 @@
         <v-row>
           <!-- Product Images -->
           <v-col cols="12" md="6" class="product-images-col">
-            <ProductImageSlider :images="product.images" :product-name="product.name" />
+            <ProductImageSlider :images="productImages" :product-name="product.name" />
           </v-col>
 
           <!-- Product Details -->
@@ -39,7 +39,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { useCartStore } from '../../../stores/modules/cart';
 import { useFavoritesStore } from '../../../stores/modules/favorites';
 import { useProductsStore } from '../../../stores/modules/products';
-import { usePageTitle } from '../../../composables/usePageTitle';
 
 // Components
 import ProductBreadcrumbs from '../components/ProductBreadcrumbs.vue';
@@ -59,9 +58,9 @@ const productsStore = useProductsStore();
 const relatedProducts = ref<any[]>([]);
 
 // Computed properties
-const product = computed(() => itemsStore.selectedItem);
-const loading = computed(() => itemsStore.loading);
-const error = computed(() => itemsStore.error);
+const product = computed(() => productsStore.selectedProduct);
+const loading = computed(() => productsStore.loading);
+const error = computed(() => productsStore.error);
 
 const isInCart = computed(() => {
   return product.value?.id ? cartStore.isItemInCart(product.value.id) : false;
@@ -72,9 +71,17 @@ const isFavorited = computed(() => {
 });
 
 const isOnSale = computed(() => {
-  if (!product.value?.prices || !Array.isArray(product.value.prices)) return false;
-  const price = product.value.prices.find((p: any) => p.isActive);
-  return !!(price?.salePrice && price.salePrice < price.price);
+  if (!product.value?.variants?.[0]?.prices?.[0]) return false;
+  const price = product.value.variants[0].prices[0];
+  return !!(price.salePrice && price.salePrice < price.price);
+});
+
+const productImages = computed(() => {
+  if (!product.value?.images) return [];
+  return product.value.images.map(img => ({
+    ...img,
+    url: img.file?.url || ''
+  }));
 });
 
 const breadcrumbItems = computed(() => [
@@ -90,11 +97,11 @@ const fetchProduct = async () => {
     const productId = route.params.id as string;
     if (!productId) return;
 
-    const productData = await itemsStore.fetchItemById(productId);
+    const productData = await productsStore.fetchProductById(productId);
 
     // Fetch related products
     if (productData.category?.id) {
-      const related = await itemsStore.fetchItems({
+      const related = await productsStore.fetchProducts({
         categoryId: productData.category.id,
         limit: 4
       });

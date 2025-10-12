@@ -56,20 +56,23 @@ onMounted(async () => {
 // Fetch new arrival items
 const fetchNewArrivals = async () => {
   try {
-    await itemsStore.fetchNewArrivalItems();
+    await productsStore.fetchNewArrivalItems();
   } catch (error) {
     // Failed to fetch new arrivals
   }
 };
 
 // Get new arrival items from store
-const newArrivalItems = computed(() => itemsStore.items as unknown as Item[]);
+const newArrivalItems = computed(() => (productsStore.items || []) as unknown as Product[]);
+
+// Computed property for new arrival products
+const newArrivalProducts = computed(() => productsStore.items || []);
 
 // Loading state
-const loading = computed(() => itemsStore.loading);
+const loading = computed(() => productsStore.loading);
 
 // Error state
-const error = computed(() => itemsStore.error);
+const error = computed(() => productsStore.error);
 </script>
 
 <style scoped>

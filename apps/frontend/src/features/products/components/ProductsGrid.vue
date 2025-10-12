@@ -19,8 +19,7 @@
     <div v-else-if="products.length > 0" class="products-content">
       <!-- Products Display -->
       <div class="products-grid">
-        <ProductCard v-for="product in products" :key="product.id" :product="product" :show-sale-tag="true"
-          class="product-card" />
+        <ProductCard v-for="product in products" :key="product.id" :product="product" :show-sale-tag="true" />
       </div>
 
       <!-- Pagination -->

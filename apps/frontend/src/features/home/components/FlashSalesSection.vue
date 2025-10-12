@@ -31,38 +31,37 @@
       </div>
 
       <!-- Products Carousel -->
-      <div class="products-carousel">
+      <!-- Loading State -->
+      <div v-if="loading" class="loading-state">
+        <v-progress-circular indeterminate color="primary" size="64" />
+        <p>Loading flash sales...</p>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="error" class="error-state">
+        <v-icon icon="mdi-alert-circle" size="64" color="error" />
+        <p>{{ error }}</p>
+        <v-btn @click="handleRetry" color="primary" variant="outlined">
+          Retry
+        </v-btn>
+      </div>
+
+      <!-- Products Container -->
+      <div v-else-if="flashSaleProducts?.length > 0" class="products-carousel">
         <v-btn icon="mdi-chevron-left" variant="outlined" class="carousel-nav-btn prev-btn" size="large" />
 
-        <!-- Loading State -->
-        <div v-if="loading" class="loading-state">
-          <v-progress-circular indeterminate color="primary" size="64" />
-          <p>Loading flash sales...</p>
-        </div>
-
-        <!-- Error State -->
-        <div v-else-if="error" class="error-state">
-          <v-icon icon="mdi-alert-circle" size="64" color="error" />
-          <p>{{ error }}</p>
-          <v-btn @click="handleRetry" color="primary" variant="outlined">
-            Retry
-          </v-btn>
-        </div>
-
-        <!-- Products Container -->
-        <div v-else-if="flashSaleProducts?.length > 0" class="products-container">
-
+        <div class="products-container">
           <ProductCard v-for="product in flashSaleProducts" :key="product.id" :product="product"
             :show-sale-tag="true" />
         </div>
 
-        <!-- Empty State -->
-        <div v-else class="empty-state">
-          <v-icon icon="mdi-flash-off" size="64" color="grey" />
-          <p>No flash sales available at the moment</p>
-        </div>
-
         <v-btn icon="mdi-chevron-right" variant="outlined" class="carousel-nav-btn next-btn" size="large" />
+      </div>
+
+      <!-- Empty State -->
+      <div v-else class="empty-state">
+        <v-icon icon="mdi-flash-off" size="64" color="grey" />
+        <p>No flash sales available at the moment</p>
       </div>
 
       <!-- View All Button -->
@@ -103,6 +102,12 @@ const handleRetry = () => {
 // Get flash sale items
 const flashSales = computed(() => flashSalesStore.flashSales as unknown as IFlashSales.FlashSale[]);
 const flashSaleItems = computed(() => flashSales?.value[0]?.items as unknown as IFlashSales.FlashSaleItem[]);
+
+// Get products from flash sale items
+const flashSaleProducts = computed(() => {
+  if (!flashSaleItems.value) return [];
+  return flashSaleItems.value;
+});
 
 // Loading and error states
 const loading = computed(() => flashSalesStore.loading);

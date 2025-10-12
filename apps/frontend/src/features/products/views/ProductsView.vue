@@ -98,7 +98,7 @@ const fetchProducts = async (filters?: any) => {
       });
     }
 
-    const result = await itemsStore.fetchItems(queryParams);
+    const result = await productsStore.fetchProducts(queryParams);
     if (result && result.length > 0) {
       // Products loaded successfully
     } else {

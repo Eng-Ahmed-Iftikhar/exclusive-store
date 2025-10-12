@@ -139,12 +139,12 @@ const currentImage = computed(() => {
 // Favorite functionality
 const isFavorited = computed(() => {
   // First check local state, then fallback to store
-  return localFavoriteStatus.value || favoritesStore.isProductFavorite(props.product.id);
+  return localFavoriteStatus.value || favoritesStore.isItemFavorite(props.product.id);
 });
 
 // Cart functionality
 const isInCart = computed(() => {
-  return cartStore.isProductInCart(props.product.id);
+  return cartStore.isItemInCart(props.product.id);
 });
 
 // Check favorite status for this product
