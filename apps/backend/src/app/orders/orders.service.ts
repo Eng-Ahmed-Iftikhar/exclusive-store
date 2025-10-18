@@ -784,13 +784,69 @@ export class OrdersService {
       },
     });
 
-    // Create order items
-    const orderItems = cart.items.map((item: any) => ({
-      orderId: order.id,
-      variantId: item.variantId,
-      quantity: item.quantity,
-      price: item.price,
-    }));
+    // Create order items - handle products with and without variants
+    const orderItems = [];
+
+    for (const item of cart.items) {
+      if (item.variantId) {
+        // Item has a variant - create order item normally
+        orderItems.push({
+          orderId: order.id,
+          variantId: item.variantId,
+          quantity: item.quantity,
+          price: item.price,
+        });
+      } else {
+        // Item doesn't have a variant - we need to create a default variant or handle differently
+        // For now, let's create a default variant for this product
+        const defaultVariant = await this.prisma.productVariant.findFirst({
+          where: {
+            productId: item.productId,
+            isDefault: true,
+          },
+        });
+
+        if (defaultVariant) {
+          // Use existing default variant
+          orderItems.push({
+            orderId: order.id,
+            variantId: defaultVariant.id,
+            quantity: item.quantity,
+            price: item.price,
+          });
+        } else {
+          // Create a default variant for this product
+          const newDefaultVariant = await this.prisma.productVariant.create({
+            data: {
+              productId: item.productId,
+              sku: `${item.product.sku || item.productId}-default`,
+              name: 'Default',
+              attributes: {},
+              isDefault: true,
+              isActive: true,
+            },
+          });
+
+          // Create a price for this variant
+          await this.prisma.price.create({
+            data: {
+              variantId: newDefaultVariant.id,
+              price: item.price,
+              currency: 'USD',
+              isActive: true,
+              validFrom: new Date(),
+            },
+          });
+
+          orderItems.push({
+            orderId: order.id,
+            variantId: newDefaultVariant.id,
+            quantity: item.quantity,
+            price: item.price,
+          });
+        }
+      }
+    }
 
     await this.prisma.orderItem.createMany({
       data: orderItems,

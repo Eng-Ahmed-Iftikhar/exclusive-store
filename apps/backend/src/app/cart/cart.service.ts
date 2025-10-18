@@ -69,6 +69,7 @@ export class CartService {
                 images: {
                   include: { file: true },
                 },
+                prices: true,
               },
             },
           },
@@ -128,6 +129,7 @@ export class CartService {
                 images: {
                   include: { file: true },
                 },
+                prices: true,
               },
             },
           },
@@ -162,6 +164,7 @@ export class CartService {
                 images: {
                   include: { file: true },
                 },
+                prices: true,
               },
             },
           },

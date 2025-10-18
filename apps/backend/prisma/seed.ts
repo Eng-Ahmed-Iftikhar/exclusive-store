@@ -17,7 +17,7 @@ async function main() {
       description: 'Standard user with basic permissions',
       isSystem: true,
       isActive: true,
-      createdBy: 'system', // We'll update this later
+      createdBy: undefined, // System role, no creator
     },
   });
 
@@ -30,7 +30,7 @@ async function main() {
       description: 'Administrator with elevated permissions',
       isSystem: true,
       isActive: true,
-      createdBy: 'system', // We'll update this later
+      createdBy: null, // System role, no creator
     },
   });
 
@@ -43,11 +43,12 @@ async function main() {
       description: 'Super administrator with full system access',
       isSystem: true,
       isActive: true,
-      createdBy: 'system', // We'll update this later
+      createdBy: null, // System role, no creator
     },
   });
 
   console.log('✅ Default roles created:', {
+    customerRole,
     userRole,
     adminRole,
     superAdminRole,

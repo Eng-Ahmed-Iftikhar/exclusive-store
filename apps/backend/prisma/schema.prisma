@@ -98,12 +98,12 @@ model Role {
   description String?
   isSystem    Boolean  @default(false) // System roles cannot be deleted
   isActive    Boolean  @default(true)
-  createdBy   String
+  createdBy   String?  // Made optional for system roles
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt   DateTime @default(now())
 
   // Relations
-  creator      User           @relation("RoleCreator", fields: [createdBy], references: [id])
+  creator      User?          @relation("RoleCreator", fields: [createdBy], references: [id])
   roleResources RoleResource[]
   teamRoles    TeamRole[]
   users        User[]         @relation("UserRole")

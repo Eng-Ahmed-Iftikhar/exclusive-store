@@ -109,11 +109,14 @@ export class AdminService {
     });
 
     const topProducts = await Promise.all(
-      orderItems.map(
-        async (item: {
-          variantId: string;
-          _sum: { quantity: number | null };
-        }) => {
+      orderItems
+        .filter(
+          (
+            item
+          ): item is { variantId: string; _sum: { quantity: number | null } } =>
+            item.variantId !== null
+        )
+        .map(async (item) => {
           const variantDetails = await this.prisma.productVariant.findUnique({
             where: { id: item.variantId },
             include: {
@@ -142,8 +145,7 @@ export class AdminService {
             sales: item._sum?.quantity || 0,
             revenue: Number(totalRevenue._sum?.price) || 0,
           };
-        }
-      )
+        })
     );
 
     return topProducts.filter(Boolean);

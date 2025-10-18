@@ -1,6 +1,6 @@
 <template>
   <v-navigation-drawer :model-value="isOpen" @update:model-value="$emit('update:modelValue', $event)" location="right"
-    temporary overlay width="400" class="cart-drawer" @click:overlay="$emit('update:modelValue', false)">
+    temporary width="400" class="cart-drawer" @click:overlay="$emit('update:modelValue', false)">
     <v-card ref="drawerContent" class="cart-drawer-content" flat @click.stop>
       <v-card-title class="cart-drawer-header">
         <h3 class="cart-title">{{ $t('cart.title') }}</h3>
@@ -20,24 +20,50 @@
         <!-- Cart Items -->
         <div v-else class="cart-items">
           <div v-for="cartItem in cartStore.cartItems" :key="`${cartItem.id}-${cartItem.quantity}`" class="cart-item">
-            <div class="cart-item-image">
-              <img :src="getItemImage(cartItem)" :alt="getItemName(cartItem)" class="item-image"
-                @error="handleImageError" />
-              <div v-if="isItemOnSale(cartItem)" class="cart-sale-badge">Sale</div>
+            <div class="cart-item-images">
+              <!-- Product Image -->
+              <div class="product-image-container">
+                <img :src="getProductImage(cartItem)" :alt="cartItem.product?.name" class="item-image product-image"
+                  @error="handleImageError" />
+                <div class="image-label">Product</div>
+              </div>
+
+              <!-- Variant Image (if available) -->
+              <div v-if="cartItem.variant" class="variant-image-container">
+                <img :src="getVariantImage(cartItem)" :alt="cartItem.variant?.name" class="item-image variant-image"
+                  @error="handleImageError" />
+                <div class="image-label">Variant</div>
+              </div>
+
+              <div class="item-quantity-badge">
+                {{ cartItem.quantity }}
+              </div>
             </div>
 
             <div class="cart-item-details">
-              <h4 class="item-name">{{ getItemName(cartItem) }}</h4>
-              <div class="item-price-container">
-                <p v-if="isItemOnSale(cartItem)" class="item-price sale-price">
-                  ${{ getSalePrice(cartItem) }}
+              <h4 class="item-name">{{ cartItem.product?.name }}</h4>
+              <p v-if="cartItem.variant" class="item-variant">{{ cartItem.variant.name }}</p>
+
+              <!-- Variant Attributes -->
+              <div v-if="cartItem.variant?.attributes" class="variant-attributes">
+                <span v-for="(value, key) in cartItem.variant.attributes" :key="key" class="attribute-tag">
+                  {{ key }}: {{ value }}
+                </span>
+              </div>
+
+              <!-- Pricing Information -->
+              <div class="pricing-info">
+                <p v-if="cartItem.variant" class="variant-price">
+                  Variant Price: ${{ getVariantPrice(cartItem).toFixed(2) }}
+                  <span v-if="getVariantOriginalPrice(cartItem) > getVariantPrice(cartItem)" class="original-price">
+                    (was ${{ getVariantOriginalPrice(cartItem).toFixed(2) }})
+                  </span>
                 </p>
-                <p v-else class="item-price">
-                  ${{ cartItem.price }}
+                <p v-if="!cartItem.variant" class="product-price">
+                  Product Price: ${{ getProductOriginalPrice(cartItem).toFixed(2) }}
                 </p>
-                <p v-if="isItemOnSale(cartItem)" class="item-original-price">
-                  ${{ getOriginalPrice(cartItem) }}
-                </p>
+                <p class="item-price">Final Price: ${{ Number(cartItem.price).toFixed(2) }}</p>
+                <p class="item-total">Total: ${{ (Number(cartItem.price) * cartItem.quantity).toFixed(2) }}</p>
               </div>
 
               <div class="quantity-controls">
@@ -59,15 +85,37 @@
 
       <!-- Cart Footer -->
       <v-card-actions v-if="!cartStore.isEmpty" class="cart-drawer-footer">
-        <div class="cart-summary">
-          <div class="cart-total">
-            <span class="total-label">{{ $t('cart.total') }}</span>
-            <span class="total-amount">${{ cartStore.cartTotal }}</span>
+        <!-- Cost Breakdown -->
+        <div class="cost-breakdown">
+          <div class="cost-row">
+            <span class="cost-label">Subtotal:</span>
+            <span class="cost-value">${{ Number(cartStore.cart?.subtotal || 0).toFixed(2) }}</span>
           </div>
-          <span class="total-separator">
-            |
-          </span>
-          <span class="item-count">{{ cartStore.cartItemsCount }} {{ $t('cart.items') }}</span>
+
+          <div class="cost-row">
+            <span class="cost-label">Shipping: </span>
+            <span class="cost-value shipping-cost">
+              {{ cartStore.shippingCost === 0 ? 'FREE' : `$${cartStore.shippingCost.toFixed(2)}` }}
+            </span>
+          </div>
+
+          <div class="cost-row">
+            <span class="cost-label">Tax: </span>
+            <span class="cost-value">${{ cartStore.tax.toFixed(2) }}</span>
+          </div>
+
+
+
+        </div>
+
+        <div class="total-row">
+          <div class="total-row">
+            <span class="total-label">{{ $t('cart.total') }} </span>
+            <span class="total-value">${{ Number(cartStore.totalWithShipping).toFixed(2) }}</span>
+          </div>
+          <div class="item-count-row">
+            <span class="item-count">{{ cartStore.cartItemsCount }} {{ $t('cart.items') }}</span>
+          </div>
         </div>
 
         <div class="cart-actions">
@@ -135,104 +183,67 @@ const refreshCartData = async () => {
 };
 
 // Helper methods for cart items
-const getItemName = (cartItem: CartItem): string => {
-  const productName = cartItem.product?.name || 'Unknown Product';
 
-  // If variant exists, show both product and variant name
-  if (cartItem.variant && cartItem.variant.name) {
-    return `${productName} - ${cartItem.variant.name}`;
-  }
-
-  return productName;
-};
-
-const getItemImage = (cartItem: CartItem): string => {
-  // Helper function to extract image URL from different possible structures
-  const extractImageUrl = (image: any): string | null => {
-    if (!image) return null;
-
-    // Try different possible URL structures
-    if (image.file?.secureUrl) return image.file.secureUrl;
-    if (image.file?.url) return image.file.url;
-    if (image.url) return image.url;
-    if (typeof image === 'string') return image;
-
-    return null;
-  };
-
-  // Try variant images first
-  if (cartItem.variant && cartItem.variant.images && cartItem.variant.images.length > 0) {
-    // Find primary image first
-    const primaryImage = cartItem.variant.images.find((img: any) => img.isPrimary);
-    if (primaryImage) {
-      const url = extractImageUrl(primaryImage);
-      if (url) return url;
-    }
-
-    // Fallback to first image
-    const firstImage = cartItem.variant.images[0];
-    const url = extractImageUrl(firstImage);
-    if (url) return url;
-  }
-
-  // Fallback to product images
-  if (cartItem.product && cartItem.product.images && cartItem.product.images.length > 0) {
-    // Find primary image first
+const getProductImage = (cartItem: CartItem): string => {
+  if (cartItem.product?.images && cartItem.product.images.length > 0) {
+    // Find the primary image first, then fall back to first image
     const primaryImage = cartItem.product.images.find((img: any) => img.isPrimary);
-    if (primaryImage) {
-      const url = extractImageUrl(primaryImage);
-      if (url) return url;
+    const imageToUse = primaryImage || cartItem.product.images[0];
+    return imageToUse.file?.secureUrl || imageToUse.file?.url || 'https://placehold.co/60x60';
+  }
+  return 'https://placehold.co/60x60';
+};
+
+const getVariantImage = (cartItem: CartItem): string => {
+  if (cartItem.variant?.images && cartItem.variant.images.length > 0) {
+    // Find the primary image first, then fall back to first image
+    const primaryImage = cartItem.variant.images.find((img: any) => img.isPrimary);
+    const imageToUse = primaryImage || cartItem.variant.images[0];
+    return imageToUse.file?.secureUrl || imageToUse.file?.url || 'https://placehold.co/60x60';
+  }
+  return 'https://placehold.co/60x60';
+};
+
+const getProductOriginalPrice = (cartItem: CartItem): number => {
+  // Show the product's original price (sale price if available, otherwise regular price)
+  const product = cartItem.product;
+  if (product?.salePrice) {
+    return parseFloat(product.salePrice);
+  }
+  if (product?.price) {
+    return parseFloat(product.price);
+  }
+  return 0;
+};
+
+const getVariantPrice = (cartItem: CartItem): number => {
+  // Get variant pricing from the prices array
+  const variant = cartItem.variant as any;
+  if (variant?.prices && variant.prices.length > 0) {
+    const activePrice = variant.prices.find((price: any) => price.isActive);
+    if (activePrice) {
+      // Use sale price if available and valid, otherwise use regular price
+      if (activePrice.salePrice && Number(activePrice.salePrice) > 0 && Number(activePrice.salePrice) < Number(activePrice.price)) {
+        return Number(activePrice.salePrice);
+      }
+      return Number(activePrice.price);
     }
-
-    // Fallback to first image
-    const firstImage = cartItem.product.images[0];
-    const url = extractImageUrl(firstImage);
-    if (url) return url;
   }
-
-  // Default fallback
-  return 'https://picsum.photos/60/60?random=1';
+  return 0;
 };
 
-const isItemOnSale = (cartItem: CartItem): boolean => {
-  // Check variant sale price first
-  if (cartItem.variant && cartItem.variant.prices && cartItem.variant.prices.length > 0) {
-    const price = cartItem.variant.prices[0];
-    return price.salePrice && price.salePrice < price.price && price.salePrice > 0 ? true : false;
+const getVariantOriginalPrice = (cartItem: CartItem): number => {
+  // Get the original price (before any sale) for variant
+  const variant = cartItem.variant as any;
+  if (variant?.prices && variant.prices.length > 0) {
+    const activePrice = variant.prices.find((price: any) => price.isActive);
+    if (activePrice) {
+      return Number(activePrice.price);
+    }
   }
-
-  // Check product sale price
-  if (cartItem.product && cartItem.product.salePrice && cartItem.product.price) {
-    return cartItem.product.salePrice < cartItem.product.price && cartItem.product.salePrice > 0 ? true : false;
-  }
-
-  return false;
+  return 0;
 };
 
-const getSalePrice = (cartItem: CartItem): number => {
-  // The cart item price is already the total price (product + variant if applicable)
-  // So we should display the cart item price directly
-  return Number(cartItem.product.salePrice) || 0;
-};
-
-const getOriginalPrice = (cartItem: CartItem): number => {
-  // Calculate the original price by adding product and variant original prices
-  let totalOriginalPrice = 0;
-
-  // Add product original price
-  if (cartItem.product && cartItem.product.price) {
-    totalOriginalPrice += Number(cartItem.product.price);
-  }
-
-  // Add variant original price if variant exists
-  if (cartItem.variant && cartItem.variant.prices && cartItem.variant.prices.length > 0) {
-    const variantPrice = cartItem.variant.prices[0];
-    totalOriginalPrice += Number(variantPrice.price);
-  }
-
-  // If we couldn't calculate original price, use the cart item price
-  return totalOriginalPrice > 0 ? totalOriginalPrice : Number(cartItem.price) || 0;
-};
 
 const increaseQuantity = async (cartItem: CartItem) => {
   if (cartItem.quantity < 10) {
@@ -289,6 +300,8 @@ const handleImageError = (event: Event) => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  max-height: 100vh;
+  overflow-y: auto;
 }
 
 .cart-drawer-header {
@@ -315,9 +328,9 @@ const handleImageError = (event: Event) => {
 }
 
 .cart-drawer-content-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0;
+  /* flex: 1; */
+  /* overflow-y: auto; */
+
 }
 
 .empty-cart {
@@ -344,45 +357,80 @@ const handleImageError = (event: Event) => {
 
 .cart-item {
   display: flex;
-  align-items: center;
-  padding: 16px 20px;
+  align-items: flex-start;
+  padding: 12px 20px;
   border-bottom: 1px solid #f0f0f0;
-  gap: 16px;
+  gap: 12px;
 }
 
 .cart-item:last-child {
   border-bottom: none;
 }
 
-.cart-item-image {
+.cart-item-images {
   flex-shrink: 0;
   position: relative;
-  /* Added for sale badge positioning */
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin-top: 4px;
+}
+
+.product-image-container,
+.variant-image-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .item-image {
-  width: 60px;
-  height: 60px;
+  width: 45px;
+  height: 45px;
   object-fit: cover;
   border-radius: 6px;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease;
 }
 
-.cart-sale-badge {
+.product-image {
+  border-color: #3b82f6;
+}
+
+.variant-image {
+  border-color: #10b981;
+}
+
+.image-label {
+  font-size: 0.5rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-top: 0.125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.item-quantity-badge {
   position: absolute;
-  top: 0;
-  right: 0;
-  background-color: #DB4444;
+  top: -0.25rem;
+  right: -0.25rem;
+  background: #DB4444;
   color: white;
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
-  padding: 4px 8px;
-  border-bottom-left-radius: 6px;
-  z-index: 1;
+  border-radius: 50%;
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .cart-item-details {
   flex: 1;
   min-width: 0;
+  padding-top: 2px;
 }
 
 .item-name {
@@ -394,6 +442,69 @@ const handleImageError = (event: Event) => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.item-variant {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+  margin: 0 0 0.25rem 0;
+  background: #f3f4f6;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  display: inline-block;
+}
+
+.variant-attributes {
+  margin: 0.25rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.attribute-tag {
+  font-size: 0.625rem;
+  color: #374151;
+  font-weight: 500;
+  background: #e5e7eb;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  border: 1px solid #d1d5db;
+}
+
+.pricing-info {
+  margin-top: 0.25rem;
+}
+
+.variant-price {
+  font-size: 0.7rem;
+  color: #059669;
+  font-weight: 600;
+  margin: 0 0 0.125rem 0;
+  background: #f0fdf4;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  border-left: 2px solid #10b981;
+  line-height: 1.2;
+}
+
+.product-price {
+  font-size: 0.7rem;
+  color: #6b7280;
+  font-weight: 500;
+  margin: 0 0 0.125rem 0;
+  background: #f9fafb;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  border-left: 2px solid #d1d5db;
+  line-height: 1.2;
+}
+
+.original-price {
+  color: #9ca3af;
+  text-decoration: line-through;
+  font-weight: 400;
+  margin-left: 0.25rem;
 }
 
 .item-price-container {
@@ -411,10 +522,19 @@ const handleImageError = (event: Event) => {
 }
 
 .item-price {
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 600;
   color: #000;
-  margin: 0;
+  margin: 0.125rem 0;
+  line-height: 1.2;
+}
+
+.item-total {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #000;
+  margin: 0.125rem 0 0 0;
+  line-height: 1.2;
 }
 
 .item-original-price {
@@ -427,7 +547,8 @@ const handleImageError = (event: Event) => {
 .quantity-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  margin-top: 0.25rem;
 }
 
 .quantity {
@@ -445,39 +566,74 @@ const handleImageError = (event: Event) => {
 .cart-drawer-footer {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 20px 24px;
+  gap: 12px;
+  /* padding: 16px 24px; */
   border-top: 1px solid #e0e0e0;
   flex-shrink: 0;
+  margin-top: auto;
 }
 
-.cart-summary {
+.cost-breakdown {
+  display: flex;
+  /* flex-direction: column; */
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.cost-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0.25rem 0;
 }
 
-.cart-total {
+.cost-label {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.cost-value {
+  font-weight: 600;
+  color: #111827;
+}
+
+.shipping-cost {
+  color: #059669;
+}
+
+.total-row {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  background: linear-gradient(135deg, #fef2f2 0%, #f3f4f6 100%);
+  border-radius: 0.5rem;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.75rem;
 }
 
 .total-label {
-  font-size: 16px;
-  font-weight: 600;
-  color: #000;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1f2937;
 }
 
-.total-amount {
-  font-size: 20px;
+.total-value {
+  font-size: 1.25rem;
   font-weight: 700;
-  color: #DB4444;
+  background: linear-gradient(135deg, #DB4444 0%, #000000 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.item-count-row {
+  text-align: center;
+  padding: 0.25rem 0;
 }
 
 .item-count {
-  font-size: 14px;
-  color: #666;
+  font-size: 0.875rem;
+  color: #6b7280;
 }
 
 .cart-actions {
@@ -492,17 +648,25 @@ const handleImageError = (event: Event) => {
   }
 
   .cart-item {
-    padding: 12px 16px;
-    gap: 12px;
+    padding: 10px 16px;
+    gap: 10px;
   }
 
   .item-image {
-    width: 50px;
-    height: 50px;
+    width: 35px;
+    height: 35px;
+  }
+
+  .cart-item-images {
+    gap: 0.25rem;
+  }
+
+  .image-label {
+    font-size: 0.4rem;
   }
 
   .cart-drawer-footer {
-    padding: 16px 20px;
+    padding: 12px 16px;
   }
 }
 </style>

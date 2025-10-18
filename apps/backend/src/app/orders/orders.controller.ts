@@ -1,36 +1,33 @@
 import {
+  Body,
   Controller,
   Get,
-  Post,
-  Body,
-  Param,
-  UseGuards,
-  Request,
   HttpCode,
   HttpStatus,
+  Param,
+  Post,
+  Request,
 } from '@nestjs/common';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
   ApiBearerAuth,
   ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
-import { OrdersService } from './orders.service';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import {
+  ConfirmOrderAfterPaymentDto,
   CreateOrderDto,
   OrderDto,
   OrderResponseDto,
-  ConfirmOrderAfterPaymentDto,
   OrderStatus,
 } from './dto/order.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { OrdersService } from './orders.service';
 
 @ApiTags('Orders')
 @Controller('orders')
 @ApiBearerAuth('JWT-auth')
-@UseGuards(JwtAuthGuard)
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 

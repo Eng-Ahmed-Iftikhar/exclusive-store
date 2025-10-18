@@ -20,9 +20,6 @@
                 <!-- Shipping Address -->
                 <ShippingAddress v-model="formData.shippingAddress" :errors="validationErrors.shippingAddress || []" />
 
-                <!-- Billing Address -->
-                <ShippingAddress v-model="formData.billingAddress" title="Billing Address" :use-shipping-address="true"
-                  @use-shipping="useShippingAsBilling" />
 
                 <!-- Payment Method -->
                 <PaymentMethod ref="paymentForm" @update:model-value="handlePaymentUpdate" />

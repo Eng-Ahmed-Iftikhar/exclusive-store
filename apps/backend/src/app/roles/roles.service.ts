@@ -158,7 +158,7 @@ export class RolesService {
       title: 'Role Updated',
       description: `Role "${updatedRole.displayName}" (${updatedRole.name}) was updated`,
       metadata: { roleId: updatedRole.id, roleName: updatedRole.name },
-      userId: role.createdBy,
+      userId: role.createdBy || undefined,
     });
 
     return updatedRole;
@@ -193,7 +193,7 @@ export class RolesService {
       title: 'Role Deleted',
       description: `Role "${deletedRole.displayName}" (${deletedRole.name}) was deleted`,
       metadata: { roleId: deletedRole.id, roleName: deletedRole.name },
-      userId: role.createdBy,
+      userId: role.createdBy || undefined,
     });
 
     return deletedRole;

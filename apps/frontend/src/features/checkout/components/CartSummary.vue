@@ -1,28 +1,57 @@
 <template>
   <div class="cart-summary">
     <div class="summary-header">
-      <div class="summary-icon">
-        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      </div>
       <h2 class="summary-title">Cart Summary</h2>
     </div>
 
     <!-- Cart Items -->
     <div class="cart-items">
       <div v-for="item in cart?.items" :key="item.id" class="cart-item">
-        <div class="item-image-container">
-          <img :src="item.item.images[0]?.url || '/placeholder-image.jpg'" :alt="item.item.name" class="item-image" />
+        <div class="item-images-container">
+          <!-- Product Image -->
+          <div class="product-image-container">
+            <img :src="getProductImage(item)" :alt="item.product.name" class="item-image product-image"
+              @error="handleImageError" />
+            <div class="image-label">Product</div>
+          </div>
+
+          <!-- Variant Image (if available) -->
+          <div v-if="item.variant" class="variant-image-container">
+            <img :src="getVariantImage(item)" :alt="item.variant.name" class="item-image variant-image"
+              @error="handleImageError" />
+            <div class="image-label">Variant</div>
+          </div>
+
           <div class="item-quantity">
             {{ item.quantity }}
           </div>
         </div>
+
         <div class="item-details">
-          <h4 class="item-name">{{ item.item.name }}</h4>
-          <p class="item-price">${{ item.price.toFixed(2) }} each</p>
-          <p class="item-total">${{ (item.price * item.quantity).toFixed(2) }}</p>
+          <h4 class="item-name">{{ item.product.name }}</h4>
+          <p v-if="item.variant" class="item-variant">{{ item.variant.name }}</p>
+
+          <!-- Variant Attributes -->
+          <div v-if="item.variant?.attributes" class="variant-attributes">
+            <span v-for="(value, key) in item.variant.attributes" :key="key" class="attribute-tag">
+              {{ key }}: {{ value }}
+            </span>
+          </div>
+
+          <!-- Pricing Information -->
+          <div class="pricing-info">
+            <p v-if="item.variant" class="variant-price">
+              Variant Price: ${{ getVariantPrice(item).toFixed(2) }}
+              <span v-if="getVariantOriginalPrice(item) > getVariantPrice(item)" class="original-price">
+                (was ${{ getVariantOriginalPrice(item).toFixed(2) }})
+              </span>
+            </p>
+            <p v-if="!item.variant" class="product-price">
+              Product Price: ${{ getProductOriginalPrice(item).toFixed(2) }}
+            </p>
+            <p class="item-price">Final Price: ${{ Number(item.price).toFixed(2) }}</p>
+            <p class="item-total">Total: ${{ (Number(item.price) * item.quantity).toFixed(2) }}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -30,37 +59,19 @@
     <!-- Cost Breakdown -->
     <div class="cost-breakdown">
       <div class="cost-row">
-        <span class="cost-label">
-          <svg class="cost-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-          </svg>
-          Subtotal
-        </span>
+        <span class="cost-label">Subtotal</span>
         <span class="cost-value">${{ Number(cart?.subtotal || 0).toFixed(2) }}</span>
       </div>
 
       <div class="cost-row">
-        <span class="cost-label">
-          <svg class="cost-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-          </svg>
-          Shipping
-        </span>
+        <span class="cost-label">Shipping</span>
         <span class="cost-value shipping-cost">
           {{ shippingCost === 0 ? 'FREE' : `$${shippingCost.toFixed(2)}` }}
         </span>
       </div>
 
       <div class="cost-row">
-        <span class="cost-label">
-          <svg class="cost-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          </svg>
-          Tax
-        </span>
+        <span class="cost-label">Tax</span>
         <span class="cost-value">${{ tax.toFixed(2) }}</span>
       </div>
 
@@ -69,17 +80,6 @@
         <span class="total-value">
           ${{ Number(total).toFixed(2) }}
         </span>
-      </div>
-    </div>
-
-    <!-- Security Badge -->
-    <div class="security-badge">
-      <div class="security-content">
-        <svg class="security-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-        </svg>
-        <span class="security-text">Secure Payment with Stripe</span>
       </div>
     </div>
   </div>
@@ -98,6 +98,74 @@ const cart = computed(() => cartStore.cart as unknown as ICart.Cart)
 const shippingCost = computed(() => cartStore.shippingCost)
 const tax = computed(() => cartStore.tax)
 const total = computed(() => cartStore.totalWithShipping)
+
+// Helper functions for cart items
+const getProductImage = (item: ICart.CartItem): string => {
+  if (item.product?.images && item.product.images.length > 0) {
+    // Find the primary image first, then fall back to first image
+    const primaryImage = item.product.images.find(img => img.isPrimary)
+    const imageToUse = primaryImage || item.product.images[0]
+    return imageToUse.file?.secureUrl || imageToUse.file?.url || 'https://placehold.co/600x400'
+  }
+  return 'https://placehold.co/600x400'
+}
+
+const getVariantImage = (item: ICart.CartItem): string => {
+  if (item.variant?.images && item.variant.images.length > 0) {
+    // Find the primary image first, then fall back to first image
+    const primaryImage = item.variant.images.find(img => img.isPrimary)
+    const imageToUse = primaryImage || item.variant.images[0]
+    return imageToUse.file?.secureUrl || imageToUse.file?.url || 'https://placehold.co/600x400'
+  }
+  return 'https://placehold.co/600x400'
+}
+
+const getProductOriginalPrice = (item: ICart.CartItem): number => {
+  // Show the product's original price (sale price if available, otherwise regular price)
+  const product = item.product
+  if (product.salePrice) {
+    return parseFloat(product.salePrice)
+  }
+  if (product.price) {
+    return parseFloat(product.price)
+  }
+  return 0
+}
+
+const getVariantPrice = (item: ICart.CartItem): number => {
+  // Get variant pricing from the prices array
+  const variant = item.variant as any
+  if (variant?.prices && variant.prices.length > 0) {
+    const activePrice = variant.prices.find((price: any) => price.isActive)
+    if (activePrice) {
+      // Use sale price if available and valid, otherwise use regular price
+      if (activePrice.salePrice && Number(activePrice.salePrice) > 0 && Number(activePrice.salePrice) < Number(activePrice.price)) {
+        return Number(activePrice.salePrice)
+      }
+      return Number(activePrice.price)
+    }
+  }
+  return 0
+}
+
+const getVariantOriginalPrice = (item: ICart.CartItem): number => {
+  // Get the original price (before any sale) for variant
+  const variant = item.variant as any
+  if (variant?.prices && variant.prices.length > 0) {
+    const activePrice = variant.prices.find((price: any) => price.isActive)
+    if (activePrice) {
+      return Number(activePrice.price)
+    }
+  }
+  return 0
+}
+
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  if (img.src !== 'https://placehold.co/600x400') {
+    img.src = 'https://placehold.co/600x400'
+  }
+}
 </script>
 
 <style scoped>
@@ -113,26 +181,7 @@ const total = computed(() => cartStore.totalWithShipping)
 }
 
 .summary-header {
-  display: flex;
-  align-items: center;
   margin-bottom: 1.5rem;
-}
-
-.summary-icon {
-  width: 2.5rem;
-  height: 2.5rem;
-  background: linear-gradient(135deg, #DB4444 0%, #000000 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 0.75rem;
-}
-
-.icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  color: white;
 }
 
 .summary-title {
@@ -164,17 +213,48 @@ const total = computed(() => cartStore.totalWithShipping)
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.item-image-container {
+.item-images-container {
   position: relative;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.product-image-container,
+.variant-image-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .item-image {
-  width: 4rem;
-  height: 4rem;
+  width: 3.5rem;
+  height: 3.5rem;
   object-fit: cover;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease;
 }
+
+.product-image {
+  border-color: #3b82f6;
+}
+
+.variant-image {
+  border-color: #10b981;
+}
+
+.image-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 
 .item-quantity {
   position: absolute;
@@ -202,6 +282,67 @@ const total = computed(() => cartStore.totalWithShipping)
   font-size: 0.875rem;
   line-height: 1.25;
   margin: 0 0 0.25rem 0;
+}
+
+.item-variant {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+  margin: 0 0 0.25rem 0;
+  background: #f3f4f6;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  display: inline-block;
+}
+
+.variant-attributes {
+  margin: 0.25rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.attribute-tag {
+  font-size: 0.625rem;
+  color: #374151;
+  font-weight: 500;
+  background: #e5e7eb;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  border: 1px solid #d1d5db;
+}
+
+.pricing-info {
+  margin-top: 0.5rem;
+}
+
+.variant-price {
+  font-size: 0.75rem;
+  color: #059669;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  background: #f0fdf4;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  border-left: 3px solid #10b981;
+}
+
+.product-price {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+  margin: 0 0 0.25rem 0;
+  background: #f9fafb;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  border-left: 3px solid #d1d5db;
+}
+
+.original-price {
+  color: #9ca3af;
+  text-decoration: line-through;
+  font-weight: 400;
+  margin-left: 0.25rem;
 }
 
 .item-price {
@@ -232,16 +373,7 @@ const total = computed(() => cartStore.totalWithShipping)
 
 .cost-label {
   color: #6b7280;
-  display: flex;
-  align-items: center;
   font-size: 0.875rem;
-}
-
-.cost-icon {
-  width: 1rem;
-  height: 1rem;
-  margin-right: 0.5rem;
-  color: #9ca3af;
 }
 
 .cost-value {
@@ -278,32 +410,6 @@ const total = computed(() => cartStore.totalWithShipping)
   color: transparent;
 }
 
-.security-badge {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background: #f0fdf4;
-  border-radius: 0.75rem;
-  border: 1px solid #bbf7d0;
-}
-
-.security-content {
-  display: flex;
-  align-items: center;
-}
-
-.security-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  color: #059669;
-  margin-right: 0.5rem;
-}
-
-.security-text {
-  font-size: 0.875rem;
-  color: #065f46;
-  font-weight: 500;
-}
-
 @media (max-width: 768px) {
   .cart-summary {
     padding: 1.5rem;
@@ -314,8 +420,16 @@ const total = computed(() => cartStore.totalWithShipping)
   }
 
   .item-image {
-    width: 3rem;
-    height: 3rem;
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .item-images-container {
+    gap: 0.25rem;
+  }
+
+  .image-label {
+    font-size: 0.5rem;
   }
 
   .total-label {
