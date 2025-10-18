@@ -269,6 +269,7 @@ model Product {
   ratings        Rating[]
   favorites      Favorite[]
   flashSaleItems FlashSaleItem[]
+  cartItems      CartItem[]       // Products in cart
 
   @@map("products")
 }
@@ -297,31 +298,6 @@ model ProductVariant {
   @@map("product_variants")
 }
 
-model Cart {
-  id        String      @id @default(cuid())
-  userId    String?     @unique
-  items     CartItem[]
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  user      User?       @relation(fields: [userId], references: [id])
-
-  @@map("carts")
-}
-
-model CartItem {
-  id        String   @id @default(cuid())
-  cartId    String
-  variantId String   // Links to product variant
-  quantity  Int
-  price     Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  cart    Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
-
-  @@map("cart_items")
-}
 
 model Order {
   id                    String        @id @default(cuid())
@@ -548,4 +524,41 @@ model File {
   productImages     ProductImage[]   @relation("ProductImage")
 
   @@map("files")
+}
+
+model Cart {
+  id            String   @id @default(cuid())
+  userId        String?  @unique
+  totalItems    Int      @default(0)
+  subtotal      Decimal  @default(0) @db.Decimal(10, 2)
+  shippingCost  Decimal  @default(0) @db.Decimal(10, 2)
+  tax           Decimal  @default(0) @db.Decimal(10, 2)
+  total         Decimal  @default(0) @db.Decimal(10, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  user  User?      @relation(fields: [userId], references: [id])
+  items CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  productId String
+  variantId String?
+  quantity  Int      @default(1)
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  cart    Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productId, variantId])
+  @@map("cart_items")
 }

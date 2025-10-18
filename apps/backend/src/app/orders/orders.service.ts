@@ -184,7 +184,7 @@ export class OrdersService {
     // Create order items
     const orderItems = cart.items.map((item) => ({
       orderId: order.id,
-      variantId: item.variantId,
+      variantId: item.variantId || '',
       quantity: item.quantity,
       price: item.price,
     }));

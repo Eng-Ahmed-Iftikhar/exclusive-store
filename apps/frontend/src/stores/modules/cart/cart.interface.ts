@@ -1,22 +1,26 @@
 export interface CartItem {
   id: string;
   cartId: string;
-  variantId: string;
+  productId: string;
+  variantId?: string;
   quantity: number;
   price: number;
   createdAt: Date;
   updatedAt: Date;
-  variant: {
+  product: {
+    id: string;
+    name: string;
+    description: string;
+    price?: number;
+    salePrice?: number;
+    images: Array<{ url: string }>;
+    category: { id: string; name: string };
+    subcategory: { id: string; name: string };
+  };
+  variant?: {
     id: string;
     name: string;
     sku: string;
-    product: {
-      id: string;
-      name: string;
-      description: string;
-      category: { id: string; name: string };
-      subcategory: { id: string; name: string };
-    };
     prices: Array<{ price: number; salePrice?: number }>;
     images: Array<{ url: string; file: { url: string; secureUrl: string } }>;
   };
@@ -36,7 +40,8 @@ export interface Cart {
 }
 
 export interface AddToCartRequest {
-  variantId: string;
+  productId: string;
+  variantId?: string;
   quantity: number;
 }
 

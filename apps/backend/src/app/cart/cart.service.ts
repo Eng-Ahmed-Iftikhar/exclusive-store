@@ -6,12 +6,41 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '../config/config.service';
+import { Decimal } from '@prisma/client/runtime/library';
 import {
   AddToCartDto,
   CartDto,
+  CartItemDto,
   CartResponseDto,
   UpdateCartItemDto,
 } from './dto/cart.dto';
+
+// Type definitions for cart data
+interface CartWithItems {
+  id: string;
+  userId?: string | null;
+  totalItems: number;
+  subtotal: Decimal;
+  shippingCost: Decimal;
+  tax: Decimal;
+  total: Decimal;
+  createdAt: Date;
+  updatedAt: Date;
+  items: CartItemWithRelations[];
+}
+
+interface CartItemWithRelations {
+  id: string;
+  cartId: string;
+  productId: string;
+  variantId?: string | null;
+  quantity: number;
+  price: Decimal;
+  createdAt: Date;
+  updatedAt: Date;
+  product?: any;
+  variant?: any;
+}
 
 @Injectable()
 export class CartService {
@@ -21,32 +50,35 @@ export class CartService {
   ) {}
 
   async getUserCart(userId: string): Promise<CartDto> {
-    let cart = await this.prisma.cart.findFirst({
+    let cart = (await this.prisma.cart.findFirst({
       where: { userId },
       include: {
         items: {
           include: {
+            product: {
+              include: {
+                category: true,
+                subcategory: true,
+                images: {
+                  include: { file: true },
+                },
+              },
+            },
             variant: {
               include: {
                 images: {
                   include: { file: true },
-                },
-                product: {
-                  include: {
-                    category: true,
-                    subcategory: true,
-                  },
                 },
               },
             },
           },
         },
       },
-    });
+    })) as CartWithItems;
 
     if (!cart) {
       // Create new cart for user
-      cart = await this.prisma.cart.create({
+      cart = (await this.prisma.cart.create({
         data: { userId },
         include: {
           items: {
@@ -67,7 +99,7 @@ export class CartService {
             },
           },
         },
-      });
+      })) as CartWithItems;
     }
 
     return this.formatCart(cart);
@@ -82,16 +114,19 @@ export class CartService {
             createdAt: 'desc',
           },
           include: {
+            product: {
+              include: {
+                category: true,
+                subcategory: true,
+                images: {
+                  include: { file: true },
+                },
+              },
+            },
             variant: {
               include: {
                 images: {
                   include: { file: true },
-                },
-                product: {
-                  include: {
-                    category: true,
-                    subcategory: true,
-                  },
                 },
               },
             },
@@ -104,7 +139,7 @@ export class CartService {
       throw new NotFoundException('Cart not found');
     }
 
-    return this.formatCart(cart);
+    return this.formatCart(cart as CartWithItems);
   }
 
   async createCart(): Promise<CartDto> {
@@ -113,16 +148,19 @@ export class CartService {
       include: {
         items: {
           include: {
+            product: {
+              include: {
+                category: true,
+                subcategory: true,
+                images: {
+                  include: { file: true },
+                },
+              },
+            },
             variant: {
               include: {
                 images: {
                   include: { file: true },
-                },
-                product: {
-                  include: {
-                    category: true,
-                    subcategory: true,
-                  },
                 },
               },
             },
@@ -131,48 +169,75 @@ export class CartService {
       },
     });
 
-    return this.formatCart(cart);
+    return this.formatCart(cart as CartWithItems);
   }
 
   async addToCart(
     cartId: string,
-    addToCartDto: AddToCartDto,
-    userId?: string
+    addToCartDto: AddToCartDto
   ): Promise<CartResponseDto> {
-    // Check if variant exists
-    const variant = await this.prisma.productVariant.findUnique({
-      where: { id: addToCartDto.variantId },
-      include: { prices: true },
+    // Check if product exists
+    const product = await this.prisma.product.findUnique({
+      where: { id: addToCartDto.productId },
     });
 
-    if (!variant) {
-      throw new NotFoundException('Product variant not found');
+    if (!product) {
+      throw new NotFoundException('Product not found');
     }
 
-    // Get the active price and determine the correct price to use
-    const activePrice = variant.prices.find((price: any) => price.isActive);
-    let variantPrice = 0;
+    let totalPrice = 0;
+    let variant = null;
 
-    if (activePrice) {
-      // Check if there's a sale price available
-      if (
-        activePrice.salePrice &&
-        Number(activePrice.salePrice) > 0 &&
-        Number(activePrice.salePrice) < Number(activePrice.price)
-      ) {
-        // Use sale price if it's less than original price
-        variantPrice = Number(activePrice.salePrice);
-      } else {
-        // Use original price if no sale or sale price is invalid
-        variantPrice = Number(activePrice.price);
+    // Add product base price (use sale price if available, otherwise regular price)
+    if (
+      product.salePrice &&
+      Number(product.salePrice) > 0 &&
+      Number(product.salePrice) < Number(product.price)
+    ) {
+      totalPrice += Number(product.salePrice);
+    } else if (product.price && Number(product.price) > 0) {
+      totalPrice += Number(product.price);
+    }
+
+    // If variant is provided, add variant price
+    if (addToCartDto.variantId) {
+      variant = await this.prisma.productVariant.findUnique({
+        where: { id: addToCartDto.variantId },
+        include: { prices: true },
+      });
+
+      if (!variant) {
+        throw new NotFoundException('Product variant not found');
       }
+
+      // Get the active price and determine the correct price to use
+      const activePrice = variant.prices.find((price) => price.isActive);
+      let variantPrice = 0;
+
+      if (activePrice) {
+        // Check if there's a sale price available
+        if (
+          activePrice.salePrice &&
+          Number(activePrice.salePrice) > 0 &&
+          Number(activePrice.salePrice) < Number(activePrice.price)
+        ) {
+          // Use sale price if it's less than original price
+          variantPrice = Number(activePrice.salePrice);
+        } else {
+          // Use original price if no sale or sale price is invalid
+          variantPrice = Number(activePrice.price);
+        }
+      }
+
+      totalPrice += variantPrice;
     }
 
-    // Check if variant is already in cart
+    // Check if item is already in cart (same product + variant combination)
     const existingCartItem = await this.prisma.cartItem.findFirst({
       where: {
         cartId,
-        variantId: addToCartDto.variantId,
+        productId: addToCartDto.productId,
+        variantId: addToCartDto.variantId || undefined,
       },
     });
 
@@ -182,19 +247,19 @@ export class CartService {
       if (newQuantity > 10) {
         throw new BadRequestException('Maximum quantity per item is 10');
       }
-
       await this.prisma.cartItem.update({
         where: { id: existingCartItem.id },
         data: { quantity: newQuantity },
       });
     } else {
-      // Add new variant to cart
+      // Add new item to cart
       await this.prisma.cartItem.create({
         data: {
           cartId,
-          variantId: addToCartDto.variantId,
+          productId: addToCartDto.productId,
+          variantId: addToCartDto.variantId || undefined,
           quantity: addToCartDto.quantity,
-          price: variantPrice,
+          price: totalPrice,
         },
       });
     }
@@ -243,35 +308,65 @@ export class CartService {
       });
     } else {
       // Recalculate price in case sale status has changed
-      const activePrice = cartItem.variant.prices.find(
-        (price: any) => price.isActive
-      );
-      let newPrice = cartItem.price; // Keep existing price as fallback
-      console.log({ activePrice });
+      if (cartItem.variant) {
+        const activePrice = cartItem.variant.prices.find(
+          (price) => price.isActive
+        );
+        let newPrice: Decimal = cartItem.price; // Keep existing price as fallback
 
-      if (activePrice) {
-        // Check if there's a sale price available
-        if (
-          activePrice.salePrice &&
-          Number(activePrice.salePrice) > 0 &&
-          Number(activePrice.salePrice) < Number(activePrice.price)
-        ) {
-          // Use sale price if it's less than original price
-          newPrice = Number(activePrice.salePrice);
-        } else {
-          // Use original price if no sale or sale price is invalid
-          newPrice = Number(activePrice.price);
+        if (activePrice) {
+          // Check if there's a sale price available
+          if (
+            activePrice.salePrice &&
+            Number(activePrice.salePrice) > 0 &&
+            Number(activePrice.salePrice) < Number(activePrice.price)
+          ) {
+            // Use sale price if it's less than original price
+            newPrice = new Decimal(activePrice.salePrice);
+          } else {
+            // Use original price if no sale or sale price is invalid
+            newPrice = new Decimal(activePrice.price);
+          }
         }
-      }
 
-      // Update quantity and price
-      await this.prisma.cartItem.update({
-        where: { id: cartItemId },
-        data: {
-          quantity: updateDto.quantity,
-          price: newPrice,
-        },
-      });
+        // Update quantity and price
+        await this.prisma.cartItem.update({
+          where: { id: cartItemId },
+          data: {
+            quantity: updateDto.quantity,
+            price: newPrice,
+          },
+        });
+      } else {
+        // Update quantity and recalculate price for product-only items
+        // Get the current product to check for price changes
+        const product = await this.prisma.product.findUnique({
+          where: { id: cartItem.productId },
+        });
+
+        let newPrice: Decimal = cartItem.price; // Keep existing price as fallback
+
+        if (product) {
+          // Calculate new price based on product's current price
+          if (
+            product.salePrice &&
+            Number(product.salePrice) > 0 &&
+            Number(product.salePrice) < Number(product.price)
+          ) {
+            newPrice = new Decimal(product.salePrice);
+          } else if (product.price && Number(product.price) > 0) {
+            newPrice = new Decimal(product.price);
+          }
+        }
+
+        await this.prisma.cartItem.update({
+          where: { id: cartItemId },
+          data: {
+            quantity: updateDto.quantity,
+            price: newPrice,
+          },
+        });
+      }
     }
 
     // Get updated cart
@@ -365,7 +460,17 @@ export class CartService {
   private async verifyCartAccess(
     cartId: string,
     userId?: string
-  ): Promise<any> {
+  ): Promise<{
+    id: string;
+    userId: string | null;
+    totalItems: number;
+    subtotal: Decimal;
+    shippingCost: Decimal;
+    tax: Decimal;
+    total: Decimal;
+    createdAt: Date;
+    updatedAt: Date;
+  }> {
     // Add logging to debug cart access issues
     console.log(
       `[CartService] Verifying cart access for cartId: ${cartId}, userId: ${
@@ -399,10 +504,12 @@ export class CartService {
     return cart;
   }
 
-  private formatCart(cart: any): CartDto {
-    const items = cart.items.map((item: any) => ({
+  private formatCart(cart: CartWithItems): CartDto {
+    const items = cart.items.map((item: CartItemWithRelations) => ({
       id: item.id,
+      productId: item.productId,
       variantId: item.variantId,
+      product: item.product,
       variant: item.variant,
       quantity: item.quantity,
       price: item.price,
@@ -411,12 +518,15 @@ export class CartService {
     }));
 
     const totalItems = items.reduce(
-      (sum: number, item: any) => sum + item.quantity,
+      (sum: number, item) => sum + item.quantity,
       0
     );
     const subtotal = parseFloat(
       items
-        .reduce((sum: number, item: any) => sum + item.price * item.quantity, 0)
+        .reduce(
+          (sum: number, item) => sum + Number(item.price) * item.quantity,
+          0
+        )
         .toFixed(2)
     );
 
@@ -437,7 +547,7 @@ export class CartService {
     return {
       id: cart.id,
       userId: cart.userId || undefined,
-      items,
+      items: items as unknown as CartItemDto[],
       totalItems,
       subtotal,
       shippingCost,
@@ -526,16 +636,28 @@ export class CartService {
         return { isValid: false, issues };
       }
 
-      // Check if all cart items reference valid variants
+      // Check if all cart items reference valid products and variants
       for (const item of cart.items) {
-        const variantExists = await this.prisma.productVariant.findUnique({
-          where: { id: item.variantId },
+        const productExists = await this.prisma.product.findUnique({
+          where: { id: item.productId },
         });
 
-        if (!variantExists) {
+        if (!productExists) {
           issues.push(
-            `Cart item ${item.id} references non-existent variant ${item.variantId}`
+            `Cart item ${item.id} references non-existent product ${item.productId}`
           );
+        }
+
+        if (item.variantId) {
+          const variantExists = await this.prisma.productVariant.findUnique({
+            where: { id: item.variantId },
+          });
+
+          if (!variantExists) {
+            issues.push(
+              `Cart item ${item.id} references non-existent variant ${item.variantId}`
+            );
+          }
         }
       }
 
@@ -578,23 +700,45 @@ export class CartService {
 
     // Update prices for all cart items
     for (const cartItem of cart.items) {
-      const activePrice = cartItem.variant.prices.find(
-        (price: any) => price.isActive
-      );
-      let newPrice = cartItem.price; // Keep existing price as fallback
+      let newPrice: Decimal = cartItem.price; // Keep existing price as fallback
 
-      if (activePrice) {
-        // Check if there's a sale price available
-        if (
-          activePrice.salePrice &&
-          Number(activePrice.salePrice) > 0 &&
-          Number(activePrice.salePrice) < Number(activePrice.price)
-        ) {
-          // Use sale price if it's less than original price
-          newPrice = Number(activePrice.salePrice);
-        } else {
-          // Use original price if no sale or sale price is invalid
-          newPrice = Number(activePrice.price);
+      if (cartItem.variant) {
+        // Handle variant prices
+        const activePrice = cartItem.variant.prices.find(
+          (price) => price.isActive
+        );
+
+        if (activePrice) {
+          // Check if there's a sale price available
+          if (
+            activePrice.salePrice &&
+            Number(activePrice.salePrice) > 0 &&
+            Number(activePrice.salePrice) < Number(activePrice.price)
+          ) {
+            // Use sale price if it's less than original price
+            newPrice = new Decimal(activePrice.salePrice);
+          } else {
+            // Use original price if no sale or sale price is invalid
+            newPrice = new Decimal(activePrice.price);
+          }
+        }
+      } else {
+        // Handle product-only cart items
+        const product = await this.prisma.product.findUnique({
+          where: { id: cartItem.productId },
+        });
+
+        if (product) {
+          // Calculate new price based on product's current price
+          if (
+            product.salePrice &&
+            Number(product.salePrice) > 0 &&
+            Number(product.salePrice) < Number(product.price)
+          ) {
+            newPrice = new Decimal(product.salePrice);
+          } else if (product.price && Number(product.price) > 0) {
+            newPrice = new Decimal(product.price);
+          }
         }
       }
 
@@ -602,7 +746,7 @@ export class CartService {
       if (newPrice !== cartItem.price) {
         await this.prisma.cartItem.update({
           where: { id: cartItem.id },
-          data: { price: newPrice },
+          data: { price: newPrice as any },
         });
       }
     }

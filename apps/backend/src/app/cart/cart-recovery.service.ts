@@ -109,9 +109,10 @@ export class CartRecoveryService {
               await this.prisma.cartItem.create({
                 data: {
                   cartId: newCart.id,
-                  variantId: item.variantId,
+                  variantId: item.variantId || '',
                   quantity: item.quantity,
                   price: item.price,
+                  productId: item.productId,
                 },
               });
               migratedItems++;

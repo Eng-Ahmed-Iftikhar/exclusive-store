@@ -92,9 +92,8 @@ export class CartController {
     }
 
     // Extract user ID if authenticated
-    const userId = req.user?.id;
 
-    return this.cartService.addToCart(cartId, addToCartDto, userId);
+    return this.cartService.addToCart(cartId, addToCartDto);
   }
 
   @Put('items/:cartItemId')

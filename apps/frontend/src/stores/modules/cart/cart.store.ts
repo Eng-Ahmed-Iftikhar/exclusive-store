@@ -30,19 +30,29 @@ export const useCartStore = defineStore('cart', () => {
   // Total with shipping and tax from backend cart API
   const totalWithShipping = computed(() => cart.value?.total || 0);
 
-  const isItemInCart = (variantId: string): boolean => {
-    return cartItems.value.some((item) => item.variantId === variantId);
+  const isItemInCart = (productId: string, variantId?: string): boolean => {
+    return cartItems.value.some(
+      (item) =>
+        item.productId === productId &&
+        (variantId ? item.variantId === variantId : !item.variantId)
+    );
   };
 
-  const getItemQuantity = (variantId: string): number => {
+  const getItemQuantity = (productId: string, variantId?: string): number => {
     const cartItem = cartItems.value.find(
-      (item) => item.variantId === variantId
+      (item) =>
+        item.productId === productId &&
+        (variantId ? item.variantId === variantId : !item.variantId)
     );
     return cartItem ? cartItem.quantity : 0;
   };
 
-  const getCartItem = (variantId: string) => {
-    return cartItems.value.find((item) => item.variantId === variantId);
+  const getCartItem = (productId: string, variantId?: string) => {
+    return cartItems.value.find(
+      (item) =>
+        item.productId === productId &&
+        (variantId ? item.variantId === variantId : !item.variantId)
+    );
   };
 
   const updateCartItemQuantity = async (
@@ -175,7 +185,11 @@ export const useCartStore = defineStore('cart', () => {
     }
   };
 
-  const addToCart = async (variantId: string, quantity = 1): Promise<void> => {
+  const addToCart = async (
+    productId: string,
+    variantId?: string,
+    quantity = 1
+  ): Promise<void> => {
     if (!cartId.value) {
       await initializeCart();
     }
@@ -190,6 +204,7 @@ export const useCartStore = defineStore('cart', () => {
       error.value = null;
 
       const updatedCart = await CartActions.addToCart(cartId.value, {
+        productId,
         variantId,
         quantity,
       });

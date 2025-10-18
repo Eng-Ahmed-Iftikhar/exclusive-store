@@ -54,16 +54,17 @@
           </div>
         </div>
 
-        <!-- Variant Selection Required Message -->
-        <div v-if="!selectedVariant" class="variant-required-message">
+        <!-- Variant Selection Optional Message -->
+        <div v-if="!selectedVariant && product.variants && product.variants.length > 0"
+          class="variant-optional-message">
           <v-icon icon="mdi-information-outline" size="16" />
-          Please select a variant below
+          Optional: Select a variant to add its price
         </div>
       </div>
 
       <!-- Variant Selector -->
       <div v-if="product.variants && product.variants.length > 0" class="variant-selector">
-        <h4 class="variant-title">Select Variant</h4>
+        <h4 class="variant-title">Select Variant (Optional)</h4>
         <div class="variant-cards">
           <div v-for="variant in product.variants" :key="variant.id" class="variant-card" :class="{
             'selected': selectedVariantId === variant.id,
@@ -314,12 +315,12 @@ const getVariantImage = (variant: any) => {
     const firstImage = variant.images[0];
     return firstImage.file?.secureUrl || firstImage.file?.url || '';
   }
-  return 'https://via.placeholder.com/150?text=No+Image';
+  return 'https://placehold.co/600x400.png';
 };
 
 const handleImageError = (e: Event) => {
   const target = e.target as HTMLImageElement;
-  target.src = 'https://via.placeholder.com/150?text=No+Image';
+  target.src = 'https://placehold.co/600x400.png';
 };
 
 const getAverageRating = (product: any) => {
@@ -450,16 +451,16 @@ const getReviewCount = (product: any) => {
   font-weight: 600;
 }
 
-.variant-required-message {
+.variant-optional-message {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-top: 12px;
   padding: 10px;
-  background: #fff3cd;
-  border: 1px solid #ffc107;
+  background: #e3f2fd;
+  border: 1px solid #2196f3;
   border-radius: 6px;
-  color: #856404;
+  color: #1565c0;
   font-size: 13px;
   font-weight: 500;
 }
@@ -528,7 +529,7 @@ const getReviewCount = (product: any) => {
 .variant-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover
 }
 
 .stock-badge {

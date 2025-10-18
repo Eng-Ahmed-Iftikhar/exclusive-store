@@ -22,7 +22,7 @@
           <v-col cols="12" md="6" class="product-details-col">
             <ProductDetails :product="product" :is-in-cart="isInCart" :is-favorited="isFavorited"
               :is-on-sale="isOnSale || false" @add-to-cart="handleAddToCart" @remove-from-cart="handleRemoveFromCart"
-              @toggle-favorite="handleFavoriteClick" />
+              @toggle-favorite="handleFavoriteClick" @variant-change="handleVariantChange" />
           </v-col>
         </v-row>
 
@@ -56,6 +56,7 @@ const productsStore = useProductsStore();
 
 // Refs
 const relatedProducts = ref<any[]>([]);
+const selectedVariantId = ref<string | null>(null);
 
 // Computed properties
 const product = computed(() => productsStore.selectedProduct);
@@ -63,7 +64,7 @@ const loading = computed(() => productsStore.loading);
 const error = computed(() => productsStore.error);
 
 const isInCart = computed(() => {
-  return product.value?.id ? cartStore.isItemInCart(product.value.id) : false;
+  return product.value?.id ? cartStore.isItemInCart(product.value.id, selectedVariantId.value || undefined) : false;
 });
 
 const isFavorited = computed(() => {
@@ -71,9 +72,23 @@ const isFavorited = computed(() => {
 });
 
 const isOnSale = computed(() => {
-  if (!product.value?.variants?.[0]?.prices?.[0]) return false;
-  const price = product.value.variants[0].prices[0];
-  return !!(price.salePrice && price.salePrice < price.price);
+  // Check if product has a sale price
+  if (product.value?.salePrice && product.value?.price && product.value.salePrice < product.value.price) {
+    return true;
+  }
+
+  // Check if any variant has a sale price
+  if (product.value?.variants && product.value.variants.length > 0) {
+    return product.value.variants.some((variant: any) => {
+      if (variant.prices && variant.prices.length > 0) {
+        const activePrice = variant.prices.find((p: any) => p.isActive);
+        return activePrice?.salePrice && activePrice.salePrice < activePrice.price;
+      }
+      return false;
+    });
+  }
+
+  return false;
 });
 
 const productImages = computed(() => {
@@ -114,11 +129,12 @@ const fetchProduct = async () => {
   }
 };
 
-const handleAddToCart = async () => {
+const handleAddToCart = async (variantId?: string) => {
   if (!product.value) return;
 
   try {
-    await cartStore.addToCart(product.value.id, 1);
+    // Add product with or without variant
+    await cartStore.addToCart(product.value.id, variantId, 1);
     // You could add a success notification here
   } catch (err) {
     console.error('Error adding to cart:', err);
@@ -126,11 +142,15 @@ const handleAddToCart = async () => {
   }
 };
 
-const handleRemoveFromCart = async () => {
+const handleRemoveFromCart = async (variantId?: string) => {
   if (!product.value) return;
 
   try {
-    await cartStore.removeFromCart(product.value.id);
+    // Find the cart item for this product (with or without variant)
+    const cartItem = cartStore.getCartItem(product.value.id, variantId);
+    if (cartItem) {
+      await cartStore.removeFromCart(cartItem.id);
+    }
   } catch (err) {
     console.error('Error removing from cart:', err);
   }
@@ -148,6 +168,10 @@ const handleFavoriteClick = async () => {
   } catch (err) {
     console.error('Error toggling favorite:', err);
   }
+};
+
+const handleVariantChange = (variantId: string) => {
+  selectedVariantId.value = variantId || null;
 };
 
 const goToProducts = () => {

@@ -200,7 +200,7 @@ const handleFavoriteClick = async () => {
 const handleAddToCart = async () => {
   try {
     cartLoading.value = true;
-    await cartStore.addToCart(props.product.id, 1);
+    await cartStore.addToCart(props.product.id);
     showProductModal.value = false;
   } catch (error) {
     // Error adding to cart
@@ -661,6 +661,7 @@ const getSalePrice = (product: any) => {
 }
 
 .view-details-btn {
+  margin-top: 10px;
   font-size: 13px;
   padding: 10px 16px;
   height: 40px;

@@ -1,5 +1,5 @@
-import { ICart } from ".";
-import { cartApi } from "../../apis/cart.api";
+import { ICart } from '.';
+import { cartApi } from '../../apis/cart.api';
 
 const CART_ID_KEY = 'exclusive_cart_id';
 
@@ -27,8 +27,12 @@ export async function createCart(): Promise<ICart.Cart> {
   }
 }
 
-export async function addToCart(cartId: string, payload: ICart.AddToCartRequest): Promise<ICart.Cart> {
+export async function addToCart(
+  cartId: string,
+  payload: ICart.AddToCartRequest
+): Promise<ICart.Cart> {
   try {
+    console.log({ payload });
     const response = await cartApi.addToCart(cartId, payload);
     return response.cart as unknown as ICart.Cart;
   } catch (err) {
@@ -36,7 +40,11 @@ export async function addToCart(cartId: string, payload: ICart.AddToCartRequest)
   }
 }
 
-export async function updateCartItem(cartId: string, itemId: string, payload: ICart.UpdateCartItemRequest): Promise<ICart.Cart> {
+export async function updateCartItem(
+  cartId: string,
+  itemId: string,
+  payload: ICart.UpdateCartItemRequest
+): Promise<ICart.Cart> {
   try {
     const response = await cartApi.updateCartItem(cartId, itemId, payload);
     return response.cart as unknown as ICart.Cart;
@@ -45,7 +53,10 @@ export async function updateCartItem(cartId: string, itemId: string, payload: IC
   }
 }
 
-export async function removeFromCart(cartId: string, itemId: string): Promise<ICart.Cart> {
+export async function removeFromCart(
+  cartId: string,
+  itemId: string
+): Promise<ICart.Cart> {
   try {
     const response = await cartApi.removeFromCart(cartId, itemId);
     return response.cart as unknown as ICart.Cart;
@@ -62,7 +73,9 @@ export async function clearCart(cartId: string): Promise<void> {
   }
 }
 
-export async function recalculateCartPrices(cartId: string): Promise<ICart.Cart> {
+export async function recalculateCartPrices(
+  cartId: string
+): Promise<ICart.Cart> {
   try {
     return await cartApi.recalculateCartPrices(cartId);
   } catch (err) {

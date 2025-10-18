@@ -27,12 +27,50 @@
     <div class="price-section mb-4">
       <div class="price-display">
         <span v-if="isOnSale" class="sale-price">${{ getSalePrice(product) }}</span>
-        <span class="current-price">${{ getCurrentPrice(product) }}</span>
         <span v-if="isOnSale" class="original-price">${{ getOriginalPrice(product) }}</span>
       </div>
       <v-chip v-if="isOnSale" color="error" size="small" class="sale-badge">
         SALE
       </v-chip>
+    </div>
+
+    <!-- Variant Selection -->
+    <div v-if="product.variants && product.variants.length > 0" class="variant-section mb-4">
+      <h3 class="section-title">Select Variant (Optional)</h3>
+      <div class="variant-grid">
+        <div v-for="variant in product.variants" :key="variant.id" class="variant-card"
+          :class="{ 'selected': selectedVariantId === variant.id }" @click="selectVariant(variant.id)">
+          <div class="variant-image">
+            <img v-if="getVariantImage(variant)" :src="getVariantImage(variant) || ''" :alt="variant.name"
+              class="variant-img" @error="handleImageError" />
+            <div v-else class="no-image-placeholder">
+              <v-icon icon="mdi-image" size="24" />
+            </div>
+          </div>
+          <div class="variant-info">
+            <h4 class="variant-name">{{ variant.name }}</h4>
+            <div class="variant-price">
+              <span v-if="getVariantSalePrice(variant)" class="variant-sale-price">
+                ${{ getVariantSalePrice(variant) }}
+              </span>
+              <span class="variant-regular-price" :class="{ 'sale-price': getVariantSalePrice(variant) }">
+                ${{ getVariantPrice(variant) }}
+              </span>
+            </div>
+            <div class="variant-stock">
+              <v-chip :color="isVariantInStock(variant) ? 'success' : 'error'" size="x-small" variant="outlined">
+                {{ isVariantInStock(variant) ? 'In Stock' : 'Out of Stock' }}
+              </v-chip>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant Selection Info -->
+      <div v-if="!selectedVariantId && product.variants.length > 0" class="variant-info-message">
+        <v-icon icon="mdi-information-outline" size="16" />
+        Optional: Select a variant to add its price to the product price
+      </div>
     </div>
 
     <!-- Product Description -->
@@ -45,7 +83,7 @@
     <div class="actions-section mb-4">
       <!-- Add to Cart Button -->
       <v-btn v-if="!isInCart" color="primary" variant="flat" size="large" class="add-to-cart-btn"
-        @click="$emit('add-to-cart')" block>
+        @click="$emit('add-to-cart', selectedVariantId ?? undefined)" block>
         <v-icon icon="mdi-cart-plus" size="20" class="me-2" />
         Add to Cart
       </v-btn>
@@ -57,7 +95,7 @@
           In Cart
         </v-btn>
         <v-btn color="error" variant="outlined" size="large" class="remove-from-cart-btn"
-          @click="$emit('remove-from-cart')" block>
+          @click="$emit('remove-from-cart', selectedVariantId ?? undefined)" block>
           <v-icon icon="mdi-cart-minus" size="20" class="me-2" />
           Remove from Cart
         </v-btn>
@@ -87,6 +125,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
+
 interface ProductPrice {
   price: number;
   salePrice?: number;
@@ -108,12 +148,44 @@ interface ProductSubcategory {
   name: string;
 }
 
+interface ProductVariant {
+  id: string;
+  name: string;
+  sku: string;
+  isDefault?: boolean;
+  prices?: ProductPrice[];
+  images?: Array<{
+    id: string;
+    productId?: string;
+    variantId?: string;
+    fileId: string;
+    altText?: string;
+    isPrimary: boolean;
+    sortOrder: number;
+    createdAt: string;
+    updatedAt: string;
+    file?: {
+      id: string;
+      url: string;
+      secureUrl: string;
+      originalName: string;
+    };
+  }>;
+  stock?: {
+    quantity: number;
+    isInStock: boolean;
+  };
+}
+
 interface Product {
   id: string;
   name: string;
   description?: string;
   sku?: string;
-  prices?: ProductPrice[];
+  price?: number;
+  salePrice?: number;
+  currency?: string;
+  variants?: ProductVariant[];
   reviews?: ProductReview[];
   category?: ProductCategory;
   subcategory?: ProductSubcategory;
@@ -126,13 +198,17 @@ interface Props {
   isOnSale: boolean;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
-defineEmits<{
-  'add-to-cart': [];
-  'remove-from-cart': [];
+const emit = defineEmits<{
+  'add-to-cart': [variantId?: string];
+  'remove-from-cart': [variantId?: string];
   'toggle-favorite': [];
+  'variant-change': [variantId: string];
 }>();
+
+// Variant selection state
+const selectedVariantId = ref<string | null>(null);
 
 // Helper methods
 const getAverageRating = (item: Product) => {
@@ -145,22 +221,98 @@ const getReviewCount = (item: Product) => {
   return item.reviews?.length || 0;
 };
 
-const getCurrentPrice = (item: Product) => {
-  if (!item.prices) return 0;
-  const price = item.prices.find(p => p.isActive);
-  return price?.salePrice || price?.price || 0;
-};
 
 const getOriginalPrice = (item: Product) => {
-  if (!item.prices) return 0;
-  const price = item.prices.find(p => p.isActive);
-  return price?.price || 0;
+  // First check if product has base price
+  if (item.price) {
+    return item.price;
+  }
+
+  // Fallback to variant prices
+  if (item.variants && item.variants.length > 0) {
+    const defaultVariant = item.variants.find(v => v.isDefault) || item.variants[0];
+    if (defaultVariant?.prices && defaultVariant.prices.length > 0) {
+      const activePrice = defaultVariant.prices.find(p => p.isActive);
+      return activePrice?.price || 0;
+    }
+  }
+
+  return 0;
 };
 
 const getSalePrice = (item: Product) => {
-  if (!item.prices) return 0;
-  const price = item.prices.find(p => p.isActive);
-  return price?.salePrice || 0;
+  // First check if product has base sale price
+  if (item.salePrice && item.price && item.salePrice < item.price) {
+    return item.salePrice;
+  }
+
+  // Fallback to variant prices
+  if (item.variants && item.variants.length > 0) {
+    const defaultVariant = item.variants.find(v => v.isDefault) || item.variants[0];
+    if (defaultVariant?.prices && defaultVariant.prices.length > 0) {
+      const activePrice = defaultVariant.prices.find(p => p.isActive);
+      return activePrice?.salePrice || 0;
+    }
+  }
+
+  return 0;
+};
+
+// Variant-related methods
+const selectVariant = (variantId: string) => {
+  // If clicking the same variant, unselect it
+  if (selectedVariantId.value === variantId) {
+    selectedVariantId.value = null;
+    emit('variant-change', '');
+    return;
+  }
+
+  // Find the variant to check stock
+  const variant = props.product.variants?.find((v: any) => v.id === variantId);
+  if (variant && !isVariantInStock(variant)) {
+    // Don't allow selection of out-of-stock variants
+    return;
+  }
+
+  selectedVariantId.value = variantId;
+  emit('variant-change', variantId);
+};
+
+const getVariantImage = (variant: ProductVariant): string | null => {
+  if (variant.images && variant.images.length > 0) {
+    // Find primary image first, then first available image
+    const primaryImage = variant.images.find((img: any) => img.isPrimary);
+    const image = primaryImage || variant.images[0];
+    return image.file?.secureUrl || image.file?.url || null;
+  }
+  return null;
+};
+
+const getVariantPrice = (variant: ProductVariant): number => {
+  if (variant.prices && variant.prices.length > 0) {
+    const activePrice = variant.prices.find((p: any) => p.isActive);
+    return activePrice?.price || variant.prices[0].price || 0;
+  }
+  return 0;
+};
+
+const getVariantSalePrice = (variant: ProductVariant): number => {
+  if (variant.prices && variant.prices.length > 0) {
+    const activePrice = variant.prices.find((p: any) => p.isActive);
+    if (activePrice?.salePrice && activePrice.salePrice > 0 && activePrice.salePrice < activePrice.price) {
+      return activePrice.salePrice;
+    }
+  }
+  return 0;
+};
+
+const isVariantInStock = (variant: ProductVariant): boolean => {
+  return variant.stock?.isInStock || false;
+};
+
+const handleImageError = (event: Event) => {
+  const target = event.target as HTMLImageElement;
+  target.src = 'https://via.placeholder.com/80x80/e0e0e0/666666?text=N/A';
 };
 </script>
 
@@ -268,8 +420,6 @@ const getSalePrice = (item: Product) => {
 .add-to-cart-btn,
 .in-cart-btn,
 .remove-from-cart-btn {
-
-
   font-size: 16px;
   font-weight: 600;
   text-transform: none;
@@ -343,6 +493,137 @@ const getSalePrice = (item: Product) => {
   .favorite-btn {
     width: 100%;
     height: 48px;
+  }
+}
+
+/* Variant Selection Styles */
+.variant-section {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 20px;
+}
+
+.variant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.variant-card {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.variant-card:hover {
+  border-color: #1976d2;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.1);
+}
+
+.variant-card.selected {
+  border-color: #1976d2;
+  background: #f3f8ff;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
+}
+
+.variant-image {
+  width: 100%;
+  height: 80px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.variant-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-image-placeholder {
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.variant-info {
+  text-align: center;
+}
+
+.variant-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 4px 0;
+  line-height: 1.2;
+}
+
+.variant-price {
+  margin-bottom: 8px;
+}
+
+.variant-sale-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #DB4444;
+  margin-right: 8px;
+}
+
+.variant-regular-price {
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+}
+
+.variant-regular-price.sale-price {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.variant-stock {
+  display: flex;
+  justify-content: center;
+}
+
+.variant-info-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #e3f2fd;
+  border: 1px solid #2196f3;
+  border-radius: 6px;
+  color: #1565c0;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Responsive Design for Variants */
+@media (max-width: 768px) {
+  .variant-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+
+  .variant-card {
+    padding: 8px;
+  }
+
+  .variant-image {
+    height: 60px;
+  }
+
+  .variant-name {
+    font-size: 13px;
   }
 }
 </style>

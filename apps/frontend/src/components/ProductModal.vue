@@ -90,8 +90,7 @@ const isFavorited = computed(() => {
 });
 
 const isInCart = computed(() => {
-  if (!selectedVariantId.value) return false;
-  return cartStore.isItemInCart(selectedVariantId.value);
+  return cartStore.isItemInCart(props.product.id, selectedVariantId.value || undefined);
 });
 
 // Methods
@@ -117,27 +116,21 @@ const handleVariantChange = (variantId: string) => {
 };
 
 const handleAddToCart = async () => {
-  if (!selectedVariantId.value) {
-    // Show error - user must select a variant
-    alert('Please select a variant before adding to cart');
-    return;
-  }
-
   try {
     addToCartLoading.value = true;
 
     if (isInCart.value) {
       // Update existing cart item
-      const cartItem = cartStore.getCartItem(selectedVariantId.value);
+      const cartItem = cartStore.getCartItem(props.product.id, selectedVariantId.value || undefined);
       if (cartItem) {
         await cartStore.updateCartItemQuantity(cartItem.id, quantity.value);
       }
     } else {
-      // Add selected variant to cart
-      await cartStore.addToCart(selectedVariantId.value, quantity.value);
+      // Add product or variant to cart
+      await cartStore.addToCart(props.product.id, selectedVariantId.value || undefined, quantity.value);
     }
 
-    emit('add-to-cart', props.product, quantity.value);
+
     // Close modal after adding to cart
     closeModal();
   } catch (error) {

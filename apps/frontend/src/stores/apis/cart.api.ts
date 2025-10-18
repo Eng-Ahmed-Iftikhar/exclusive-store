@@ -3,8 +3,10 @@ import axiosInstance from './axios-instance';
 
 export interface CartItem {
   id: string;
-  itemId: string;
-  item: any;
+  productId: string;
+  variantId?: string;
+  product: any;
+  variant?: any;
   quantity: number;
   price: number;
   createdAt: string;
@@ -23,7 +25,8 @@ export interface Cart {
 }
 
 export interface AddToCartRequest {
-  itemId: string;
+  productId: string;
+  variantId?: string;
   quantity: number;
 }
 
@@ -49,6 +52,7 @@ export const cartApi = {
     data: AddToCartRequest
   ): Promise<CartResponse> => {
     const response = await axiosInstance.post(CartUrls.ADD_TO_CART(cartId), {
+      productId: data.productId,
       variantId: data.variantId,
       quantity: data.quantity,
     });
