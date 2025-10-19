@@ -176,11 +176,13 @@ export class AuthService {
     }
 
     // Generate token pair
-    const { accessToken } = await this.generateNewRefreshToken(
+    const tokenPair = await this.generateNewRefreshToken(
       dbUser.id,
       dbUser.email,
       false
     );
+    console.log('Generated token pair:', tokenPair);
+    const { accessToken } = tokenPair;
 
     // Log login activity
     await this.activityService.logUserActivity(
@@ -189,9 +191,11 @@ export class AuthService {
       dbUser.email
     );
 
-    return {
+    const result = {
       accessToken,
     };
+    console.log('Returning auth result:', result);
+    return result;
   }
 
   async register(registerDto: RegisterDto): Promise<AuthResponse> {

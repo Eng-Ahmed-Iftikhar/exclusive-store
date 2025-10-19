@@ -14,6 +14,8 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  avatar?: string;
+  provider?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,4 +31,3 @@ export interface AuthState {
   isLoading: boolean;
   errorMessage: string | null;
 }
-  

@@ -5,6 +5,7 @@ import ResetPasswordView from '../features/auth/views/ResetPasswordView.vue';
 import SignupView from '../features/auth/views/SignupView.vue';
 import GoogleCallbackView from '../views/auth/GoogleCallback.vue';
 import HomeView from '../features/home/views/HomeView.vue';
+import { useAuthStore } from '../stores';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -99,41 +100,41 @@ const router = createRouter({
 // Route guards
 router.beforeEach(async (to, from, next) => {
   console.log('Route guard - navigating to:', to.path);
-  // const authStore = useAuthStore();
+  const authStore = useAuthStore();
 
-  // // Wait for auth store to be initialized if it hasn't been yet
-  // if (!authStore.getIsInitialized) {
-  //   console.log('Route guard - initializing auth store...');
-  //   await authStore.initializeFromStorage();
-  // }
+  // Wait for auth store to be initialized if it hasn't been yet
+  if (!authStore.getIsInitialized) {
+    console.log('Route guard - initializing auth store...');
+    await authStore.initializeFromStorage();
+  }
 
-  // const isAuthenticated = authStore.isAuthenticated;
-  // console.log('isAuthenticated', isAuthenticated);
+  const isAuthenticated = authStore.isAuthenticated;
+  console.log('isAuthenticated', isAuthenticated);
 
-  // console.log('Route guard - isAuthenticated:', isAuthenticated);
+  console.log('Route guard - isAuthenticated:', isAuthenticated);
 
-  // // Routes that require guest access (not logged in)
-  // if (to.meta.requiresGuest && isAuthenticated) {
-  //   console.log(
-  //     'Route guard - user is authenticated, redirecting from guest page to home'
-  //   );
-  //   // If user is logged in and tries to access auth pages, redirect to home
-  //   next('/');
-  //   return;
-  // }
+  // Routes that require guest access (not logged in)
+  if (to.meta.requiresGuest && isAuthenticated) {
+    console.log(
+      'Route guard - user is authenticated, redirecting from guest page to home'
+    );
+    // If user is logged in and tries to access auth pages, redirect to home
+    next('/');
+    return;
+  }
 
-  // // Routes that require authentication
-  // if (to.meta.requiresAuth && !isAuthenticated) {
-  //   console.log(
-  //     'Route guard - user is not authenticated, redirecting to login'
-  //   );
-  //   // If user is not logged in and tries to access protected pages, redirect to login with redirect URL
-  //   const redirectTo = encodeURIComponent(to.fullPath);
-  //   next(`/login?redirectTo=${redirectTo}`);
-  //   return;
-  // }
+  // Routes that require authentication
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    console.log(
+      'Route guard - user is not authenticated, redirecting to login'
+    );
+    // If user is not logged in and tries to access protected pages, redirect to login with redirect URL
+    const redirectTo = encodeURIComponent(to.fullPath);
+    next(`/login?redirectTo=${redirectTo}`);
+    return;
+  }
 
-  // console.log('Route guard - allowing navigation to:', to.path);
+  console.log('Route guard - allowing navigation to:', to.path);
   next();
 });
 

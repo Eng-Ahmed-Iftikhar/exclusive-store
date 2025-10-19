@@ -66,10 +66,11 @@ const handleGoogleSignup = async () => {
 
   try {
     const success = await authStore.googleSignup();
+    console.log({ success });
 
     if (success) {
       // Redirect to the appropriate page after successful authentication
-      authStore.handlePostAuthRedirect(router);
+      router.push('/');
     }
   } catch (error) {
     console.error('Google signup error:', error);

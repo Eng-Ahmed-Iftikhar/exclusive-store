@@ -253,31 +253,25 @@ export const useAuthStore = defineStore('auth', () => {
 
     // Listen for messages from the popup
     return new Promise((resolve) => {
-      const messageHandler = (event: MessageEvent) => {
-        // Verify the origin for security
-        const frontendUrl = window.location.origin;
-        if (event.origin !== frontendUrl) {
-          return;
-        }
-
-        if (event.data.type === 'GOOGLE_OAUTH_SUCCESS') {
+      const messageHandler = async (event: MessageEvent) => {
+        // Check if it's a Google OAuth message
+        if (event.data && event.data.type === 'GOOGLE_OAUTH_SUCCESS') {
           // Remove the event listener
           window.removeEventListener('message', messageHandler);
 
           // Handle the successful authentication
-          const { user, accessToken } = event.data.data;
 
-          // Set user data and token
-          user.value = user;
-          accessToken.value = accessToken;
+          const token = event.data.data.accessToken;
+          console.log({ token });
+          // Set token
+          accessToken.value = token;
 
           // Store token in localStorage for persistence
-          localStorage.setItem('accessToken', accessToken);
-
-          // Close the popup
-          popup.close();
+          localStorage.setItem('accessToken', token);
 
           resolve(true);
+          // Close the popup
+          popup.close();
         } else if (event.data.type === 'GOOGLE_OAUTH_ERROR') {
           // Remove the event listener
           window.removeEventListener('message', messageHandler);

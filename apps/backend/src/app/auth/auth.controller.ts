@@ -372,8 +372,6 @@ export class AuthController {
       if (!code) {
         throw new BadRequestException('Authorization code not provided');
       }
-      console.log({ code });
-      console.log({ redirectUri: this.googleOAuthService.getAuthUrl() });
 
       // Exchange code for token
       const tokenResponse = await this.googleOAuthService.exchangeCodeForToken(
@@ -390,8 +388,10 @@ export class AuthController {
       const result = await this.authService.googleAuth(googleUser);
 
       // For popup flow, return HTML that closes the popup and sends data to parent
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const frontendUrl = this.configService.frontendUrl;
 
+      // Simple HTML approach that works
+      const token = result.accessToken;
       const html = `
         <!DOCTYPE html>
         <html>
@@ -400,18 +400,18 @@ export class AuthController {
           </head>
           <body>
             <script>
-              // Send the auth data to the parent window
+              console.log('Sending token to parent:', '${token}');
+              
               if (window.opener) {
                 window.opener.postMessage({
                   type: 'GOOGLE_OAUTH_SUCCESS',
                   data: {
-                    accessToken: '${result.accessToken}'
+                    accessToken: '${token}'
                   }
-                }, '${frontendUrl}');
+                }, '*');
                 window.close();
               } else {
-                // Fallback: redirect to frontend if not in popup
-                window.location.href = '${frontendUrl}/auth/google/callback?token=${result.accessToken}';
+                window.location.href = '${frontendUrl}/auth/google/callback?token=${token}';
               }
             </script>
             <p>Authentication successful! This window should close automatically.</p>
@@ -422,7 +422,7 @@ export class AuthController {
       res.send(html);
     } catch (error) {
       // Handle authentication errors
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const frontendUrl = this.configService.frontendUrl;
       const errorMessage =
         error instanceof Error ? error.message : 'Authentication failed';
 
