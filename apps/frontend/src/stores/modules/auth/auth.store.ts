@@ -234,6 +234,109 @@ export const useAuthStore = defineStore('auth', () => {
     console.log('================================');
   };
 
+  const googleSignup = async (): Promise<boolean> => {
+    // Store redirect URL if present
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectTo = urlParams.get('redirectTo');
+    if (redirectTo) {
+      localStorage.setItem('redirectAfterLogin', redirectTo);
+    }
+
+    // Open popup window for Google OAuth
+    const popup = await AuthActions.googleAuth();
+
+    if (!popup) {
+      errorMessage.value =
+        'Failed to open Google OAuth popup. Please check your popup blocker settings.';
+      return false;
+    }
+
+    // Listen for messages from the popup
+    return new Promise((resolve) => {
+      const messageHandler = (event: MessageEvent) => {
+        // Verify the origin for security
+        const frontendUrl = window.location.origin;
+        if (event.origin !== frontendUrl) {
+          return;
+        }
+
+        if (event.data.type === 'GOOGLE_OAUTH_SUCCESS') {
+          // Remove the event listener
+          window.removeEventListener('message', messageHandler);
+
+          // Handle the successful authentication
+          const { user, accessToken } = event.data.data;
+
+          // Set user data and token
+          user.value = user;
+          accessToken.value = accessToken;
+
+          // Store token in localStorage for persistence
+          localStorage.setItem('accessToken', accessToken);
+
+          // Close the popup
+          popup.close();
+
+          resolve(true);
+        } else if (event.data.type === 'GOOGLE_OAUTH_ERROR') {
+          // Remove the event listener
+          window.removeEventListener('message', messageHandler);
+
+          // Handle the error
+          errorMessage.value =
+            event.data.error || 'Google authentication failed';
+
+          // Close the popup
+          popup.close();
+
+          resolve(false);
+        }
+      };
+
+      // Add event listener for popup messages
+      window.addEventListener('message', messageHandler);
+
+      // Check if popup was closed manually
+      const checkClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkClosed);
+          window.removeEventListener('message', messageHandler);
+          resolve(false);
+        }
+      }, 1000);
+    });
+  };
+
+  const handleGoogleCallback = async (token: string): Promise<boolean> => {
+    isLoading.value = true;
+    errorMessage.value = null;
+
+    try {
+      const response = await AuthActions.googleCallback(token);
+
+      if (response && response.user && response.accessToken) {
+        user.value = response.user;
+        accessToken.value = response.accessToken;
+
+        // Store token in localStorage for persistence
+        localStorage.setItem('accessToken', response.accessToken);
+
+        return true;
+      } else {
+        errorMessage.value =
+          'Google authentication failed. Invalid response from server.';
+        return false;
+      }
+    } catch (error) {
+      console.error('Google callback error:', error);
+      errorMessage.value =
+        error instanceof Error ? error.message : 'Google authentication failed';
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
   const clearError = (): void => {
     errorMessage.value = null;
   };
@@ -306,6 +409,8 @@ export const useAuthStore = defineStore('auth', () => {
     handlePostAuthRedirect,
     forgotPassword,
     resetPassword,
+    googleSignup,
+    handleGoogleCallback,
 
     // ****** Mutations ******
     setUser,

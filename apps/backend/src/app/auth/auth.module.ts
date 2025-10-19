@@ -9,6 +9,7 @@ import { RedisModule } from '../redis/redis.module';
 import { EmailModule } from '../email/email.module';
 import { LoggerModule } from '../logger/logger.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { GoogleOAuthService } from './services/google-oauth.service';
 import { RolesGuard } from './guards/roles.guard';
 import { PermissionsGuard } from './guards/permissions.guard';
 import { AccessControlService } from './services/access-control.service';
@@ -36,6 +37,7 @@ import { ActivityModule } from '../activity/activity.module';
   providers: [
     AuthService,
     JwtStrategy,
+    GoogleOAuthService,
     RolesGuard,
     PermissionsGuard,
     AccessControlService,

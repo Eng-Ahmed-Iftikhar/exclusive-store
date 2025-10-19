@@ -20,6 +20,17 @@ export async function logout(): Promise<boolean> {
   return true;
 }
 
+export async function googleAuth(): Promise<Window | null> {
+  return await AuthApis.googleAuth();
+}
+
+export async function googleCallback(
+  token: string
+): Promise<IAuth.AuthResponse | null> {
+  const response = await AuthApis.googleCallback(token);
+  return response;
+}
+
 export async function getCurrentUser(): Promise<IAuth.User | null> {
   const response = await AuthApis.getCurrentUser();
   return response.user;

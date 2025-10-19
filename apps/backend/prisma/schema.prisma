@@ -19,9 +19,18 @@ model User {
   id              String   @id @default(cuid())
   email           String   @unique
   name            String
-  password        String
+  password        String?
   roleId          String?  // Link to roles table instead of hardcoded string
   isEmailVerified Boolean  @default(false)
+  
+  // Social login fields
+  googleId        String?  @unique
+  facebookId      String?  @unique
+  twitterId       String?  @unique
+  githubId        String?  @unique
+  linkedinId      String?  @unique
+  provider        String?  // 'google', 'facebook', 'twitter', 'github', 'linkedin', 'email'
+  
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

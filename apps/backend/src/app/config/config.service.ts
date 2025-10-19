@@ -125,6 +125,19 @@ export class ConfigService {
     return this.nestConfigService.get<string>('CLOUDINARY_FOLDER') as string;
   }
 
+  // Google OAuth Configuration
+  get googleClientId(): string {
+    return this.nestConfigService.get<string>('GOOGLE_CLIENT_ID') as string;
+  }
+
+  get googleClientSecret(): string {
+    return this.nestConfigService.get<string>('GOOGLE_CLIENT_SECRET') as string;
+  }
+
+  get googleCallbackUrl(): string {
+    return this.nestConfigService.get<string>('GOOGLE_CALLBACK_URL') as string;
+  }
+
   // Utility methods
   get isDevelopment(): boolean {
     return this.nodeEnv === 'development';
@@ -166,6 +179,9 @@ export class ConfigService {
       CLOUDINARY_API_KEY: this.cloudinaryApiKey,
       CLOUDINARY_API_SECRET: this.cloudinaryApiSecret,
       CLOUDINARY_FOLDER: this.cloudinaryFolder,
+      GOOGLE_CLIENT_ID: this.googleClientId,
+      GOOGLE_CLIENT_SECRET: this.googleClientSecret,
+      GOOGLE_CALLBACK_URL: this.googleCallbackUrl,
     };
   }
 }

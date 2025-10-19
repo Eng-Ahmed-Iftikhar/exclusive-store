@@ -45,6 +45,11 @@ export interface EnvironmentConfig {
   CLOUDINARY_API_KEY: string;
   CLOUDINARY_API_SECRET: string;
   CLOUDINARY_FOLDER: string;
+
+  // Google OAuth Configuration
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
+  GOOGLE_CALLBACK_URL: string;
 }
 
 export const envValidationSchema = Joi.object({
@@ -107,6 +112,11 @@ export const envValidationSchema = Joi.object({
   CLOUDINARY_API_KEY: Joi.string().required(),
   CLOUDINARY_API_SECRET: Joi.string().required(),
   CLOUDINARY_FOLDER: Joi.string().default('uploads'),
+
+  // Google OAuth Configuration
+  GOOGLE_CLIENT_ID: Joi.string().required(),
+  GOOGLE_CLIENT_SECRET: Joi.string().required(),
+  GOOGLE_CALLBACK_URL: Joi.string().uri().required(),
 });
 
 export const getEnvironmentConfig = (): EnvironmentConfig => {

@@ -9,6 +9,7 @@ export interface UserData {
   name: string;
   password: string;
   roleName: string;
+  provider: string;
   isEmailVerified: boolean;
 }
 
@@ -17,6 +18,7 @@ export const users: UserData[] = [
     email: 'superadmin@exclusive.com',
     name: 'Super Administrator',
     password: 'superadmin123',
+    provider: 'email',
     roleName: 'super-admin',
     isEmailVerified: true,
   },
@@ -24,6 +26,7 @@ export const users: UserData[] = [
     email: 'admin@exclusive.com',
     name: 'Administrator',
     password: 'admin123',
+    provider: 'email',
     roleName: 'admin',
     isEmailVerified: true,
   },

@@ -58,6 +58,13 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    // Check if user has a password (not an OAuth-only user)
+    if (!dbUser.password) {
+      throw new UnauthorizedException(
+        'Please use social login for this account'
+      );
+    }
+
     // Verify password
     const isPasswordValid = await bcrypt.compare(
       loginDto.password,
@@ -78,6 +85,107 @@ export class AuthService {
     await this.activityService.logUserActivity(
       dbUser.id,
       'logged in',
+      dbUser.email
+    );
+
+    return {
+      accessToken,
+    };
+  }
+
+  async googleAuth(googleUser: any): Promise<AuthResponse> {
+    // Check if user already exists by email or Google ID
+    let dbUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: googleUser.email }, { googleId: googleUser.googleId }],
+      },
+      include: {
+        role: {
+          select: {
+            id: true,
+            name: true,
+            displayName: true,
+            description: true,
+          },
+        },
+      },
+    });
+
+    if (!dbUser) {
+      // Create new user if doesn't exist
+      const defaultRole = await this.prisma.role.findFirst({
+        where: { name: 'customer' },
+      });
+
+      if (!defaultRole) {
+        throw new UnauthorizedException('Default user role not found');
+      }
+
+      dbUser = await this.prisma.user.create({
+        data: {
+          email: googleUser.email,
+          name: googleUser.name,
+          password: null, // No password for OAuth users
+          roleId: defaultRole.id,
+          isEmailVerified: true, // Google emails are pre-verified
+          googleId: googleUser.googleId,
+          avatar: googleUser.picture,
+          provider: 'google',
+        },
+        include: {
+          role: {
+            select: {
+              id: true,
+              name: true,
+              displayName: true,
+              description: true,
+            },
+          },
+        },
+      });
+
+      // Log user registration activity
+      await this.activityService.logUserActivity(
+        dbUser.id,
+        'User registered via Google OAuth',
+        dbUser.email
+      );
+    } else {
+      // Update existing user with Google info if not already set
+      if (!dbUser.googleId) {
+        dbUser = await this.prisma.user.update({
+          where: { id: dbUser.id },
+          data: {
+            googleId: googleUser.googleId,
+            avatar: googleUser.picture,
+            provider: 'google',
+            isEmailVerified: true, // Ensure email is verified for OAuth users
+          },
+          include: {
+            role: {
+              select: {
+                id: true,
+                name: true,
+                displayName: true,
+                description: true,
+              },
+            },
+          },
+        });
+      }
+    }
+
+    // Generate token pair
+    const { accessToken } = await this.generateNewRefreshToken(
+      dbUser.id,
+      dbUser.email,
+      false
+    );
+
+    // Log login activity
+    await this.activityService.logUserActivity(
+      dbUser.id,
+      'User logged in via Google OAuth',
       dbUser.email
     );
 
@@ -118,6 +226,7 @@ export class AuthService {
         name: registerDto.name,
         password: hashedPassword,
         roleId: defaultRole.id,
+        provider: 'email',
       },
       include: {
         role: {
@@ -589,6 +698,13 @@ export class AuthService {
 
     if (!user) {
       throw new UnauthorizedException('User not found');
+    }
+
+    // Check if user has a password (not an OAuth-only user)
+    if (!user.password) {
+      throw new UnauthorizedException(
+        'Cannot change password for social login accounts'
+      );
     }
 
     // Verify current password

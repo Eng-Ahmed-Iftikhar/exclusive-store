@@ -7,7 +7,12 @@ import {
   HttpStatus,
   UseGuards,
   Req,
+  Res,
+  Query,
   UnauthorizedException,
+  BadRequestException,
+  UseInterceptors,
+  ClassSerializerInterceptor,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -15,10 +20,12 @@ import {
   ApiResponse,
   ApiBody,
   ApiBearerAuth,
+  ApiProduces,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { AuthService } from './auth.service';
+import { GoogleOAuthService } from './services/google-oauth.service';
 import {
   LoginDto,
   RegisterDto,
@@ -34,11 +41,16 @@ import {
   MessageResponseDto,
   SetupPasswordDto,
 } from './dto/auth.dto';
+import { ConfigService } from '../config';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly googleOAuthService: GoogleOAuthService,
+    private readonly configService: ConfigService
+  ) {}
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -314,5 +326,134 @@ export class AuthController {
   })
   async adminForgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     return this.authService.adminForgotPassword(forgotPasswordDto.email);
+  }
+
+  // Google OAuth endpoints
+  @Get('google')
+  @ApiOperation({
+    summary: 'Initiate Google OAuth login',
+    description: 'Redirects to Google OAuth consent screen',
+  })
+  @ApiResponse({
+    status: 302,
+    description: 'Redirects to Google OAuth',
+  })
+  async googleAuth(@Res() res: any) {
+    const authUrl = this.googleOAuthService.getAuthUrl();
+    res.redirect(authUrl);
+  }
+
+  @Get('google/callback')
+  @UseInterceptors(ClassSerializerInterceptor)
+  @ApiOperation({
+    summary: 'Google OAuth callback',
+    description: 'Handles the callback from Google OAuth',
+  })
+  @ApiProduces('text/html')
+  @ApiResponse({
+    status: 200,
+    description:
+      'User authenticated successfully - returns HTML page that closes popup',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Authentication failed',
+  })
+  async googleAuthCallback(
+    @Query('code') code: string,
+    @Query('error') error: string,
+    @Res() res: any
+  ) {
+    try {
+      if (error) {
+        throw new BadRequestException(`Google OAuth error: ${error}`);
+      }
+
+      if (!code) {
+        throw new BadRequestException('Authorization code not provided');
+      }
+      console.log({ code });
+      console.log({ redirectUri: this.googleOAuthService.getAuthUrl() });
+
+      // Exchange code for token
+      const tokenResponse = await this.googleOAuthService.exchangeCodeForToken(
+        code,
+        this.configService.googleCallbackUrl
+      );
+
+      // Get user info from Google
+      const googleUser = await this.googleOAuthService.getUserInfo(
+        tokenResponse.access_token
+      );
+
+      // Create or update user in our system
+      const result = await this.authService.googleAuth(googleUser);
+
+      // For popup flow, return HTML that closes the popup and sends data to parent
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+      const html = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Google OAuth Success</title>
+          </head>
+          <body>
+            <script>
+              // Send the auth data to the parent window
+              if (window.opener) {
+                window.opener.postMessage({
+                  type: 'GOOGLE_OAUTH_SUCCESS',
+                  data: {
+                    accessToken: '${result.accessToken}'
+                  }
+                }, '${frontendUrl}');
+                window.close();
+              } else {
+                // Fallback: redirect to frontend if not in popup
+                window.location.href = '${frontendUrl}/auth/google/callback?token=${result.accessToken}';
+              }
+            </script>
+            <p>Authentication successful! This window should close automatically.</p>
+          </body>
+        </html>
+      `;
+
+      res.send(html);
+    } catch (error) {
+      // Handle authentication errors
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Authentication failed';
+
+      const html = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Google OAuth Error</title>
+          </head>
+          <body>
+            <script>
+              // Send the error to the parent window
+              if (window.opener) {
+                window.opener.postMessage({
+                  type: 'GOOGLE_OAUTH_ERROR',
+                  error: '${errorMessage}'
+                }, '${frontendUrl}');
+                window.close();
+              } else {
+                // Fallback: redirect to frontend with error
+                window.location.href = '${frontendUrl}/login?error=${encodeURIComponent(
+        errorMessage
+      )}';
+              }
+            </script>
+            <p>Authentication failed: ${errorMessage}</p>
+          </body>
+        </html>
+      `;
+
+      res.send(html);
+    }
   }
 }

@@ -22,6 +22,12 @@ export const roles: RoleData[] = [
     description: 'Administrative access to most system features',
     isSystem: true,
   },
+  {
+    name: 'customer',
+    displayName: 'Customer',
+    description: 'Customer access to the system',
+    isSystem: true,
+  },
 ];
 
 export async function seedRoles(): Promise<void> {

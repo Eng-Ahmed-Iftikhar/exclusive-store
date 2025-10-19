@@ -3,6 +3,7 @@ import ForgotPasswordView from '../features/auth/views/ForgotPasswordView.vue';
 import LoginView from '../features/auth/views/LoginView.vue';
 import ResetPasswordView from '../features/auth/views/ResetPasswordView.vue';
 import SignupView from '../features/auth/views/SignupView.vue';
+import GoogleCallbackView from '../views/auth/GoogleCallback.vue';
 import HomeView from '../features/home/views/HomeView.vue';
 
 const router = createRouter({
@@ -41,6 +42,11 @@ const router = createRouter({
       name: 'login',
       component: LoginView,
       meta: { requiresGuest: true },
+    },
+    {
+      path: '/auth/google/callback',
+      name: 'google-callback',
+      component: GoogleCallbackView,
     },
     {
       path: '/about',
