@@ -20,6 +20,10 @@ import EditSubcategoryPage from '@/pages/app/contents/subcategories/EditSubcateg
 import SubcategoryDetailPage from '@/pages/app/contents/subcategories/SubcategoryDetailPage';
 import SubcategoryPage from '@/pages/app/contents/subcategories/SubcategoryPage';
 import Dashboard from '@/pages/app/DashboardPage';
+import FinancialDashboardPage from '@/pages/app/finance/FinancialDashboardPage';
+import LiveOrdersPage from '@/pages/app/finance/LiveOrdersPage';
+import OrderHistoryPage from '@/pages/app/finance/OrderHistoryPage';
+import TransactionsPage from '@/pages/app/finance/TransactionsPage';
 import CreatePermissionPage from '@/pages/app/management/CreatePermissionPage';
 import CreateResourcePage from '@/pages/app/management/CreateResourcePage';
 import CreateRolePage from '@/pages/app/management/CreateRolePage';
@@ -79,6 +83,10 @@ const COMPONENT_MAP = {
   EditProductVariants: VariantsPage,
   EditProductImages: ImagesPage,
   EditProductReview: ReviewPage,
+  FinancialDashboard: FinancialDashboardPage,
+  LiveOrders: LiveOrdersPage,
+  OrderHistory: OrderHistoryPage,
+  Transactions: TransactionsPage,
   Login: Login,
   SetupPassword: SetupPasswordPage,
   ForgotPassword: ForgotPasswordPage,

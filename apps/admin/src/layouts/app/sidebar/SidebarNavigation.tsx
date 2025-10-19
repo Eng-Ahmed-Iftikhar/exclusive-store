@@ -40,6 +40,9 @@ const SidebarNavigation: React.FC = () => {
     content: FiPackage,
     resources: FiPackage,
     teams: FiUsers,
+    finance: FiBarChart2,
+    history: FiBarChart2,
+    transactions: FiShoppingCart,
   };
 
   const handleCloseSidebar = () => {

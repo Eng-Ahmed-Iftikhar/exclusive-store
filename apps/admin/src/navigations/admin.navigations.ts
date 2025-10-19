@@ -95,6 +95,49 @@ const adminNavigations: NavigationItem[] = [
     ],
   },
   {
+    isParent: true,
+    name: 'Finance',
+    icon: 'finance',
+    children: [
+      {
+        name: 'Live Orders',
+        path: '/finance/live-orders',
+        icon: 'orders',
+        permission: {
+          action: 'view',
+          subject: 'orders',
+        },
+      },
+      {
+        name: 'Order History',
+        path: '/finance/order-history',
+        icon: 'history',
+        permission: {
+          action: 'view',
+          subject: 'orders',
+        },
+      },
+      {
+        name: 'Transactions',
+        path: '/finance/transactions',
+        icon: 'transactions',
+        permission: {
+          action: 'view',
+          subject: 'transactions',
+        },
+      },
+      {
+        name: 'Financial Dashboard',
+        path: '/finance/dashboard',
+        icon: 'dashboard',
+        permission: {
+          action: 'view',
+          subject: 'finance',
+        },
+      },
+    ],
+  },
+  {
     name: 'Analytics',
     path: '/analytics',
     icon: 'analytics',

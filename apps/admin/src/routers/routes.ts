@@ -47,6 +47,14 @@ const CONTENT_ROUTES = {
   ADMIN_EDIT_PRODUCT_REVIEW: '/review',
 };
 
+const FINANCE_ROUTES = {
+  ADMIN_FINANCE: '/finance',
+  ADMIN_FINANCE_DASHBOARD: '/finance/dashboard',
+  ADMIN_LIVE_ORDERS: '/finance/live-orders',
+  ADMIN_ORDER_HISTORY: '/finance/order-history',
+  ADMIN_TRANSACTIONS: '/finance/transactions',
+};
+
 const AUTH_ROUTES = {
   ADMIN_SETUP_PASSWORD: '/setup-password',
   ADMIN_FORGOT_PASSWORD: '/forgot-password',
@@ -67,6 +75,8 @@ export const ROUTES = {
 
   // content routes
   ...CONTENT_ROUTES,
+  // finance routes
+  ...FINANCE_ROUTES,
 
   ADMIN_ANALYTICS: '/analytics',
   ADMIN_SETTINGS: '/settings',
@@ -110,6 +120,10 @@ export const ROUTE_NAMES = {
   EDIT_PRODUCT_VARIANTS: 'Edit Product - Variants',
   EDIT_PRODUCT_IMAGES: 'Edit Product - Images',
   EDIT_PRODUCT_REVIEW: 'Edit Product - Review',
+  FINANCE_DASHBOARD: 'Financial Dashboard',
+  LIVE_ORDERS: 'Live Orders',
+  ORDER_HISTORY: 'Order History',
+  TRANSACTIONS: 'Transactions',
   SETUP_PASSWORD: 'Setup Password',
   FORGOT_PASSWORD: 'Forgot Password',
   RESET_PASSWORD: 'Reset Password',
@@ -337,6 +351,30 @@ export const ADMIN_ROUTES: AppRoute[] = [
         icon: 'edit-product-review',
       },
     ],
+  },
+  {
+    path: ROUTES.ADMIN_FINANCE_DASHBOARD,
+    name: ROUTE_NAMES.FINANCE_DASHBOARD,
+    element: 'FinancialDashboard',
+    icon: 'dashboard',
+  },
+  {
+    path: ROUTES.ADMIN_LIVE_ORDERS,
+    name: ROUTE_NAMES.LIVE_ORDERS,
+    element: 'LiveOrders',
+    icon: 'orders',
+  },
+  {
+    path: ROUTES.ADMIN_ORDER_HISTORY,
+    name: ROUTE_NAMES.ORDER_HISTORY,
+    element: 'OrderHistory',
+    icon: 'history',
+  },
+  {
+    path: ROUTES.ADMIN_TRANSACTIONS,
+    name: ROUTE_NAMES.TRANSACTIONS,
+    element: 'Transactions',
+    icon: 'transactions',
   },
 ];
 

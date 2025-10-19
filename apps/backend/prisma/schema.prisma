@@ -300,6 +300,7 @@ model ProductVariant {
 
 model Order {
   id                    String        @id @default(cuid())
+  orderNumber           String        @unique @default(cuid()) // Human-readable order number
   userId                String?
   guestUserInfo         String?       // JSON string for guest user info
   shippingAddress       String        // JSON string for shipping address
@@ -308,11 +309,18 @@ model Order {
   shippingCost          Float
   tax                   Float
   total                 Float
-  status                String        @default("pending") // pending, confirmed, processing, shipped, delivered, cancelled
-  paymentStatus         String        @default("pending") // pending, completed, failed, refunded
+  status                String        @default("pending") // pending, confirmed, processing, shipped, out_for_delivery, delivered, cancelled, refunded
+  paymentStatus         String        @default("pending") // pending, paid, failed, refunded
   stripePaymentIntentId String?
   notes                 String?
   isGuestOrder          Boolean       @default(false)     // Whether this is a guest order
+  estimatedDelivery     DateTime?     // Estimated delivery date
+  actualDelivery        DateTime?     // Actual delivery date
+  trackingNumber        String?       // Shipping tracking number
+  carrier               String?       // Shipping carrier (UPS, FedEx, etc.)
+  priority              String        @default("normal")  // normal, high, urgent
+  tags                  String[]      // Array of tags for categorization
+  internalNotes         String?       // Internal notes for admin use
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
   

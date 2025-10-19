@@ -7,6 +7,7 @@ import { seedCategories } from './seed/05-categories';
 import { seedSubcategories } from './seed/06-subcategories';
 import { seedProducts } from './seed/07-products';
 import { seedVariants } from './seed/08-variants';
+import { seedUsers } from './seed/09-users';
 
 const prisma = new PrismaClient();
 
@@ -47,6 +48,10 @@ async function main() {
     await seedVariants();
     console.log('');
 
+    // Step 9: Seed admin users (super-admin and admin)
+    await seedUsers();
+    console.log('');
+
     console.log('=====================================');
     console.log('🎉 Database seeding completed successfully!');
     console.log('');
@@ -62,8 +67,13 @@ async function main() {
     console.log(
       '   • 8000 total stock entries (2000 products + 6000 variants)'
     );
+    console.log('   • 2 admin users created (super-admin and admin)');
     console.log('');
     console.log('✅ Your database is now ready for use!');
+    console.log('');
+    console.log('🔐 Admin Login Credentials:');
+    console.log('   Super Admin: superadmin@exclusive.com / superadmin123');
+    console.log('   Admin: admin@exclusive.com / admin123');
   } catch (error) {
     console.error('❌ Error during seeding:', error);
     throw error;

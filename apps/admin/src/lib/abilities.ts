@@ -12,6 +12,8 @@ export type Subjects =
   | 'subcategories'
   | 'products'
   | 'orders'
+  | 'finance'
+  | 'transactions'
   | 'payments'
   | 'reviews'
   | 'favorites'

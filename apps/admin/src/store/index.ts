@@ -15,6 +15,7 @@ import rootReducer from './slices';
 import { categoryApi } from '@/apis/services/categoryApi';
 import { subcategoryApi } from '@/apis/services/subcategoryApi';
 import { productApi } from '@/apis/services/productApi';
+import { orderApi } from '@/apis/services/orderApi';
 
 // Persist config
 const persistConfig = {
@@ -38,6 +39,7 @@ const apiMiddleware = [
   categoryApi.middleware,
   subcategoryApi.middleware,
   productApi.middleware,
+  orderApi.middleware,
 ];
 
 export const store = configureStore({
