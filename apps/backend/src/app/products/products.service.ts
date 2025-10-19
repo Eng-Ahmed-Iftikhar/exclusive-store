@@ -52,8 +52,8 @@ export class ProductsService {
       }
     }
 
-    // Extract prices from the DTO
-    const { prices, ...productData } = createProductDto;
+    // Extract prices and stock from the DTO
+    const { prices, stock, ...productData } = createProductDto;
 
     const product = await this.prisma.product.create({
       data: productData,
@@ -94,18 +94,44 @@ export class ProductsService {
 
     // Create prices if provided
     if (prices && prices.length > 0) {
-      for (const priceData of prices) {
+      // Validate that at least one price is active
+      const activePriceCount = prices.filter((p) => p.isActive).length;
+      if (activePriceCount === 0) {
+        throw new BadRequestException('At least one price must be active');
+      }
+      if (activePriceCount > 1) {
+        throw new BadRequestException('Only one price can be active at a time');
+      }
+
+      // Ensure only one price is active
+      const activePriceIndex = prices.findIndex((p) => p.isActive);
+
+      for (let i = 0; i < prices.length; i++) {
+        const priceData = prices[i];
+        const isActive = i === activePriceIndex;
+
         await this.prisma.price.create({
           data: {
             productId: product.id,
             price: priceData.price,
             salePrice: priceData.salePrice,
             currency: priceData.currency || 'USD',
-            isActive: true,
+            isActive,
           },
         });
       }
     }
+
+    // Create stock entry for the product
+    await this.prisma.stock.create({
+      data: {
+        productId: product.id,
+        quantity: stock || 0,
+        reserved: 0,
+        minThreshold: 5,
+        isInStock: (stock || 0) > 0,
+      },
+    });
 
     // Log product creation activity
     if (userId) {
@@ -212,6 +238,100 @@ export class ProductsService {
     };
   }
 
+  async getFeaturedProducts(limit = 10): Promise<ProductResponseDto[]> {
+    const products = await this.prisma.product.findMany({
+      where: {
+        isActive: true,
+        isFeatured: true,
+      },
+      include: {
+        category: {
+          select: { id: true, name: true, slug: true },
+        },
+        subcategory: {
+          select: { id: true, name: true, slug: true },
+        },
+        prices: { where: { isActive: true } },
+        stock: { where: { isInStock: true } },
+        variants: {
+          include: {
+            prices: { where: { isActive: true } },
+            stock: { where: { isInStock: true } },
+            images: {
+              include: {
+                file: {
+                  select: {
+                    id: true,
+                    url: true,
+                    secureUrl: true,
+                    originalName: true,
+                    format: true,
+                    width: true,
+                    height: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        reviews: { where: { isApproved: true } },
+        ratings: true,
+      },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+      take: limit,
+    });
+
+    return products.map((p) => this.mapToProductResponse(p));
+  }
+
+  async getBestSellingProducts(limit = 10): Promise<ProductResponseDto[]> {
+    // For now, return featured products as best-selling products
+    // In a real implementation, you would query order items to calculate actual sales
+    const products = await this.prisma.product.findMany({
+      where: {
+        isActive: true,
+        isFeatured: true, // Use featured products as a proxy for best-selling
+      },
+      include: {
+        category: {
+          select: { id: true, name: true, slug: true },
+        },
+        subcategory: {
+          select: { id: true, name: true, slug: true },
+        },
+        prices: { where: { isActive: true } },
+        stock: { where: { isInStock: true } },
+        variants: {
+          include: {
+            prices: { where: { isActive: true } },
+            stock: { where: { isInStock: true } },
+            images: {
+              include: {
+                file: {
+                  select: {
+                    id: true,
+                    url: true,
+                    secureUrl: true,
+                    originalName: true,
+                    format: true,
+                    width: true,
+                    height: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        reviews: { where: { isApproved: true } },
+        ratings: true,
+      },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+      take: limit,
+    });
+
+    return products.map((p) => this.mapToProductResponse(p));
+  }
+
   async getProductById(id: string): Promise<ProductResponseDto> {
     const product = await this.prisma.product.findUnique({
       where: { id },
@@ -301,8 +421,8 @@ export class ProductsService {
       }
     }
 
-    // Extract prices from the DTO
-    const { prices, ...productData } = updateProductDto;
+    // Extract prices and stock from the DTO
+    const { prices, stock, ...productData } = updateProductDto;
 
     const product = await this.prisma.product.update({
       where: { id },
@@ -341,20 +461,62 @@ export class ProductsService {
 
     // Update prices if provided
     if (prices && prices.length > 0) {
+      // Validate that at least one price is active
+      const activePriceCount = prices.filter((p) => p.isActive).length;
+      if (activePriceCount === 0) {
+        throw new BadRequestException('At least one price must be active');
+      }
+      if (activePriceCount > 1) {
+        throw new BadRequestException('Only one price can be active at a time');
+      }
+
       // Delete existing prices for this product
       await this.prisma.price.deleteMany({
         where: { productId: id },
       });
 
+      // Ensure only one price is active
+      const activePriceIndex = prices.findIndex((p) => p.isActive);
+
       // Create new prices
-      for (const priceData of prices) {
+      for (let i = 0; i < prices.length; i++) {
+        const priceData = prices[i];
+        const isActive = i === activePriceIndex;
+
         await this.prisma.price.create({
           data: {
             productId: id,
             price: priceData.price,
             salePrice: priceData.salePrice,
             currency: priceData.currency || 'USD',
-            isActive: true,
+            isActive,
+          },
+        });
+      }
+    }
+
+    // Update stock if provided
+    if (stock !== undefined) {
+      const existingStock = await this.prisma.stock.findFirst({
+        where: { productId: id },
+      });
+
+      if (existingStock) {
+        await this.prisma.stock.update({
+          where: { id: existingStock.id },
+          data: {
+            quantity: stock,
+            isInStock: stock > 0,
+          },
+        });
+      } else {
+        await this.prisma.stock.create({
+          data: {
+            productId: id,
+            quantity: stock,
+            reserved: 0,
+            minThreshold: 5,
+            isInStock: stock > 0,
           },
         });
       }

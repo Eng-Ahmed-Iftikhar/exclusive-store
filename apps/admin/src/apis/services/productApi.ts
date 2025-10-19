@@ -15,7 +15,7 @@ export interface ProductVariant {
   createdAt: string;
   updatedAt: string;
   prices?: Price[];
-  stock?: Stock;
+  stock?: Stock[];
   images?: ProductImage[];
 }
 
@@ -24,7 +24,6 @@ export interface Product {
   name: string;
   description?: string;
   sku?: string;
-  stock: number;
   isActive: boolean;
   isFeatured: boolean;
   sortOrder: number;
@@ -45,6 +44,7 @@ export interface Product {
   variants?: ProductVariant[];
   images?: ProductImage[];
   prices?: Price[];
+  stock?: Stock[];
   reviews?: Review[];
   ratings?: Rating[];
   favorites?: Favorite[];
@@ -69,7 +69,8 @@ export interface Price {
 
 export interface Stock {
   id: string;
-  variantId: string;
+  productId?: string;
+  variantId?: string;
   quantity: number;
   reserved: number;
   minThreshold: number;
@@ -144,16 +145,17 @@ export interface CreateProductDto {
   name: string;
   description?: string;
   sku?: string;
-  stock?: number;
   isActive?: boolean;
   isFeatured?: boolean;
   sortOrder?: number;
   categoryId?: string;
   subcategoryId?: string;
+  stock?: number;
   prices?: {
     price: number;
     salePrice?: number;
     currency?: string;
+    isActive?: boolean;
   }[];
 }
 
@@ -161,16 +163,17 @@ export interface UpdateProductDto {
   name?: string;
   description?: string;
   sku?: string;
-  stock?: number;
   isActive?: boolean;
   isFeatured?: boolean;
   sortOrder?: number;
   categoryId?: string;
   subcategoryId?: string;
+  stock?: number;
   prices?: {
     price: number;
     salePrice?: number;
     currency?: string;
+    isActive?: boolean;
   }[];
 }
 

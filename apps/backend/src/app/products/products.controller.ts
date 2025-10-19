@@ -157,6 +157,52 @@ export class ProductsController {
     );
   }
 
+  @Get('featured')
+  @ApiOperation({
+    summary: 'Get featured products',
+    description: 'Retrieve all featured products',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Maximum number of featured products to return',
+    example: 10,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Featured products retrieved successfully',
+    type: [ProductResponseDto],
+  })
+  async getFeaturedProducts(
+    @Query('limit') limit?: string
+  ): Promise<ProductResponseDto[]> {
+    return this.productsService.getFeaturedProducts(parseInt(limit || '10'));
+  }
+
+  @Get('best-selling')
+  @ApiOperation({
+    summary: 'Get best-selling products',
+    description: 'Retrieve products ordered by sales volume',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Maximum number of best-selling products to return',
+    example: 10,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Best-selling products retrieved successfully',
+    type: [ProductResponseDto],
+  })
+  async getBestSellingProducts(
+    @Query('limit') limit?: string
+  ): Promise<ProductResponseDto[]> {
+    return this.productsService.getBestSellingProducts(parseInt(limit || '10'));
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get product by ID',

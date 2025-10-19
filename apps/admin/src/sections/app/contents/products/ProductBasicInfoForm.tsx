@@ -12,14 +12,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Autocomplete, AutocompleteField } from '@/components/ui/autocomplete';
 import { useProductContext } from '@/contexts/ProductContext';
 import { ArrowRightIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import React, { useMemo, useState, useEffect } from 'react';
@@ -31,28 +25,33 @@ export const basicInfoFormSchema = z.object({
   name: z.string().min(1, { message: 'Product name is required' }),
   description: z.string(),
   sku: z.string(),
-  stock: z.number().min(0),
   categoryId: z.string(),
   subcategoryId: z.string(),
   isFeatured: z.boolean(),
   sortOrder: z.number(),
+  stock: z.number().min(0, { message: 'Stock must be 0 or greater' }),
 });
 
 interface ProductBasicInfoFormData {
   name: string;
   description: string;
   sku: string;
-  stock: number;
   categoryId: string;
   subcategoryId: string;
   isFeatured: boolean;
   sortOrder: number;
+  stock: number;
 }
 
 interface ProductBasicInfoFormProps {
   onSubmit: (
     data: ProductBasicInfoFormData & {
-      prices: { price: number; salePrice?: number; currency: string }[];
+      prices: {
+        price: number;
+        salePrice?: number;
+        currency: string;
+        isActive?: boolean;
+      }[];
     }
   ) => Promise<void>;
   onCancel: () => void;
@@ -74,11 +73,11 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
       name: productData?.name || '',
       description: productData?.description || '',
       sku: productData?.sku || '',
-      stock: productData?.stock || 0,
       categoryId: productData?.categoryId || '',
       subcategoryId: productData?.subcategoryId || '',
       isFeatured: productData?.isFeatured || false,
       sortOrder: productData?.sortOrder || 0,
+      stock: productData?.stock?.[0]?.quantity || 0,
     }),
     [productData]
   );
@@ -90,11 +89,11 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
           name: productData.name || '',
           description: productData.description || '',
           sku: productData.sku || '',
-          stock: productData.stock || 0,
           categoryId: productData.categoryId || '',
           subcategoryId: productData.subcategoryId || '',
           isFeatured: productData.isFeatured || false,
           sortOrder: productData.sortOrder || 0,
+          stock: productData.stock?.[0]?.quantity || 0,
         }
       : undefined,
     resolver: zodResolver(basicInfoFormSchema),
@@ -102,8 +101,13 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
 
   const categoryId = form.watch('categoryId');
   const [prices, setPrices] = useState<
-    { price: number; salePrice?: number; currency: string }[]
-  >([{ price: 0, currency: 'USD' }]);
+    {
+      price: number;
+      salePrice?: number;
+      currency: string;
+      isActive?: boolean;
+    }[]
+  >([{ price: 0, currency: 'USD', isActive: true }]);
 
   // Fetch subcategories when a category is selected
   const { data: subcategories } = useGetSubcategoriesByCategoryQuery(
@@ -115,22 +119,54 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
 
   // Price management functions
   const addPrice = () => {
-    setPrices([...prices, { price: 0, currency: 'USD' }]);
+    setPrices([...prices, { price: 0, currency: 'USD', isActive: false }]);
   };
 
   const removePrice = (index: number) => {
     if (prices.length > 1) {
-      setPrices(prices.filter((_, i) => i !== index));
+      // Prevent removing the last active price
+      const activePriceCount = prices.filter((p) => p.isActive).length;
+      if (prices[index].isActive && activePriceCount === 1) {
+        alert(
+          'Cannot remove the last active price. At least one price must be active.'
+        );
+        return;
+      }
+
+      const updatedPrices = prices.filter((_, i) => i !== index);
+
+      // If we removed the active price, set the first remaining price as active
+      if (prices[index].isActive && updatedPrices.length > 0) {
+        updatedPrices[0].isActive = true;
+      }
+
+      setPrices(updatedPrices);
     }
   };
 
   const updatePrice = (
     index: number,
-    field: 'price' | 'salePrice' | 'currency',
-    value: string | number | undefined
+    field: 'price' | 'salePrice' | 'currency' | 'isActive',
+    value: string | number | boolean | undefined
   ) => {
     const updatedPrices = [...prices];
-    updatedPrices[index] = { ...updatedPrices[index], [field]: value };
+
+    if (field === 'isActive' && value === true) {
+      // If setting this price as active, deactivate all others
+      updatedPrices.forEach((price, i) => {
+        price.isActive = i === index;
+      });
+    } else if (field === 'isActive' && value === false) {
+      // Prevent deactivating the last active price
+      const activePriceCount = updatedPrices.filter((p) => p.isActive).length;
+      if (activePriceCount <= 1) {
+        return; // Don't allow deactivating the last active price
+      }
+      updatedPrices[index] = { ...updatedPrices[index], [field]: value };
+    } else {
+      updatedPrices[index] = { ...updatedPrices[index], [field]: value };
+    }
+
     setPrices(updatedPrices);
   };
 
@@ -142,20 +178,26 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
           price: price.price,
           salePrice: price.salePrice,
           currency: price.currency,
+          isActive: price.isActive,
         }))
       );
     } else {
-      setPrices([{ price: 0, currency: 'USD' }]);
+      setPrices([{ price: 0, currency: 'USD', isActive: true }]);
     }
   }, [productData]);
 
-  // Create a key for forcing re-render of Select components
-  const formKey = productData?.id || 'new';
-
   const handleFormSubmit = async (data: ProductBasicInfoFormData) => {
+    // Validate that at least one price is active
+    const activePriceCount = prices.filter((p) => p.isActive).length;
+    if (prices.length > 0 && activePriceCount === 0) {
+      alert('At least one price must be active');
+      return;
+    }
+
     const formData = {
       ...data,
       prices: prices,
+      stock: data.stock, // Include stock in the form data
     };
     await onSubmit(formData);
   };
@@ -270,7 +312,7 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
           {prices.map((price, index) => (
             <div
               key={index}
-              className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
+              className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
             >
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -313,21 +355,51 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Currency
                 </label>
-                <Select
+                <Autocomplete
                   value={price.currency}
                   onValueChange={(value) =>
                     updatePrice(index, 'currency', value)
                   }
+                  options={[
+                    { value: 'USD', label: 'USD' },
+                    { value: 'EUR', label: 'EUR' },
+                    { value: 'GBP', label: 'GBP' },
+                  ]}
+                  placeholder="Select Currency"
+                  searchPlaceholder="Search currencies..."
+                  emptyMessage="No currency found."
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id={`active-${index}`}
+                  checked={price.isActive || false}
+                  disabled={
+                    price.isActive &&
+                    prices.filter((p) => p.isActive).length === 1
+                  }
+                  onCheckedChange={(checked) =>
+                    updatePrice(index, 'isActive', checked === true)
+                  }
+                />
+                <label
+                  htmlFor={`active-${index}`}
+                  className={`text-sm font-medium ${
+                    price.isActive &&
+                    prices.filter((p) => p.isActive).length === 1
+                      ? 'text-gray-400 dark:text-gray-500'
+                      : 'text-gray-700 dark:text-gray-300'
+                  }`}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                    <SelectItem value="GBP">GBP</SelectItem>
-                  </SelectContent>
-                </Select>
+                  Active Price
+                  {price.isActive &&
+                    prices.filter((p) => p.isActive).length === 1 && (
+                      <span className="text-xs text-gray-500 ml-1">
+                        (Required)
+                      </span>
+                    )}
+                </label>
               </div>
 
               <div className="flex items-end">
@@ -337,7 +409,16 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={() => removePrice(index)}
-                    className="text-red-600 hover:text-red-700"
+                    disabled={
+                      price.isActive &&
+                      prices.filter((p) => p.isActive).length === 1
+                    }
+                    className={`${
+                      price.isActive &&
+                      prices.filter((p) => p.isActive).length === 1
+                        ? 'text-gray-400 cursor-not-allowed'
+                        : 'text-red-600 hover:text-red-700'
+                    }`}
                   >
                     Remove
                   </Button>
@@ -355,28 +436,24 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                <Select
-                  key={`category-${formKey}`}
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    form.setValue('subcategoryId', '');
-                  }}
-                  value={field.value || undefined}
-                  defaultValue={field.value || undefined}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Category" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {categories?.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <AutocompleteField
+                    field={field}
+                    options={
+                      categories?.map((category) => ({
+                        value: category.id,
+                        label: category.name,
+                      })) || []
+                    }
+                    placeholder="Select Category"
+                    searchPlaceholder="Search categories..."
+                    emptyMessage="No categories found."
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      form.setValue('subcategoryId', '');
+                    }}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -388,26 +465,21 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subcategory</FormLabel>
-                <Select
-                  key={`subcategory-${formKey}-${categoryId}`}
-                  onValueChange={field.onChange}
-                  value={field.value || undefined}
-                  defaultValue={field.value || undefined}
-                  disabled={!categoryId}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Subcategory" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {subcategories?.map((sub) => (
-                      <SelectItem key={sub.id} value={sub.id}>
-                        {sub.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <AutocompleteField
+                    field={field}
+                    options={
+                      subcategories?.map((sub) => ({
+                        value: sub.id,
+                        label: sub.name,
+                      })) || []
+                    }
+                    placeholder="Select Subcategory"
+                    searchPlaceholder="Search subcategories..."
+                    emptyMessage="No subcategories found."
+                    disabled={!categoryId}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

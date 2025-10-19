@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import {
@@ -330,17 +330,32 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                   </td>
                   <td className="py-3 px-4">
                     <div className="text-sm">
-                      {product.price ? (
+                      {product.prices && product.prices.length > 0 ? (
                         <div>
-                          <span className="font-medium text-gray-900 dark:text-white">
-                            {formatCurrency(product.price)}
-                          </span>
-                          {product.salePrice &&
-                            product.salePrice < product.price && (
-                              <div className="text-xs text-red-600 dark:text-red-400">
-                                Sale: {formatCurrency(product.s)}
-                              </div>
-                            )}
+                          {(() => {
+                            const activePrice =
+                              product.prices.find((p) => p.isActive) ||
+                              product.prices[0];
+                            return (
+                              <>
+                                <span className="font-medium text-gray-900 dark:text-white">
+                                  {formatCurrency(activePrice.price)}
+                                </span>
+                                {activePrice.salePrice &&
+                                  activePrice.salePrice < activePrice.price && (
+                                    <div className="text-xs text-red-600 dark:text-red-400">
+                                      Sale:{' '}
+                                      {formatCurrency(activePrice.salePrice)}
+                                    </div>
+                                  )}
+                                {product.prices.length > 1 && (
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    {product.prices.length} prices
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       ) : (
                         <span className="text-gray-500 dark:text-gray-400">
@@ -351,22 +366,35 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                   </td>
                   <td className="py-3 px-4">
                     <div className="text-sm">
-                      {product.stock ? (
+                      {product.stock && product.stock.length > 0 ? (
                         <div>
-                          <span
-                            className={`font-medium ${
-                              product.stock.isInStock
-                                ? 'text-green-600 dark:text-green-400'
-                                : 'text-red-600 dark:text-red-400'
-                            }`}
-                          >
-                            {product.stock.quantity}
-                          </span>
-                          {product.stock.reserved > 0 && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              Reserved: {product.stock.reserved}
-                            </div>
-                          )}
+                          {(() => {
+                            const productStock = product.stock[0]; // Get the first stock entry for the product
+                            return (
+                              <>
+                                <span
+                                  className={`font-medium ${
+                                    productStock.isInStock
+                                      ? 'text-green-600 dark:text-green-400'
+                                      : 'text-red-600 dark:text-red-400'
+                                  }`}
+                                >
+                                  {productStock.quantity}
+                                </span>
+                                {productStock.reserved > 0 && (
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    Reserved: {productStock.reserved}
+                                  </div>
+                                )}
+                                {productStock.quantity <=
+                                  productStock.minThreshold && (
+                                  <div className="text-xs text-orange-600 dark:text-orange-400">
+                                    Low stock
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       ) : (
                         <span className="text-gray-500 dark:text-gray-400">

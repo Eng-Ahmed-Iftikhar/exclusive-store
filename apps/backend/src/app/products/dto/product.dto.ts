@@ -230,7 +230,18 @@ export class CreateProductDto {
     price: number;
     salePrice?: number;
     currency?: string;
+    isActive?: boolean;
   }[];
+
+  @ApiProperty({
+    description: 'Stock quantity for the product',
+    example: 100,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  stock?: number;
 
   @ApiProperty({
     description: 'Whether the product is active',
@@ -316,7 +327,18 @@ export class UpdateProductDto {
     price: number;
     salePrice?: number;
     currency?: string;
+    isActive?: boolean;
   }[];
+
+  @ApiProperty({
+    description: 'Stock quantity for the product',
+    example: 100,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  stock?: number;
 
   @ApiProperty({
     description: 'Whether the product is active',
