@@ -70,6 +70,7 @@ import { computed } from 'vue';
 
 interface ProductModalActionsProps {
   product: any;
+  selectedVariant: any;
   quantity: number;
   isInStock: boolean;
   isFavorited: boolean;
@@ -86,13 +87,18 @@ const emit = defineEmits<{
 
 // Computed properties
 const maxQuantity = computed(() => {
-  // Get stock from default variant
-  if (props.product.variants && props.product.variants.length > 0) {
-    const defaultVariant = props.product.variants.find((v: any) => v.isDefault) || props.product.variants[0];
-    const stock = defaultVariant.stock;
-    const availableStock = stock ? stock.quantity : 0;
+  // If we have a selected variant, use its stock
+  if (props.selectedVariant && props.selectedVariant.stock && props.selectedVariant.stock.length > 0) {
+    const availableStock = props.selectedVariant.stock[0].quantity;
     return Math.min(availableStock, 10); // Max 10 items per order
   }
+  
+  // If no variant selected, use product stock
+  if (props.product.stock && props.product.stock.length > 0) {
+    const availableStock = props.product.stock[0].quantity;
+    return Math.min(availableStock, 10); // Max 10 items per order
+  }
+  
   return 0;
 });
 

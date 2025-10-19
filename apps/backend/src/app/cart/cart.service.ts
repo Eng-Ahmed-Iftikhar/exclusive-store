@@ -59,6 +59,7 @@ export class CartService {
               include: {
                 category: true,
                 subcategory: true,
+                prices: { where: { isActive: true } },
                 images: {
                   include: { file: true },
                 },
@@ -119,6 +120,7 @@ export class CartService {
               include: {
                 category: true,
                 subcategory: true,
+                prices: { where: { isActive: true } },
                 images: {
                   include: { file: true },
                 },
@@ -154,6 +156,7 @@ export class CartService {
               include: {
                 category: true,
                 subcategory: true,
+                prices: { where: { isActive: true } },
                 images: {
                   include: { file: true },
                 },
@@ -182,6 +185,9 @@ export class CartService {
     // Check if product exists
     const product = await this.prisma.product.findUnique({
       where: { id: addToCartDto.productId },
+      include: {
+        prices: { where: { isActive: true } },
+      },
     });
 
     if (!product) {
@@ -192,14 +198,17 @@ export class CartService {
     let variant = null;
 
     // Add product base price (use sale price if available, otherwise regular price)
-    if (
-      product.salePrice &&
-      Number(product.salePrice) > 0 &&
-      Number(product.salePrice) < Number(product.price)
-    ) {
-      totalPrice += Number(product.salePrice);
-    } else if (product.price && Number(product.price) > 0) {
-      totalPrice += Number(product.price);
+    if (product.prices && product.prices.length > 0) {
+      const activePrice = product.prices[0]; // Use the first active price
+      if (
+        activePrice.salePrice &&
+        Number(activePrice.salePrice) > 0 &&
+        Number(activePrice.salePrice) < Number(activePrice.price)
+      ) {
+        totalPrice += Number(activePrice.salePrice);
+      } else if (activePrice.price && Number(activePrice.price) > 0) {
+        totalPrice += Number(activePrice.price);
+      }
     }
 
     // If variant is provided, add variant price
@@ -345,20 +354,24 @@ export class CartService {
         // Get the current product to check for price changes
         const product = await this.prisma.product.findUnique({
           where: { id: cartItem.productId },
+          include: {
+            prices: { where: { isActive: true } },
+          },
         });
 
         let newPrice: Decimal = cartItem.price; // Keep existing price as fallback
 
-        if (product) {
+        if (product && product.prices && product.prices.length > 0) {
           // Calculate new price based on product's current price
+          const activePrice = product.prices[0]; // Use the first active price
           if (
-            product.salePrice &&
-            Number(product.salePrice) > 0 &&
-            Number(product.salePrice) < Number(product.price)
+            activePrice.salePrice &&
+            Number(activePrice.salePrice) > 0 &&
+            Number(activePrice.salePrice) < Number(activePrice.price)
           ) {
-            newPrice = new Decimal(product.salePrice);
-          } else if (product.price && Number(product.price) > 0) {
-            newPrice = new Decimal(product.price);
+            newPrice = new Decimal(activePrice.salePrice);
+          } else if (activePrice.price && Number(activePrice.price) > 0) {
+            newPrice = new Decimal(activePrice.price);
           }
         }
 
@@ -729,18 +742,22 @@ export class CartService {
         // Handle product-only cart items
         const product = await this.prisma.product.findUnique({
           where: { id: cartItem.productId },
+          include: {
+            prices: { where: { isActive: true } },
+          },
         });
 
-        if (product) {
+        if (product && product.prices && product.prices.length > 0) {
           // Calculate new price based on product's current price
+          const activePrice = product.prices[0]; // Use the first active price
           if (
-            product.salePrice &&
-            Number(product.salePrice) > 0 &&
-            Number(product.salePrice) < Number(product.price)
+            activePrice.salePrice &&
+            Number(activePrice.salePrice) > 0 &&
+            Number(activePrice.salePrice) < Number(activePrice.price)
           ) {
-            newPrice = new Decimal(product.salePrice);
-          } else if (product.price && Number(product.price) > 0) {
-            newPrice = new Decimal(product.price);
+            newPrice = new Decimal(activePrice.salePrice);
+          } else if (activePrice.price && Number(activePrice.price) > 0) {
+            newPrice = new Decimal(activePrice.price);
           }
         }
       }

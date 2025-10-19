@@ -22,7 +22,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useProductContext } from '@/contexts/ProductContext';
 import { ArrowRightIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,8 +31,7 @@ export const basicInfoFormSchema = z.object({
   name: z.string().min(1, { message: 'Product name is required' }),
   description: z.string(),
   sku: z.string(),
-  price: z.number().min(0).optional(),
-  salePrice: z.number().min(0).optional(),
+  stock: z.number().min(0),
   categoryId: z.string(),
   subcategoryId: z.string(),
   isFeatured: z.boolean(),
@@ -43,8 +42,7 @@ interface ProductBasicInfoFormData {
   name: string;
   description: string;
   sku: string;
-  price?: number;
-  salePrice?: number;
+  stock: number;
   categoryId: string;
   subcategoryId: string;
   isFeatured: boolean;
@@ -52,7 +50,11 @@ interface ProductBasicInfoFormData {
 }
 
 interface ProductBasicInfoFormProps {
-  onSubmit: (data: ProductBasicInfoFormData) => Promise<void>;
+  onSubmit: (
+    data: ProductBasicInfoFormData & {
+      prices: { price: number; salePrice?: number; currency: string }[];
+    }
+  ) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
 }
@@ -72,8 +74,7 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
       name: productData?.name || '',
       description: productData?.description || '',
       sku: productData?.sku || '',
-      price: productData?.price || undefined,
-      salePrice: productData?.salePrice || undefined,
+      stock: productData?.stock || 0,
       categoryId: productData?.categoryId || '',
       subcategoryId: productData?.subcategoryId || '',
       isFeatured: productData?.isFeatured || false,
@@ -89,8 +90,7 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
           name: productData.name || '',
           description: productData.description || '',
           sku: productData.sku || '',
-          price: productData.price || undefined,
-          salePrice: productData.salePrice || undefined,
+          stock: productData.stock || 0,
           categoryId: productData.categoryId || '',
           subcategoryId: productData.subcategoryId || '',
           isFeatured: productData.isFeatured || false,
@@ -101,6 +101,9 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
   });
 
   const categoryId = form.watch('categoryId');
+  const [prices, setPrices] = useState<
+    { price: number; salePrice?: number; currency: string }[]
+  >([{ price: 0, currency: 'USD' }]);
 
   // Fetch subcategories when a category is selected
   const { data: subcategories } = useGetSubcategoriesByCategoryQuery(
@@ -110,11 +113,51 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
     }
   );
 
+  // Price management functions
+  const addPrice = () => {
+    setPrices([...prices, { price: 0, currency: 'USD' }]);
+  };
+
+  const removePrice = (index: number) => {
+    if (prices.length > 1) {
+      setPrices(prices.filter((_, i) => i !== index));
+    }
+  };
+
+  const updatePrice = (
+    index: number,
+    field: 'price' | 'salePrice' | 'currency',
+    value: string | number | undefined
+  ) => {
+    const updatedPrices = [...prices];
+    updatedPrices[index] = { ...updatedPrices[index], [field]: value };
+    setPrices(updatedPrices);
+  };
+
+  // Initialize prices from product data
+  useEffect(() => {
+    if (productData?.prices && productData.prices.length > 0) {
+      setPrices(
+        productData.prices.map((price) => ({
+          price: price.price,
+          salePrice: price.salePrice,
+          currency: price.currency,
+        }))
+      );
+    } else {
+      setPrices([{ price: 0, currency: 'USD' }]);
+    }
+  }, [productData]);
+
   // Create a key for forcing re-render of Select components
   const formKey = productData?.id || 'new';
 
   const handleFormSubmit = async (data: ProductBasicInfoFormData) => {
-    await onSubmit(data);
+    const formData = {
+      ...data,
+      prices: prices,
+    };
+    await onSubmit(formData);
   };
 
   return (
@@ -182,59 +225,126 @@ const ProductBasicInfoForm: React.FC<ProductBasicInfoFormProps> = ({
           )}
         />
 
-        {/* Price & Sale Price */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Base Product Price</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="29.99"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(parseFloat(e.target.value) || undefined)
-                    }
-                  />
-                </FormControl>
-                <FormDescription>
-                  Base price for the product (variants can override)
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        {/* Stock */}
+        <FormField
+          control={form.control}
+          name="stock"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Stock Quantity</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="100"
+                  {...field}
+                  onChange={(e) =>
+                    field.onChange(parseInt(e.target.value) || 0)
+                  }
+                />
+              </FormControl>
+              <FormDescription>
+                Available stock quantity for this product
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="salePrice"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Sale Price</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="19.99"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(parseFloat(e.target.value) || undefined)
-                    }
-                  />
-                </FormControl>
-                <FormDescription>
-                  Optional sale price (leave empty for no sale)
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        {/* Pricing Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+              Product Pricing
+            </h3>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addPrice}
+            >
+              Add Price
+            </Button>
+          </div>
+
+          {prices.map((price, index) => (
+            <div
+              key={index}
+              className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
+            >
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Price
+                </label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="29.99"
+                  value={price.price}
+                  onChange={(e) =>
+                    updatePrice(index, 'price', parseFloat(e.target.value) || 0)
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Sale Price
+                </label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="19.99"
+                  value={price.salePrice || ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    updatePrice(
+                      index,
+                      'salePrice',
+                      value ? parseFloat(value) : undefined
+                    );
+                  }}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Currency
+                </label>
+                <Select
+                  value={price.currency}
+                  onValueChange={(value) =>
+                    updatePrice(index, 'currency', value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="GBP">GBP</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-end">
+                {prices.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removePrice(index)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Category & Subcategory */}

@@ -24,6 +24,7 @@ export interface Product {
   name: string;
   description?: string;
   sku?: string;
+  stock: number;
   isActive: boolean;
   isFeatured: boolean;
   sortOrder: number;
@@ -43,6 +44,7 @@ export interface Product {
   };
   variants?: ProductVariant[];
   images?: ProductImage[];
+  prices?: Price[];
   reviews?: Review[];
   ratings?: Rating[];
   favorites?: Favorite[];
@@ -53,7 +55,8 @@ export interface Product {
 
 export interface Price {
   id: string;
-  variantId: string;
+  productId?: string;
+  variantId?: string;
   price: number;
   salePrice?: number;
   currency: string;
@@ -141,22 +144,34 @@ export interface CreateProductDto {
   name: string;
   description?: string;
   sku?: string;
+  stock?: number;
   isActive?: boolean;
   isFeatured?: boolean;
   sortOrder?: number;
   categoryId?: string;
   subcategoryId?: string;
+  prices?: {
+    price: number;
+    salePrice?: number;
+    currency?: string;
+  }[];
 }
 
 export interface UpdateProductDto {
   name?: string;
   description?: string;
   sku?: string;
+  stock?: number;
   isActive?: boolean;
   isFeatured?: boolean;
   sortOrder?: number;
   categoryId?: string;
   subcategoryId?: string;
+  prices?: {
+    price: number;
+    salePrice?: number;
+    currency?: string;
+  }[];
 }
 
 export interface ProductQueryDto {
@@ -182,6 +197,26 @@ export interface ProductListResponse {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+export interface CreatePriceDto {
+  productId?: string;
+  variantId?: string;
+  price: number;
+  salePrice?: number;
+  currency?: string;
+  isActive?: boolean;
+  validFrom?: Date;
+  validTo?: Date;
+}
+
+export interface UpdatePriceDto {
+  price?: number;
+  salePrice?: number;
+  currency?: string;
+  isActive?: boolean;
+  validFrom?: Date;
+  validTo?: Date;
 }
 
 // ===== API ENDPOINTS =====
@@ -636,6 +671,30 @@ export const productApi = createApi({
       query: () => '/products/favorites',
       providesTags: ['Product'],
     }),
+
+    // Price management endpoints
+    // Get prices by product ID
+    getPricesByProduct: builder.query<Price[], string>({
+      query: (productId) => `/products/${productId}/prices`,
+      providesTags: (result, error, productId) => [
+        { type: 'Product', id: productId },
+      ],
+    }),
+
+    // Create price for product
+    createProductPrice: builder.mutation<
+      Price,
+      { productId: string; data: CreatePriceDto }
+    >({
+      query: ({ productId, data }) => ({
+        url: `/products/${productId}/prices`,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { productId }) => [
+        { type: 'Product', id: productId },
+      ],
+    }),
   }),
 });
 
@@ -661,6 +720,8 @@ export const {
   useCreatePriceMutation,
   useUpdatePriceMutation,
   useDeletePriceMutation,
+  useGetPricesByProductQuery,
+  useCreateProductPriceMutation,
   useCreateStockMutation,
   useUpdateStockMutation,
   useDeleteStockMutation,

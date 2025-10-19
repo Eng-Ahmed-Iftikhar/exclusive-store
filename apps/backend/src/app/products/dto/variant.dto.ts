@@ -80,8 +80,11 @@ export class StockResponseDto {
   @ApiProperty({ description: 'Stock ID' })
   id!: string;
 
-  @ApiProperty({ description: 'Variant ID' })
-  variantId!: string;
+  @ApiProperty({ description: 'Product ID', required: false })
+  productId?: string;
+
+  @ApiProperty({ description: 'Variant ID', required: false })
+  variantId?: string;
 
   @ApiProperty({ description: 'Available quantity' })
   quantity!: number;
@@ -306,8 +309,11 @@ export class PriceResponseDto {
   @ApiProperty({ description: 'Price ID' })
   id!: string;
 
-  @ApiProperty({ description: 'Variant ID' })
-  variantId!: string;
+  @ApiProperty({ description: 'Product ID', required: false })
+  productId?: string;
+
+  @ApiProperty({ description: 'Variant ID', required: false })
+  variantId?: string;
 
   @ApiProperty({ description: 'Regular price' })
   price!: number;

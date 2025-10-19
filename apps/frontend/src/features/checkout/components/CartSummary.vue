@@ -121,13 +121,18 @@ const getVariantImage = (item: ICart.CartItem): string => {
 }
 
 const getProductOriginalPrice = (item: ICart.CartItem): number => {
-  // Show the product's original price (sale price if available, otherwise regular price)
-  const product = item.product
-  if (product.salePrice) {
-    return parseFloat(product.salePrice)
-  }
-  if (product.price) {
-    return parseFloat(product.price)
+  // Get product pricing from the prices array
+  const product = item.product as any
+  if (product?.prices && product.prices.length > 0) {
+    const activePrice = product.prices.find((price: any) => price.isActive)
+    if (activePrice) {
+      // Use sale price if available and valid, otherwise use regular price
+      if (activePrice.salePrice && Number(activePrice.salePrice) > 0 && Number(activePrice.salePrice) < Number(activePrice.price)) {
+        return Number(activePrice.salePrice)
+      }
+      return Number(activePrice.price)
+    }
+    return Number(product.prices[0].price)
   }
   return 0
 }

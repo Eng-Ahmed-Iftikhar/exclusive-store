@@ -74,14 +74,26 @@ const selectedVariant = computed(() => {
 });
 
 const isInStock = computed(() => {
+  // If variant is selected, check variant stock
+  if (selectedVariantId.value && selectedVariant.value?.stock && selectedVariant.value.stock.length > 0) {
+    return selectedVariant.value.stock[0].quantity > 0;
+  }
+  
   // If no variant selected, check if any variant is in stock
-  if (!selectedVariantId.value) {
-    return props.product.variants?.some((v: any) => v.stock?.quantity > 0) || false;
+  if (!selectedVariantId.value && props.product.variants && props.product.variants.length > 0) {
+    return props.product.variants.some((v: any) => {
+      if (v.stock && v.stock.length > 0) {
+        return v.stock[0].quantity > 0;
+      }
+      return false;
+    });
   }
-  // Check selected variant stock
-  if (selectedVariant.value?.stock) {
-    return selectedVariant.value.stock.quantity > 0;
+  
+  // Check product-level stock if no variants
+  if (props.product.stock && props.product.stock.length > 0) {
+    return props.product.stock[0].quantity > 0;
   }
+  
   return false;
 });
 
@@ -119,17 +131,29 @@ const handleAddToCart = async () => {
   try {
     addToCartLoading.value = true;
 
+    // Stock validation before adding to cart
+    const availableStock = getAvailableStock();
+    if (quantity.value > availableStock) {
+      console.error(`Cannot add ${quantity.value} items. Only ${availableStock} available in stock.`);
+      // You could show a toast notification here
+      return;
+    }
+
     if (isInCart.value) {
       // Update existing cart item
       const cartItem = cartStore.getCartItem(props.product.id, selectedVariantId.value || undefined);
       if (cartItem) {
-        await cartStore.updateCartItemQuantity(cartItem.id, quantity.value);
+        const newTotalQuantity = cartItem.quantity + quantity.value;
+        if (newTotalQuantity > availableStock) {
+          console.error(`Cannot update cart. Total quantity (${newTotalQuantity}) exceeds available stock (${availableStock}).`);
+          return;
+        }
+        await cartStore.updateCartItemQuantity(cartItem.id, newTotalQuantity);
       }
     } else {
       // Add product or variant to cart
       await cartStore.addToCart(props.product.id, selectedVariantId.value || undefined, quantity.value);
     }
-
 
     // Close modal after adding to cart
     closeModal();
@@ -138,6 +162,21 @@ const handleAddToCart = async () => {
   } finally {
     addToCartLoading.value = false;
   }
+};
+
+// Helper function to get available stock
+const getAvailableStock = () => {
+  // If variant is selected, return variant stock
+  if (selectedVariantId.value && selectedVariant.value?.stock && selectedVariant.value.stock.length > 0) {
+    return selectedVariant.value.stock[0].quantity;
+  }
+  
+  // If no variant selected, return product stock
+  if (props.product.stock && props.product.stock.length > 0) {
+    return props.product.stock[0].quantity;
+  }
+  
+  return 0;
 };
 
 const handleFavoriteClick = async () => {

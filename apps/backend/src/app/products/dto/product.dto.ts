@@ -9,6 +9,188 @@ import {
   Min,
 } from 'class-validator';
 
+// ==================== PRICE DTOs ====================
+
+export class CreatePriceDto {
+  @ApiProperty({
+    description: 'Price amount',
+    example: 29.99,
+  })
+  @IsNumber()
+  @Min(0)
+  price!: number;
+
+  @ApiProperty({
+    description: 'Sale price amount',
+    example: 19.99,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  salePrice?: number;
+
+  @ApiProperty({
+    description: 'Currency code',
+    example: 'USD',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  currency?: string;
+
+  @ApiProperty({
+    description: 'Whether the price is active',
+    example: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+}
+
+export class UpdatePriceDto {
+  @ApiProperty({
+    description: 'Price amount',
+    example: 29.99,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  price?: number;
+
+  @ApiProperty({
+    description: 'Sale price amount',
+    example: 19.99,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  salePrice?: number;
+
+  @ApiProperty({
+    description: 'Currency code',
+    example: 'USD',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  currency?: string;
+
+  @ApiProperty({
+    description: 'Whether the price is active',
+    example: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+}
+
+// ==================== STOCK DTOs ====================
+
+export class CreateStockDto {
+  @ApiProperty({
+    description: 'Stock quantity',
+    example: 100,
+  })
+  @IsInt()
+  @Min(0)
+  quantity!: number;
+
+  @ApiProperty({
+    description: 'Reserved quantity',
+    example: 0,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  reserved?: number;
+
+  @ApiProperty({
+    description: 'Minimum threshold',
+    example: 5,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  minThreshold?: number;
+
+  @ApiProperty({
+    description: 'Maximum threshold',
+    example: 200,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  maxThreshold?: number;
+
+  @ApiProperty({
+    description: 'Whether the item is in stock',
+    example: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isInStock?: boolean;
+}
+
+export class UpdateStockDto {
+  @ApiProperty({
+    description: 'Stock quantity',
+    example: 100,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  quantity?: number;
+
+  @ApiProperty({
+    description: 'Reserved quantity',
+    example: 0,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  reserved?: number;
+
+  @ApiProperty({
+    description: 'Minimum threshold',
+    example: 5,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  minThreshold?: number;
+
+  @ApiProperty({
+    description: 'Maximum threshold',
+    example: 200,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  maxThreshold?: number;
+
+  @ApiProperty({
+    description: 'Whether the item is in stock',
+    example: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isInStock?: boolean;
+}
+
 // ==================== PRODUCT DTOs ====================
 
 export class CreateProductDto {
@@ -39,33 +221,16 @@ export class CreateProductDto {
   sku?: string;
 
   @ApiProperty({
-    description: 'Base product price',
-    example: 29.99,
+    description: 'Product prices array',
+    type: 'array',
     required: false,
   })
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  price?: number;
-
-  @ApiProperty({
-    description: 'Base product sale price',
-    example: 19.99,
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  salePrice?: number;
-
-  @ApiProperty({
-    description: 'Currency code',
-    example: 'USD',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  currency?: string;
+  prices?: {
+    price: number;
+    salePrice?: number;
+    currency?: string;
+  }[];
 
   @ApiProperty({
     description: 'Whether the product is active',
@@ -142,33 +307,16 @@ export class UpdateProductDto {
   sku?: string;
 
   @ApiProperty({
-    description: 'Base product price',
-    example: 29.99,
+    description: 'Product prices array',
+    type: 'array',
     required: false,
   })
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  price?: number;
-
-  @ApiProperty({
-    description: 'Base product sale price',
-    example: 19.99,
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  salePrice?: number;
-
-  @ApiProperty({
-    description: 'Currency code',
-    example: 'USD',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  currency?: string;
+  prices?: {
+    price: number;
+    salePrice?: number;
+    currency?: string;
+  }[];
 
   @ApiProperty({
     description: 'Whether the product is active',
@@ -229,14 +377,31 @@ export class ProductResponseDto {
   @ApiProperty({ description: 'Base SKU' })
   sku?: string;
 
-  @ApiProperty({ description: 'Base product price' })
-  price?: number;
+  @ApiProperty({
+    description: 'Product prices',
+    type: 'array',
+    required: false,
+  })
+  prices?: {
+    id: string;
+    price: number;
+    salePrice?: number;
+    currency: string;
+    isActive: boolean;
+  }[];
 
-  @ApiProperty({ description: 'Base product sale price' })
-  salePrice?: number;
-
-  @ApiProperty({ description: 'Currency code' })
-  currency?: string;
+  @ApiProperty({
+    description: 'Product stock information',
+    required: false,
+  })
+  stock?: {
+    id: string;
+    quantity: number;
+    reserved: number;
+    minThreshold: number;
+    maxThreshold?: number;
+    isInStock: boolean;
+  }[];
 
   @ApiProperty({ description: 'Whether the product is active' })
   isActive!: boolean;

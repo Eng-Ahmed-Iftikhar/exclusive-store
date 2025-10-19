@@ -1,10 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { useAuthStore } from '../stores/index';
-import HomeView from '../features/home/views/HomeView.vue';
-import LoginView from '../features/auth/views/LoginView.vue';
-import SignupView from '../features/auth/views/SignupView.vue';
 import ForgotPasswordView from '../features/auth/views/ForgotPasswordView.vue';
+import LoginView from '../features/auth/views/LoginView.vue';
 import ResetPasswordView from '../features/auth/views/ResetPasswordView.vue';
+import SignupView from '../features/auth/views/SignupView.vue';
+import HomeView from '../features/home/views/HomeView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

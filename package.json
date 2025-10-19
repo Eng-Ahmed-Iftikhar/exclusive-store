@@ -20,7 +20,7 @@
     "prisma:migrate-dev": "nx run backend:prisma:migrate-dev",
     "prisma:migrate-deploy": "nx run backend:prisma:migrate-deploy",
     "prisma:migrate-reset": "nx run backend:prisma:migrate-reset",
-    "prisma:seed": "nx run backend:prisma:seed",
+    "prisma:seed": "tsx apps/backend/prisma/seed.ts",
     "prisma:studio": "nx run backend:prisma:studio",
     "admin:dev": "npx nx run admin:dev"
   },
@@ -28,6 +28,7 @@
   "dependencies": {
     "@casl/ability": "^6.7.3",
     "@casl/react": "^5.0.0",
+    "@faker-js/faker": "^10.1.0",
     "@headlessui/react": "^2.2.7",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.2.1",

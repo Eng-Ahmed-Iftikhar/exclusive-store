@@ -82,10 +82,10 @@
     <!-- Product Actions -->
     <div class="actions-section mb-4">
       <!-- Add to Cart Button -->
-      <v-btn v-if="!isInCart" color="primary" variant="flat" size="large" class="add-to-cart-btn"
+      <v-btn v-if="!isInCart" color="primary" variant="flat" size="large" class="add-to-cart-btn" :disabled="!isInStock"
         @click="$emit('add-to-cart', selectedVariantId ?? undefined)" block>
         <v-icon icon="mdi-cart-plus" size="20" class="me-2" />
-        Add to Cart
+        {{ isInStock ? 'Add to Cart' : 'Out of Stock' }}
       </v-btn>
 
       <!-- Cart Actions (when in cart) -->
@@ -154,6 +154,14 @@ interface ProductVariant {
   sku: string;
   isDefault?: boolean;
   prices?: ProductPrice[];
+  stock?: Array<{
+    id: string;
+    quantity: number;
+    reserved: number;
+    minThreshold: number;
+    maxThreshold?: number;
+    isInStock: boolean;
+  }>;
   images?: Array<{
     id: string;
     productId?: string;
@@ -171,10 +179,6 @@ interface ProductVariant {
       originalName: string;
     };
   }>;
-  stock?: {
-    quantity: number;
-    isInStock: boolean;
-  };
 }
 
 interface Product {
@@ -182,9 +186,15 @@ interface Product {
   name: string;
   description?: string;
   sku?: string;
-  price?: number;
-  salePrice?: number;
-  currency?: string;
+  prices?: ProductPrice[];
+  stock?: Array<{
+    id: string;
+    quantity: number;
+    reserved: number;
+    minThreshold: number;
+    maxThreshold?: number;
+    isInStock: boolean;
+  }>;
   variants?: ProductVariant[];
   reviews?: ProductReview[];
   category?: ProductCategory;
@@ -196,6 +206,7 @@ interface Props {
   isInCart: boolean;
   isFavorited: boolean;
   isOnSale: boolean;
+  isInStock?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -223,9 +234,10 @@ const getReviewCount = (item: Product) => {
 
 
 const getOriginalPrice = (item: Product) => {
-  // First check if product has base price
-  if (item.price) {
-    return item.price;
+  // First check if product has prices array
+  if (item.prices && item.prices.length > 0) {
+    const activePrice = item.prices.find(p => p.isActive);
+    return activePrice?.price || item.prices[0].price || 0;
   }
 
   // Fallback to variant prices
@@ -233,7 +245,7 @@ const getOriginalPrice = (item: Product) => {
     const defaultVariant = item.variants.find(v => v.isDefault) || item.variants[0];
     if (defaultVariant?.prices && defaultVariant.prices.length > 0) {
       const activePrice = defaultVariant.prices.find(p => p.isActive);
-      return activePrice?.price || 0;
+      return activePrice?.price || defaultVariant.prices[0].price || 0;
     }
   }
 
@@ -241,9 +253,12 @@ const getOriginalPrice = (item: Product) => {
 };
 
 const getSalePrice = (item: Product) => {
-  // First check if product has base sale price
-  if (item.salePrice && item.price && item.salePrice < item.price) {
-    return item.salePrice;
+  // First check if product has prices array with sale price
+  if (item.prices && item.prices.length > 0) {
+    const activePrice = item.prices.find(p => p.isActive);
+    if (activePrice?.salePrice && activePrice.salePrice > 0 && activePrice.salePrice < activePrice.price) {
+      return activePrice.salePrice;
+    }
   }
 
   // Fallback to variant prices
@@ -251,11 +266,13 @@ const getSalePrice = (item: Product) => {
     const defaultVariant = item.variants.find(v => v.isDefault) || item.variants[0];
     if (defaultVariant?.prices && defaultVariant.prices.length > 0) {
       const activePrice = defaultVariant.prices.find(p => p.isActive);
-      return activePrice?.salePrice || 0;
+      if (activePrice?.salePrice && activePrice.salePrice > 0 && activePrice.salePrice < activePrice.price) {
+        return activePrice.salePrice;
+      }
     }
   }
 
-  return 0;
+  return getOriginalPrice(item);
 };
 
 // Variant-related methods
@@ -307,7 +324,10 @@ const getVariantSalePrice = (variant: ProductVariant): number => {
 };
 
 const isVariantInStock = (variant: ProductVariant): boolean => {
-  return variant.stock?.isInStock || false;
+  if (variant.stock && variant.stock.length > 0) {
+    return variant.stock[0].quantity > 0;
+  }
+  return false;
 };
 
 const handleImageError = (event: Event) => {

@@ -177,11 +177,21 @@ const selectedVariant = computed(() => {
 
 // Product base price helpers
 const getProductPrice = () => {
-  return Number(props.product.price) || 0;
+  if (props.product.prices && props.product.prices.length > 0) {
+    const activePrice = props.product.prices.find((p: any) => p.isActive);
+    return activePrice ? Number(activePrice.price) : Number(props.product.prices[0].price);
+  }
+  return 0;
 };
 
 const getProductSalePrice = () => {
-  return Number(props.product.salePrice) || 0;
+  if (props.product.prices && props.product.prices.length > 0) {
+    const activePrice = props.product.prices.find((p: any) => p.isActive);
+    if (activePrice?.salePrice && Number(activePrice.salePrice) > 0) {
+      return Number(activePrice.salePrice);
+    }
+  }
+  return getProductPrice();
 };
 
 const hasProductSalePrice = computed(() => {
@@ -244,16 +254,42 @@ const getTotalDiscount = () => {
 
 // Computed properties
 const isInStock = computed(() => {
-  if (selectedVariant.value?.stock) {
-    return selectedVariant.value.stock.quantity > 0;
+  // If variant is selected, check variant stock
+  if (selectedVariant.value?.stock && selectedVariant.value.stock.length > 0) {
+    const stock = selectedVariant.value.stock[0];
+    return stock.quantity > 0;
   }
+  
+  // If no variant selected, check if any variant has stock
+  if (props.product.variants && props.product.variants.length > 0) {
+    return props.product.variants.some((v: any) => {
+      if (v.stock && v.stock.length > 0) {
+        return v.stock[0].quantity > 0;
+      }
+      return false;
+    });
+  }
+  
+  // Check product-level stock if no variants
+  if (props.product.stock && props.product.stock.length > 0) {
+    const stock = props.product.stock[0];
+    return stock.quantity > 0;
+  }
+  
   return false;
 });
 
 const availableStock = computed(() => {
-  if (selectedVariant.value?.stock) {
-    return selectedVariant.value.stock.quantity;
+  // If variant is selected, return variant stock
+  if (selectedVariant.value?.stock && selectedVariant.value.stock.length > 0) {
+    return selectedVariant.value.stock[0].quantity;
   }
+  
+  // If no variant selected, return product stock
+  if (props.product.stock && props.product.stock.length > 0) {
+    return props.product.stock[0].quantity;
+  }
+  
   return 0;
 });
 
@@ -295,8 +331,8 @@ const getVariantSalePrice = (variant: any) => {
 
 // Get variant stock
 const getVariantStock = (variant: any) => {
-  if (variant.stock) {
-    return variant.stock.quantity || 0;
+  if (variant.stock && variant.stock.length > 0) {
+    return variant.stock[0].quantity || 0;
   }
   return 0;
 };

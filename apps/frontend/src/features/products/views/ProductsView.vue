@@ -128,10 +128,7 @@ const handleClearFilters = () => {
 
 const handlePageChange = (page: number) => {
   if (filtersRef.value) {
-    filtersRef.value.filters.page = page;
-    const newFilters = { ...filtersRef.value.filters };
-    filtersRef.value.updateQueryParams(newFilters);
-    fetchProducts(newFilters);
+    filtersRef.value.updatePage(page);
   }
 };
 

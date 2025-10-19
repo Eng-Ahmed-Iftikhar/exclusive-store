@@ -1,5 +1,5 @@
 <template>
-  <div class="product-card" @click="navigateToProduct">
+  <div class="product-card" :class="{ 'out-of-stock': !isInStock }" @click="navigateToProduct">
     <div class="product-image">
       <!-- Image Display -->
       <div class="image-container">
@@ -24,6 +24,7 @@
       </div>
 
       <div v-if="showSaleTag && isOnSale" class="sale-badge">Sale</div>
+      <div v-if="!isInStock" class="out-of-stock-badge">Out of Stock</div>
     </div>
 
     <div class="product-info">
@@ -47,9 +48,9 @@
       <div class="product-actions">
         <!-- Add to Cart Button (when not in cart) -->
         <v-btn v-if="!isInCart" color="primary" variant="flat" size="small" class="add-to-cart-btn"
-          :loading="cartLoading" @click.stop="handleAddToCart" block>
+          :loading="cartLoading" :disabled="!isInStock" @click.stop="handleAddToCart" block>
           <v-icon icon="mdi-cart-plus" size="16" class="me-1" />
-          Add To Cart
+          {{ isInStock ? 'Add To Cart' : 'Out of Stock' }}
         </v-btn>
 
         <!-- Cart Actions (when in cart) -->
@@ -150,7 +151,13 @@ const isFavorited = computed(() => {
 
 // Cart functionality
 const isInCart = computed(() => {
-  return cartStore.isItemInCart(props.product.id);
+  // Check if product (without variant) is in cart
+  return cartStore.isItemInCart(props.product.id, undefined);
+});
+
+// Stock functionality
+const isInStock = computed(() => {
+  return getAvailableStock(props.product) > 0;
 });
 
 // Check favorite status for this product
@@ -200,10 +207,20 @@ const handleFavoriteClick = async () => {
 const handleAddToCart = async () => {
   try {
     cartLoading.value = true;
-    await cartStore.addToCart(props.product.id);
+
+    // Check stock before adding to cart
+    const availableStock = getAvailableStock(props.product);
+    if (availableStock <= 0) {
+      notificationsStore.showError('This product is currently out of stock');
+      return;
+    }
+
+    // Add product without variant - let user choose variant in modal if needed
+    await cartStore.addToCart(props.product.id, undefined, 1);
     showProductModal.value = false;
   } catch (error) {
     // Error adding to cart
+    notificationsStore.showError('Failed to add product to cart');
   } finally {
     cartLoading.value = false;
   }
@@ -213,7 +230,9 @@ const handleAddToCart = async () => {
 const handleRemoveFromCart = async () => {
   try {
     cartLoading.value = true;
-    const cartItem = cartStore.getCartItem(props.product.id);
+
+    // Remove product without variant
+    const cartItem = cartStore.getCartItem(props.product.id, undefined);
     if (cartItem) {
       await cartStore.removeFromCart(cartItem.id);
     }
@@ -357,9 +376,13 @@ const getReviewCount = (product: any) => {
 
 // Helper function to get original price (product price or variant price)
 const getOriginalPrice = (product: any) => {
-  // First check if product has a base price
-  if (product.price && Number(product.price) > 0) {
-    return Number(product.price);
+  // First check if product has prices array
+  if (product.prices && product.prices.length > 0) {
+    const activePrice = product.prices.find((price: any) => price.isActive);
+    if (activePrice) {
+      return Number(activePrice.price);
+    }
+    return Number(product.prices[0].price);
   }
 
   // Otherwise get price from default variant
@@ -377,9 +400,12 @@ const getOriginalPrice = (product: any) => {
 
 // Helper function to get sale price (product sale price or variant sale price)
 const getSalePrice = (product: any) => {
-  // First check if product has a base sale price
-  if (product.salePrice && Number(product.salePrice) > 0) {
-    return Number(product.salePrice);
+  // First check if product has prices array with sale price
+  if (product.prices && product.prices.length > 0) {
+    const activePrice = product.prices.find((price: any) => price.isActive);
+    if (activePrice?.salePrice && Number(activePrice.salePrice) > 0) {
+      return Number(activePrice.salePrice);
+    }
   }
 
   // Otherwise get sale price from default variant
@@ -392,6 +418,22 @@ const getSalePrice = (product: any) => {
   }
 
   return getOriginalPrice(product);
+};
+
+// Helper function to get available stock
+const getAvailableStock = (product: any) => {
+  // First check if product has stock array
+  if (product.stock && product.stock.length > 0) {
+    return product.stock[0].quantity || 0;
+  }
+
+  // Otherwise get stock from default variant
+  const defaultVariant = getDefaultVariant(product);
+  if (defaultVariant?.stock && defaultVariant.stock.length > 0) {
+    return defaultVariant.stock[0].quantity || 0;
+  }
+
+  return 0;
 };
 </script>
 
@@ -411,6 +453,11 @@ const getSalePrice = (product: any) => {
   display: flex;
   flex-direction: column;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.product-card.out-of-stock {
+  opacity: 0.7;
+  filter: grayscale(0.3);
 }
 
 .product-card:hover {
@@ -536,6 +583,21 @@ const getSalePrice = (product: any) => {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   box-shadow: 0 2px 4px rgba(219, 68, 68, 0.3);
+}
+
+.out-of-stock-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #666;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(102, 102, 102, 0.3);
 }
 
 .product-info {

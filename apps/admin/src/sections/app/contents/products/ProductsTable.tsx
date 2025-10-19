@@ -330,15 +330,15 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                   </td>
                   <td className="py-3 px-4">
                     <div className="text-sm">
-                      {product.currentPrice ? (
+                      {product.price ? (
                         <div>
                           <span className="font-medium text-gray-900 dark:text-white">
-                            {formatCurrency(product.currentPrice)}
+                            {formatCurrency(product.price)}
                           </span>
                           {product.salePrice &&
-                            product.salePrice < product.currentPrice && (
+                            product.salePrice < product.price && (
                               <div className="text-xs text-red-600 dark:text-red-400">
-                                Sale: {formatCurrency(product.salePrice)}
+                                Sale: {formatCurrency(product.s)}
                               </div>
                             )}
                         </div>

@@ -10,6 +10,10 @@ import {
   CreateProductDto,
   UpdateProductDto,
   ProductResponseDto,
+  CreatePriceDto,
+  UpdatePriceDto,
+  CreateStockDto,
+  UpdateStockDto,
 } from './dto/product.dto';
 import {
   CreateVariantDto,
@@ -18,11 +22,7 @@ import {
   CreateProductImageDto,
   UpdateProductImageDto,
   ProductImageResponseDto,
-  CreatePriceDto,
-  UpdatePriceDto,
   PriceResponseDto,
-  CreateStockDto,
-  UpdateStockDto,
   StockResponseDto,
 } from './dto/variant.dto';
 
@@ -52,8 +52,11 @@ export class ProductsService {
       }
     }
 
+    // Extract prices from the DTO
+    const { prices, ...productData } = createProductDto;
+
     const product = await this.prisma.product.create({
-      data: createProductDto,
+      data: productData,
       include: {
         category: {
           select: { id: true, name: true, slug: true },
@@ -61,6 +64,8 @@ export class ProductsService {
         subcategory: {
           select: { id: true, name: true, slug: true },
         },
+        prices: true,
+        stock: true,
         variants: {
           include: {
             prices: true,
@@ -86,6 +91,21 @@ export class ProductsService {
         ratings: true,
       },
     });
+
+    // Create prices if provided
+    if (prices && prices.length > 0) {
+      for (const priceData of prices) {
+        await this.prisma.price.create({
+          data: {
+            productId: product.id,
+            price: priceData.price,
+            salePrice: priceData.salePrice,
+            currency: priceData.currency || 'USD',
+            isActive: true,
+          },
+        });
+      }
+    }
 
     // Log product creation activity
     if (userId) {
@@ -152,10 +172,12 @@ export class ProductsService {
           subcategory: {
             select: { id: true, name: true, slug: true },
           },
+          prices: { where: { isActive: true } },
+          stock: { where: { isInStock: true } },
           variants: {
             include: {
               prices: { where: { isActive: true } },
-              stock: true,
+              stock: { where: { isInStock: true } },
               images: {
                 include: {
                   file: {
@@ -200,6 +222,8 @@ export class ProductsService {
         subcategory: {
           select: { id: true, name: true, slug: true },
         },
+        prices: true,
+        stock: true,
         variants: {
           include: {
             prices: true,
@@ -277,12 +301,18 @@ export class ProductsService {
       }
     }
 
+    // Extract prices from the DTO
+    const { prices, ...productData } = updateProductDto;
+
     const product = await this.prisma.product.update({
       where: { id },
-      data: updateProductDto,
+      data: productData,
       include: {
         category: { select: { id: true, name: true, slug: true } },
         subcategory: { select: { id: true, name: true, slug: true } },
+        prices: true,
+        stock: true,
+        images: true,
         variants: {
           include: {
             prices: true,
@@ -308,6 +338,27 @@ export class ProductsService {
         ratings: true,
       },
     });
+
+    // Update prices if provided
+    if (prices && prices.length > 0) {
+      // Delete existing prices for this product
+      await this.prisma.price.deleteMany({
+        where: { productId: id },
+      });
+
+      // Create new prices
+      for (const priceData of prices) {
+        await this.prisma.price.create({
+          data: {
+            productId: id,
+            price: priceData.price,
+            salePrice: priceData.salePrice,
+            currency: priceData.currency || 'USD',
+            isActive: true,
+          },
+        });
+      }
+    }
 
     return this.mapToProductResponse(product);
   }
@@ -546,16 +597,30 @@ export class ProductsService {
 
   // ==================== PRICE OPERATIONS ====================
 
-  async createPrice(createPriceDto: CreatePriceDto): Promise<PriceResponseDto> {
-    // Verify variant exists
-    const variant = await this.prisma.productVariant.findUnique({
-      where: { id: createPriceDto.variantId },
-    });
+  async createPrice(
+    createPriceDto: CreatePriceDto & { productId?: string; variantId?: string }
+  ): Promise<PriceResponseDto> {
+    // Verify product or variant exists
+    if (createPriceDto.productId) {
+      const product = await this.prisma.product.findUnique({
+        where: { id: createPriceDto.productId },
+      });
+      if (!product) {
+        throw new NotFoundException(
+          `Product with ID ${createPriceDto.productId} not found`
+        );
+      }
+    }
 
-    if (!variant) {
-      throw new NotFoundException(
-        `Variant with ID ${createPriceDto.variantId} not found`
-      );
+    if (createPriceDto.variantId) {
+      const variant = await this.prisma.productVariant.findUnique({
+        where: { id: createPriceDto.variantId },
+      });
+      if (!variant) {
+        throw new NotFoundException(
+          `Variant with ID ${createPriceDto.variantId} not found`
+        );
+      }
     }
 
     const price = await this.prisma.price.create({
@@ -610,27 +675,30 @@ export class ProductsService {
 
   // ==================== STOCK OPERATIONS ====================
 
-  async createStock(createStockDto: CreateStockDto): Promise<StockResponseDto> {
-    // Verify variant exists
-    const variant = await this.prisma.productVariant.findUnique({
-      where: { id: createStockDto.variantId },
-    });
-
-    if (!variant) {
-      throw new NotFoundException(
-        `Variant with ID ${createStockDto.variantId} not found`
-      );
+  async createStock(
+    createStockDto: CreateStockDto & { productId?: string; variantId?: string }
+  ): Promise<StockResponseDto> {
+    // Verify product or variant exists
+    if (createStockDto.productId) {
+      const product = await this.prisma.product.findUnique({
+        where: { id: createStockDto.productId },
+      });
+      if (!product) {
+        throw new NotFoundException(
+          `Product with ID ${createStockDto.productId} not found`
+        );
+      }
     }
 
-    // Check if stock already exists for this variant
-    const existingStock = await this.prisma.stock.findUnique({
-      where: { variantId: createStockDto.variantId },
-    });
-
-    if (existingStock) {
-      throw new ConflictException(
-        `Stock record already exists for variant ${createStockDto.variantId}`
-      );
+    if (createStockDto.variantId) {
+      const variant = await this.prisma.productVariant.findUnique({
+        where: { id: createStockDto.variantId },
+      });
+      if (!variant) {
+        throw new NotFoundException(
+          `Variant with ID ${createStockDto.variantId} not found`
+        );
+      }
     }
 
     const stock = await this.prisma.stock.create({
@@ -661,7 +729,7 @@ export class ProductsService {
   }
 
   async getStockByVariant(variantId: string): Promise<StockResponseDto | null> {
-    const stock = await this.prisma.stock.findUnique({
+    const stock = await this.prisma.stock.findFirst({
       where: { variantId },
     });
 
@@ -875,9 +943,21 @@ export class ProductsService {
       name: product.name,
       description: product.description,
       sku: product.sku,
-      price: product.price ? Number(product.price) : undefined,
-      salePrice: product.salePrice ? Number(product.salePrice) : undefined,
-      currency: product.currency,
+      prices: product.prices?.map((p: any) => ({
+        id: p.id,
+        price: Number(p.price),
+        salePrice: p.salePrice ? Number(p.salePrice) : undefined,
+        currency: p.currency,
+        isActive: p.isActive,
+      })),
+      stock: product.stock?.map((s: any) => ({
+        id: s.id,
+        quantity: s.quantity,
+        reserved: s.reserved,
+        minThreshold: s.minThreshold,
+        maxThreshold: s.maxThreshold,
+        isInStock: s.isInStock,
+      })),
       isActive: product.isActive,
       isFeatured: product.isFeatured,
       sortOrder: product.sortOrder,
@@ -916,7 +996,7 @@ export class ProductsService {
       createdAt: variant.createdAt,
       updatedAt: variant.updatedAt,
       prices: variant.prices?.map((p: any) => this.mapToPriceResponse(p)),
-      stock: variant.stock ? this.mapToStockResponse(variant.stock) : undefined,
+      stock: variant.stock?.map((s: any) => this.mapToStockResponse(s)),
       images: variant.images?.map((img: any) =>
         this.mapToProductImageResponse(img)
       ),
@@ -929,6 +1009,7 @@ export class ProductsService {
   private mapToPriceResponse(price: any): PriceResponseDto {
     return {
       id: price.id,
+      productId: price.productId,
       variantId: price.variantId,
       price: Number(price.price),
       salePrice: price.salePrice ? Number(price.salePrice) : undefined,
@@ -944,6 +1025,7 @@ export class ProductsService {
   private mapToStockResponse(stock: any): StockResponseDto {
     return {
       id: stock.id,
+      productId: stock.productId,
       variantId: stock.variantId,
       quantity: stock.quantity,
       reserved: stock.reserved,

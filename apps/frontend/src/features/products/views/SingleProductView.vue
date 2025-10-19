@@ -21,8 +21,9 @@
           <!-- Product Details -->
           <v-col cols="12" md="6" class="product-details-col">
             <ProductDetails :product="product" :is-in-cart="isInCart" :is-favorited="isFavorited"
-              :is-on-sale="isOnSale || false" @add-to-cart="handleAddToCart" @remove-from-cart="handleRemoveFromCart"
-              @toggle-favorite="handleFavoriteClick" @variant-change="handleVariantChange" />
+              :is-on-sale="isOnSale || false" :is-in-stock="isInStock" @add-to-cart="handleAddToCart"
+              @remove-from-cart="handleRemoveFromCart" @toggle-favorite="handleFavoriteClick"
+              @variant-change="handleVariantChange" />
           </v-col>
         </v-row>
 
@@ -72,20 +73,44 @@ const isFavorited = computed(() => {
 });
 
 const isOnSale = computed(() => {
-  // Check if product has a sale price
-  if (product.value?.salePrice && product.value?.price && product.value.salePrice < product.value.price) {
-    return true;
+  const productData = product.value as any;
+
+  // Check if product has a sale price in the prices array
+  if (productData?.prices && productData.prices.length > 0) {
+    const activePrice = productData.prices.find((p: any) => p.isActive);
+    if (activePrice?.salePrice && activePrice.salePrice < activePrice.price) {
+      return true;
+    }
   }
 
   // Check if any variant has a sale price
-  if (product.value?.variants && product.value.variants.length > 0) {
-    return product.value.variants.some((variant: any) => {
+  if (productData?.variants && productData.variants.length > 0) {
+    return productData.variants.some((variant: any) => {
       if (variant.prices && variant.prices.length > 0) {
         const activePrice = variant.prices.find((p: any) => p.isActive);
         return activePrice?.salePrice && activePrice.salePrice < activePrice.price;
       }
       return false;
     });
+  }
+
+  return false;
+});
+
+const isInStock = computed(() => {
+  const productData = product.value as any;
+
+  // If variant is selected, check variant stock
+  if (selectedVariantId.value) {
+    const variant = productData?.variants?.find((v: any) => v.id === selectedVariantId.value);
+    if (variant?.stock && variant.stock.length > 0) {
+      return variant.stock[0].quantity > 0;
+    }
+  }
+
+  // If no variant selected, check product stock
+  if (productData?.stock && productData.stock.length > 0) {
+    return productData.stock[0].quantity > 0;
   }
 
   return false;
@@ -133,6 +158,14 @@ const handleAddToCart = async (variantId?: string) => {
   if (!product.value) return;
 
   try {
+    // Check stock before adding to cart
+    const availableStock = getAvailableStock(variantId);
+    if (availableStock <= 0) {
+      console.error('Product is out of stock');
+      // You could add an error notification here
+      return;
+    }
+
     // Add product with or without variant
     await cartStore.addToCart(product.value.id, variantId, 1);
     // You could add a success notification here
@@ -140,6 +173,25 @@ const handleAddToCart = async (variantId?: string) => {
     console.error('Error adding to cart:', err);
     // You could add an error notification here
   }
+};
+
+// Helper function to get available stock
+const getAvailableStock = (variantId?: string) => {
+  const productData = product.value as any;
+
+  if (variantId) {
+    // Check variant stock
+    const variant = productData?.variants?.find((v: any) => v.id === variantId);
+    if (variant?.stock && variant.stock.length > 0) {
+      return variant.stock[0].quantity || 0;
+    }
+  } else {
+    // Check product stock
+    if (productData?.stock && productData.stock.length > 0) {
+      return productData.stock[0].quantity || 0;
+    }
+  }
+  return 0;
 };
 
 const handleRemoveFromCart = async (variantId?: string) => {

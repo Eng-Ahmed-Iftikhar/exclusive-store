@@ -10,13 +10,14 @@ export interface ProductVariant {
   createdAt: string;
   updatedAt: string;
   prices?: Price[];
-  stock?: Stock;
+  stock?: Stock[];
   images?: ProductImage[];
 }
 
 export interface Price {
   id: string;
-  variantId: string;
+  productId?: string;
+  variantId?: string;
   price: number;
   salePrice?: number;
   currency: string;
@@ -29,7 +30,8 @@ export interface Price {
 
 export interface Stock {
   id: string;
-  variantId: string;
+  productId?: string;
+  variantId?: string;
   quantity: number;
   reserved: number;
   minThreshold: number;
@@ -100,14 +102,12 @@ export interface Favorite {
   };
 }
 
+// Updated Product interface to match new backend schema
 export interface Product {
   id: string;
   name: string;
   description?: string;
   sku?: string;
-  price?: number;
-  salePrice?: number;
-  currency?: string;
   isActive: boolean;
   isFeatured: boolean;
   sortOrder: number;
@@ -129,6 +129,8 @@ export interface Product {
   };
   variants?: ProductVariant[];
   images?: ProductImage[];
+  prices?: Price[];
+  stock?: Stock[];
   reviews?: Review[];
   ratings?: Rating[];
   favorites?: Favorite[];

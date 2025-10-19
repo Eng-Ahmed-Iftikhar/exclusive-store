@@ -8,7 +8,8 @@
     "apps/**/*.vue",
     "libs/**/*.ts",
     "libs/**/*.tsx",
-    "libs/**/*.vue"
+    "libs/**/*.vue",
+    "apps/backend/prisma/seed.ts"
   ],
   "references": [
     {
