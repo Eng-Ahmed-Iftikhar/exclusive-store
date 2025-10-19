@@ -10,6 +10,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { ConfigService } from '../config/config.service';
 import { ActivityService } from '../activity/activity.service';
+import { TransactionsService } from '../transactions/transactions.service';
 import {
   CreateOrderDto,
   OrderDto,
@@ -17,6 +18,7 @@ import {
   OrderStatus,
   PaymentStatus,
 } from './dto/order.dto';
+import { PaymentMethod } from '../transactions/dto/transaction.dto';
 
 @Injectable()
 export class OrdersService {
@@ -27,7 +29,8 @@ export class OrdersService {
     private cartService: CartService,
     private emailService: EmailService,
     private configService: ConfigService,
-    private activityService: ActivityService
+    private activityService: ActivityService,
+    private transactionsService: TransactionsService
   ) {
     this.stripe = new Stripe(this.configService.stripeSecretKey, {
       apiVersion: '2025-07-30.basil',
@@ -868,6 +871,27 @@ export class OrdersService {
       },
     });
 
+    // Create transaction record for the order payment
+    try {
+      await this.transactionsService.createOrderTransaction({
+        orderId: order.id,
+        userId: userId || undefined,
+        amount: total,
+        paymentMethod: PaymentMethod.CARD,
+        reference: stripePaymentIntentId,
+        paymentMethodDetails: {
+          last4: createOrderDto.cardNumber?.slice(-4) || null,
+          brand: this.detectCardBrand(createOrderDto.cardNumber || ''),
+          paymentMethodId: createOrderDto.paymentMethodId,
+        },
+        processingFee: this.calculateProcessingFee(total),
+        platformFee: this.calculatePlatformFee(total),
+      });
+    } catch (error) {
+      // Log error but don't fail the order creation
+      console.error('Failed to create transaction record:', error);
+    }
+
     return order;
   }
 
@@ -1002,5 +1026,19 @@ export class OrdersService {
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
+  }
+
+  // ==================== FEE CALCULATION METHODS ====================
+
+  private calculateProcessingFee(amount: number): number {
+    // Stripe processing fee: 2.9% + $0.30 per transaction
+    const stripeFee = amount * 0.029 + 0.3;
+    return Math.round(stripeFee * 100) / 100; // Round to 2 decimal places
+  }
+
+  private calculatePlatformFee(amount: number): number {
+    // Platform fee: 1% of transaction amount
+    const platformFee = amount * 0.01;
+    return Math.round(platformFee * 100) / 100; // Round to 2 decimal places
   }
 }

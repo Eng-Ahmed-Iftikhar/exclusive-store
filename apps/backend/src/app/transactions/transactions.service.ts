@@ -1,0 +1,686 @@
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { ActivityService } from '../activity/activity.service';
+import {
+  CreateTransactionDto,
+  UpdateTransactionDto,
+  TransactionResponseDto,
+  TransactionQueryDto,
+  TransactionListResponseDto,
+  TransactionStatsDto,
+  CreateOrderTransactionDto,
+  TransactionType,
+  TransactionStatus,
+  PaymentMethod,
+} from './dto/transaction.dto';
+import { Prisma } from '@prisma/client';
+
+@Injectable()
+export class TransactionsService {
+  constructor(
+    private prisma: PrismaService,
+    private activityService: ActivityService
+  ) {}
+
+  // ==================== TRANSACTION CRUD OPERATIONS ====================
+
+  async createTransaction(
+    createTransactionDto: CreateTransactionDto,
+    userId?: string
+  ): Promise<TransactionResponseDto> {
+    try {
+      // Calculate net amount if not provided
+      const processingFee = createTransactionDto.processingFee || 0;
+      const platformFee = createTransactionDto.platformFee || 0;
+      const netAmount =
+        createTransactionDto.netAmount ||
+        createTransactionDto.amount - processingFee - platformFee;
+
+      const transaction = await this.prisma.transaction.create({
+        data: {
+          ...createTransactionDto,
+          netAmount,
+          processedAt: createTransactionDto.processedAt
+            ? new Date(createTransactionDto.processedAt)
+            : null,
+        },
+        include: {
+          order: {
+            select: {
+              id: true,
+              orderNumber: true,
+              total: true,
+              status: true,
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      // Log activity
+      await this.activityService.logSystemActivity(
+        'Transaction Created',
+        `Transaction ${transaction.id} created for ${createTransactionDto.type}`,
+        {
+          transactionId: transaction.id,
+          type: createTransactionDto.type,
+          amount: createTransactionDto.amount,
+          orderId: createTransactionDto.orderId,
+        }
+      );
+
+      return this.mapToTransactionResponse(transaction);
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to create transaction: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`
+      );
+    }
+  }
+
+  async createOrderTransaction(
+    createOrderTransactionDto: CreateOrderTransactionDto,
+    userId?: string
+  ): Promise<TransactionResponseDto> {
+    try {
+      // Verify order exists
+      const order = await this.prisma.order.findUnique({
+        where: { id: createOrderTransactionDto.orderId },
+        select: { id: true, orderNumber: true, total: true, status: true },
+      });
+
+      if (!order) {
+        throw new NotFoundException('Order not found');
+      }
+
+      // Calculate fees if not provided
+      const processingFee = createOrderTransactionDto.processingFee || 0;
+      const platformFee = createOrderTransactionDto.platformFee || 0;
+      const netAmount =
+        createOrderTransactionDto.amount - processingFee - platformFee;
+
+      const transaction = await this.prisma.transaction.create({
+        data: {
+          orderId: createOrderTransactionDto.orderId,
+          userId: createOrderTransactionDto.userId,
+          type: TransactionType.ORDER_PAYMENT,
+          status: TransactionStatus.COMPLETED,
+          amount: createOrderTransactionDto.amount,
+          currency: 'USD',
+          description: `Payment for Order #${order.orderNumber}`,
+          reference: createOrderTransactionDto.reference,
+          paymentMethod: createOrderTransactionDto.paymentMethod,
+          paymentMethodDetails: createOrderTransactionDto.paymentMethodDetails,
+          processingFee,
+          platformFee,
+          netAmount,
+          processedAt: new Date(),
+        },
+        include: {
+          order: {
+            select: {
+              id: true,
+              orderNumber: true,
+              total: true,
+              status: true,
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      // Log activity
+      await this.activityService.logOrderActivity(
+        createOrderTransactionDto.orderId,
+        'Payment Received',
+        userId
+      );
+
+      return this.mapToTransactionResponse(transaction);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException(
+        `Failed to create order transaction: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`
+      );
+    }
+  }
+
+  async getAllTransactions(
+    query: TransactionQueryDto
+  ): Promise<TransactionListResponseDto> {
+    const {
+      page = 1,
+      limit = 20,
+      search,
+      type,
+      status,
+      paymentMethod,
+      userId,
+      orderId,
+      minAmount,
+      maxAmount,
+      dateFrom,
+      dateTo,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = query;
+
+    // Build where clause
+    const where: Prisma.TransactionWhereInput = {};
+
+    if (search) {
+      where.OR = [
+        { description: { contains: search, mode: 'insensitive' } },
+        { reference: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (type) {
+      where.type = type;
+    }
+
+    if (status) {
+      where.status = status;
+    }
+
+    if (paymentMethod) {
+      where.paymentMethod = paymentMethod;
+    }
+
+    if (userId) {
+      where.userId = userId;
+    }
+
+    if (orderId) {
+      where.orderId = orderId;
+    }
+
+    if (minAmount !== undefined || maxAmount !== undefined) {
+      where.amount = {};
+      if (minAmount !== undefined) {
+        where.amount.gte = minAmount;
+      }
+      if (maxAmount !== undefined) {
+        where.amount.lte = maxAmount;
+      }
+    }
+
+    if (dateFrom || dateTo) {
+      where.createdAt = {};
+      if (dateFrom) {
+        where.createdAt.gte = new Date(dateFrom);
+      }
+      if (dateTo) {
+        where.createdAt.lte = new Date(dateTo);
+      }
+    }
+
+    // Build order by clause
+    const orderBy: Prisma.TransactionOrderByWithRelationInput = {};
+    orderBy[sortBy] = sortOrder;
+
+    // Execute query with pagination
+    const [transactions, total] = await Promise.all([
+      this.prisma.transaction.findMany({
+        where,
+        orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          order: {
+            select: {
+              id: true,
+              orderNumber: true,
+              total: true,
+              status: true,
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      }),
+      this.prisma.transaction.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      transactions: transactions.map((transaction) =>
+        this.mapToTransactionResponse(transaction)
+      ),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+      filters: {
+        type,
+        status,
+        paymentMethod,
+        search,
+        dateRange:
+          dateFrom || dateTo
+            ? { from: dateFrom || '', to: dateTo || '' }
+            : undefined,
+      },
+    };
+  }
+
+  async getTransactionById(id: string): Promise<TransactionResponseDto> {
+    const transaction = await this.prisma.transaction.findUnique({
+      where: { id },
+      include: {
+        order: {
+          select: {
+            id: true,
+            orderNumber: true,
+            total: true,
+            status: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    return this.mapToTransactionResponse(transaction);
+  }
+
+  async updateTransaction(
+    id: string,
+    updateTransactionDto: UpdateTransactionDto,
+    userId?: string
+  ): Promise<TransactionResponseDto> {
+    try {
+      // Check if transaction exists
+      const existingTransaction = await this.prisma.transaction.findUnique({
+        where: { id },
+      });
+
+      if (!existingTransaction) {
+        throw new NotFoundException('Transaction not found');
+      }
+
+      // Calculate net amount if amount or fees are being updated
+      let netAmount = existingTransaction.netAmount;
+      if (
+        updateTransactionDto.processingFee !== undefined ||
+        updateTransactionDto.platformFee !== undefined
+      ) {
+        const processingFee =
+          updateTransactionDto.processingFee ??
+          existingTransaction.processingFee ??
+          0;
+        const platformFee =
+          updateTransactionDto.platformFee ??
+          existingTransaction.platformFee ??
+          0;
+        netAmount = existingTransaction.amount - processingFee - platformFee;
+      }
+
+      const transaction = await this.prisma.transaction.update({
+        where: { id },
+        data: {
+          ...updateTransactionDto,
+          netAmount,
+          processedAt: updateTransactionDto.processedAt
+            ? new Date(updateTransactionDto.processedAt)
+            : undefined,
+        },
+        include: {
+          order: {
+            select: {
+              id: true,
+              orderNumber: true,
+              total: true,
+              status: true,
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      // Log activity
+      await this.activityService.logSystemActivity(
+        'Transaction Updated',
+        `Transaction ${id} updated`,
+        {
+          transactionId: id,
+          changes: updateTransactionDto,
+        }
+      );
+
+      return this.mapToTransactionResponse(transaction);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException(
+        `Failed to update transaction: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`
+      );
+    }
+  }
+
+  async deleteTransaction(id: string, userId?: string): Promise<void> {
+    try {
+      const transaction = await this.prisma.transaction.findUnique({
+        where: { id },
+      });
+
+      if (!transaction) {
+        throw new NotFoundException('Transaction not found');
+      }
+
+      await this.prisma.transaction.delete({
+        where: { id },
+      });
+
+      // Log activity
+      await this.activityService.logSystemActivity(
+        'Transaction Deleted',
+        `Transaction ${id} deleted`,
+        {
+          transactionId: id,
+          type: transaction.type,
+          amount: transaction.amount,
+        }
+      );
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException(
+        `Failed to delete transaction: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`
+      );
+    }
+  }
+
+  // ==================== TRANSACTION STATISTICS ====================
+
+  async getTransactionStats(): Promise<TransactionStatsDto> {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    // Get basic counts
+    const [
+      totalTransactions,
+      byType,
+      byStatus,
+      byPaymentMethod,
+      recentTransactions,
+    ] = await Promise.all([
+      this.prisma.transaction.count(),
+      this.getTransactionsByType(),
+      this.getTransactionsByStatus(),
+      this.getTransactionsByPaymentMethod(),
+      this.getRecentTransactions(10),
+    ]);
+
+    // Get financial data
+    const [
+      totalRevenue,
+      totalFees,
+      todayRevenue,
+      thisWeekRevenue,
+      thisMonthRevenue,
+    ] = await Promise.all([
+      this.getTotalRevenue(),
+      this.getTotalFees(),
+      this.getRevenueForPeriod(today, now),
+      this.getRevenueForPeriod(weekAgo, now),
+      this.getRevenueForPeriod(monthAgo, now),
+    ]);
+
+    const netRevenue = totalRevenue - totalFees;
+    const averageTransaction =
+      totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
+
+    return {
+      totalTransactions,
+      byType,
+      byStatus,
+      byPaymentMethod,
+      financial: {
+        totalRevenue,
+        totalFees,
+        netRevenue,
+        averageTransaction,
+        todayRevenue,
+        thisWeekRevenue,
+        thisMonthRevenue,
+      },
+      recentTransactions,
+    };
+  }
+
+  // ==================== HELPER METHODS ====================
+
+  private async getTransactionsByType(): Promise<
+    Record<TransactionType, number>
+  > {
+    const result = await this.prisma.transaction.groupBy({
+      by: ['type'],
+      _count: { type: true },
+    });
+
+    const byType: Record<TransactionType, number> = {} as Record<
+      TransactionType,
+      number
+    >;
+
+    // Initialize all types with 0
+    Object.values(TransactionType).forEach((type) => {
+      byType[type] = 0;
+    });
+
+    // Fill in actual counts
+    result.forEach((item) => {
+      byType[item.type as TransactionType] = item._count.type;
+    });
+
+    return byType;
+  }
+
+  private async getTransactionsByStatus(): Promise<
+    Record<TransactionStatus, number>
+  > {
+    const result = await this.prisma.transaction.groupBy({
+      by: ['status'],
+      _count: { status: true },
+    });
+
+    const byStatus: Record<TransactionStatus, number> = {} as Record<
+      TransactionStatus,
+      number
+    >;
+
+    // Initialize all statuses with 0
+    Object.values(TransactionStatus).forEach((status) => {
+      byStatus[status] = 0;
+    });
+
+    // Fill in actual counts
+    result.forEach((item) => {
+      byStatus[item.status as TransactionStatus] = item._count.status;
+    });
+
+    return byStatus;
+  }
+
+  private async getTransactionsByPaymentMethod(): Promise<
+    Record<PaymentMethod, number>
+  > {
+    const result = await this.prisma.transaction.groupBy({
+      by: ['paymentMethod'],
+      _count: { paymentMethod: true },
+      where: {
+        paymentMethod: { not: null },
+      },
+    });
+
+    const byPaymentMethod: Record<PaymentMethod, number> = {} as Record<
+      PaymentMethod,
+      number
+    >;
+
+    // Initialize all payment methods with 0
+    Object.values(PaymentMethod).forEach((method) => {
+      byPaymentMethod[method] = 0;
+    });
+
+    // Fill in actual counts
+    result.forEach((item) => {
+      if (item.paymentMethod) {
+        byPaymentMethod[item.paymentMethod as PaymentMethod] =
+          item._count.paymentMethod;
+      }
+    });
+
+    return byPaymentMethod;
+  }
+
+  private async getTotalRevenue(): Promise<number> {
+    const result = await this.prisma.transaction.aggregate({
+      _sum: { amount: true },
+      where: {
+        type: TransactionType.ORDER_PAYMENT,
+        status: TransactionStatus.COMPLETED,
+      },
+    });
+
+    return result._sum.amount || 0;
+  }
+
+  private async getTotalFees(): Promise<number> {
+    const result = await this.prisma.transaction.aggregate({
+      _sum: {
+        processingFee: true,
+        platformFee: true,
+      },
+      where: {
+        status: TransactionStatus.COMPLETED,
+      },
+    });
+
+    return (result._sum.processingFee || 0) + (result._sum.platformFee || 0);
+  }
+
+  private async getRevenueForPeriod(from: Date, to: Date): Promise<number> {
+    const result = await this.prisma.transaction.aggregate({
+      _sum: { amount: true },
+      where: {
+        type: TransactionType.ORDER_PAYMENT,
+        status: TransactionStatus.COMPLETED,
+        createdAt: {
+          gte: from,
+          lte: to,
+        },
+      },
+    });
+
+    return result._sum.amount || 0;
+  }
+
+  private async getRecentTransactions(limit: number): Promise<
+    Array<{
+      id: string;
+      type: TransactionType;
+      amount: number;
+      description: string;
+      createdAt: string;
+    }>
+  > {
+    const transactions = await this.prisma.transaction.findMany({
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        type: true,
+        amount: true,
+        description: true,
+        createdAt: true,
+      },
+    });
+
+    return transactions.map((transaction) => ({
+      id: transaction.id,
+      type: transaction.type as TransactionType,
+      amount: transaction.amount,
+      description: transaction.description,
+      createdAt: transaction.createdAt.toISOString(),
+    }));
+  }
+
+  private mapToTransactionResponse(transaction: any): TransactionResponseDto {
+    return {
+      id: transaction.id,
+      orderId: transaction.orderId,
+      userId: transaction.userId,
+      type: transaction.type,
+      status: transaction.status,
+      amount: transaction.amount,
+      currency: transaction.currency,
+      description: transaction.description,
+      reference: transaction.reference,
+      metadata: transaction.metadata,
+      paymentMethod: transaction.paymentMethod,
+      paymentMethodDetails: transaction.paymentMethodDetails,
+      processingFee: transaction.processingFee,
+      platformFee: transaction.platformFee,
+      netAmount: transaction.netAmount,
+      processedAt: transaction.processedAt,
+      createdAt: transaction.createdAt,
+      updatedAt: transaction.updatedAt,
+      order: transaction.order,
+      user: transaction.user,
+    };
+  }
+}

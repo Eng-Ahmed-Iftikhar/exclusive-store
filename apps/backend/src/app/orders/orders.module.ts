@@ -9,6 +9,7 @@ import { AuthModule } from '../auth/auth.module';
 import { EmailModule } from '../email/email.module';
 import { AppConfigModule } from '../config/config.module';
 import { ActivityModule } from '../activity/activity.module';
+import { TransactionsModule } from '../transactions/transactions.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ActivityModule } from '../activity/activity.module';
     AuthModule,
     EmailModule,
     ActivityModule,
+    TransactionsModule,
   ],
   controllers: [OrdersController, AdminOrdersController],
   providers: [OrdersService, AdminOrdersService],

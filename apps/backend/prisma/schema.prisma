@@ -35,6 +35,7 @@ model User {
   orders           Order[]
   paymentHistory   PaymentHistory[]
   activities       Activity[]
+  transactions     Transaction[]
   
   // RBAC Relations
   role            Role?           @relation("UserRole", fields: [roleId], references: [id])
@@ -327,6 +328,7 @@ model Order {
   user                  User?         @relation(fields: [userId], references: [id])
   items                 OrderItem[]
   paymentHistory        PaymentHistory[]
+  transactions          Transaction[]
 
   @@map("orders")
 }
@@ -572,4 +574,37 @@ model CartItem {
 
   @@unique([cartId, productId, variantId])
   @@map("cart_items")
+}
+
+model Transaction {
+  id                    String        @id @default(cuid())
+  orderId               String?       // Reference to the order that created this transaction
+  userId                String?       // User who made the transaction (null for guest orders)
+  type                  String        // 'order_payment', 'refund', 'partial_refund', 'fee', 'adjustment'
+  status                String        @default("pending") // 'pending', 'completed', 'failed', 'cancelled', 'refunded'
+  amount                Float         // Transaction amount (positive for income, negative for expenses)
+  currency              String        @default("USD")
+  description           String        // Human-readable description
+  reference             String?       // External reference (e.g., Stripe payment intent ID)
+  metadata              Json?         // Additional transaction data (JSON)
+  
+  // Payment method information
+  paymentMethod         String?       // 'card', 'paypal', 'bank_transfer', etc.
+  paymentMethodDetails  Json?         // Payment method specific details
+  
+  // Fee breakdown
+  processingFee         Float?        // Processing fee amount
+  platformFee           Float?        // Platform fee amount
+  netAmount             Float         // Amount after fees (amount - processingFee - platformFee)
+  
+  // Timestamps
+  processedAt           DateTime?     // When the transaction was processed
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  // Relations
+  order                 Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  user                  User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("transactions")
 }

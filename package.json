@@ -22,7 +22,8 @@
     "prisma:migrate-reset": "nx run backend:prisma:migrate-reset",
     "prisma:seed": "tsx apps/backend/prisma/seed.ts",
     "prisma:studio": "nx run backend:prisma:studio",
-    "admin:dev": "npx nx run admin:dev"
+    "admin:dev": "npx nx run admin:dev",
+    "kill-node": "taskkill /f /im node.exe"
   },
   "private": true,
   "dependencies": {

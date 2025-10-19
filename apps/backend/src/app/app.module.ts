@@ -24,6 +24,7 @@ import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { ActivityModule } from './activity/activity.module';
 import { FilesModule } from './files/files.module';
+import { TransactionsModule } from './transactions/transactions.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
@@ -54,6 +55,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     PermissionsModule,
     ActivityModule,
     FilesModule,
+    TransactionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
