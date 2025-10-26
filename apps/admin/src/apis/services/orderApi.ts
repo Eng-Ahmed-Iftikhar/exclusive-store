@@ -402,6 +402,28 @@ export const orderApi = createApi({
         { type: 'AdminOrder', id: 'LIVE_LIST' },
       ],
     }),
+
+    // Export orders as CSV
+    exportOrdersCSV: builder.mutation<void, AdminOrderQuery>({
+      query: (params) => ({
+        url: '/admin/orders/export/csv',
+        method: 'GET',
+        params,
+        responseHandler: async (response) => {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `orders_${
+            new Date().toISOString().split('T')[0]
+          }.csv`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        },
+      }),
+    }),
   }),
 });
 
@@ -420,6 +442,7 @@ export const {
   useMarkAsDeliveredMutation,
   useCancelOrderMutation,
   useDeleteOrderMutation,
+  useExportOrdersCSVMutation,
   useLazyGetOrdersQuery,
   useLazyGetLiveOrdersQuery,
   useLazyGetOrderByIdQuery,

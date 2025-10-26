@@ -1,21 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PermissionGuard } from '@/components/PermissionGuard';
 import OrderHistoryTable from '@/sections/app/finance/order-history/OrderHistoryTable';
+import {
+  useExportOrdersCSVMutation,
+  AdminOrderQuery,
+} from '@/apis/services/orderApi';
 
 const OrderHistoryView: React.FC = () => {
+  const [exportFilters, setExportFilters] = useState<AdminOrderQuery>({});
+  const [exportCSV] = useExportOrdersCSVMutation();
+
   const handleViewOrder = (orderId: string) => {
     // Navigate to order detail page
     window.location.href = `/finance/orders/${orderId}`;
   };
 
-  const handleExportOrders = (format: 'csv' | 'excel') => {
-    // Handle order export
-    console.log(`Exporting orders in ${format} format`);
-  };
-
-  const handleRefundOrder = (orderId: string) => {
-    // Handle order refund
-    console.log(`Processing refund for order ${orderId}`);
+  const handleExportOrders = async () => {
+    try {
+      await exportCSV(exportFilters).unwrap();
+    } catch (error) {
+      console.error('Failed to export orders as CSV:', error);
+    }
   };
 
   return (
@@ -30,25 +35,17 @@ const OrderHistoryView: React.FC = () => {
               Complete history of all orders with advanced filtering
             </p>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleExportOrders('csv')}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
-            >
-              Export CSV
-            </button>
-            <button
-              onClick={() => handleExportOrders('excel')}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-            >
-              Export Excel
-            </button>
-          </div>
+          <button
+            onClick={handleExportOrders}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+          >
+            Export CSV
+          </button>
         </div>
 
         <OrderHistoryTable
           onViewOrder={handleViewOrder}
-          onRefundOrder={handleRefundOrder}
+          onFiltersChange={setExportFilters}
         />
       </div>
     </PermissionGuard>

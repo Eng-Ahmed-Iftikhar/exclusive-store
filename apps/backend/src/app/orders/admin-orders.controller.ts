@@ -6,8 +6,10 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import { Response } from 'express';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -223,5 +225,23 @@ export class AdminOrdersController {
     @CurrentUser() user: any
   ): Promise<AdminOrderDto> {
     return this.adminOrdersService.cancelOrder(id, body.notes, user.id);
+  }
+
+  @Get('export/csv')
+  @ApiOperation({ summary: 'Export orders as CSV' })
+  @ApiResponse({
+    status: 200,
+    description: 'Orders exported successfully as CSV',
+  })
+  async exportOrdersAsCSV(
+    @Query() query: AdminOrderQueryDto,
+    @Res() res: Response
+  ) {
+    const csvContent = await this.adminOrdersService.exportToCSV(query);
+    const filename = `orders_${new Date().toISOString().split('T')[0]}.csv`;
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csvContent);
   }
 }

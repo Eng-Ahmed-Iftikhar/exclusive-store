@@ -1315,4 +1315,189 @@ export class AdminOrdersService {
       ),
     };
   }
+
+  async exportToCSV(query: AdminOrderQueryDto): Promise<string> {
+    // Fetch all orders matching the query (no pagination for export)
+    const orders = await this.getAllOrdersForExport(query);
+
+    // Create CSV header
+    const headers = [
+      'Order Number',
+      'Customer Name',
+      'Customer Email',
+      'Status',
+      'Payment Status',
+      'Priority',
+      'Total Items',
+      'Subtotal',
+      'Shipping Cost',
+      'Tax',
+      'Total',
+      'Order Date',
+      'Updated Date',
+      'Carrier',
+      'Tracking Number',
+      'Estimated Delivery',
+      'Actual Delivery',
+    ];
+
+    // Create CSV rows
+    const rows = orders.map((order) => [
+      order.orderNumber,
+      order.customer.name,
+      order.customer.email,
+      order.status.toUpperCase(),
+      order.paymentStatus.toUpperCase(),
+      order.priority.toUpperCase(),
+      order.totalItems.toString(),
+      order.totals.subtotal.toString(),
+      order.totals.shippingCost.toString(),
+      order.totals.tax.toString(),
+      order.totals.total.toString(),
+      order.timestamps.createdAt,
+      order.timestamps.updatedAt,
+      order.shipping?.carrier || 'N/A',
+      order.shipping?.trackingNumber || 'N/A',
+      order.shipping?.estimatedDelivery || 'N/A',
+      order.shipping?.actualDelivery || 'N/A',
+    ]);
+
+    // Combine headers and rows
+    const csvLines = [headers.join(',')];
+    rows.forEach((row) => {
+      csvLines.push(row.map((cell) => `"${cell}"`).join(','));
+    });
+
+    return csvLines.join('\n');
+  }
+
+  private async getAllOrdersForExport(
+    query: AdminOrderQueryDto
+  ): Promise<AdminOrderDto[]> {
+    const {
+      search,
+      status,
+      paymentStatus,
+      priority,
+      tags,
+      dateFrom,
+      dateTo,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = query;
+
+    // Build where clause
+    const where: any = {};
+
+    // Search filter
+    if (search) {
+      where.OR = [
+        { orderNumber: { contains: search, mode: 'insensitive' } },
+        {
+          user: {
+            name: { contains: search, mode: 'insensitive' },
+          },
+        },
+        {
+          user: {
+            email: { contains: search, mode: 'insensitive' },
+          },
+        },
+        {
+          guestUserInfo: { contains: search, mode: 'insensitive' },
+        },
+      ];
+    }
+
+    // Status filter
+    if (status) {
+      where.status = status;
+    }
+
+    // Payment status filter
+    if (paymentStatus) {
+      where.paymentStatus = paymentStatus;
+    }
+
+    // Priority filter
+    if (priority) {
+      where.priority = priority;
+    }
+
+    // Tags filter
+    if (tags && tags.length > 0) {
+      where.tags = {
+        hasSome: tags,
+      };
+    }
+
+    // Date range filter
+    if (dateFrom || dateTo) {
+      where.createdAt = {};
+      if (dateFrom) {
+        where.createdAt.gte = new Date(dateFrom);
+      }
+      if (dateTo) {
+        where.createdAt.lte = new Date(dateTo);
+      }
+    }
+
+    // Fetch orders
+    const orders = await this.prisma.order.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        items: {
+          include: {
+            variant: {
+              include: {
+                product: {
+                  select: {
+                    id: true,
+                    name: true,
+                    sku: true,
+                    category: {
+                      select: {
+                        id: true,
+                        name: true,
+                      },
+                    },
+                    subcategory: {
+                      select: {
+                        id: true,
+                        name: true,
+                      },
+                    },
+                  },
+                },
+                images: {
+                  select: {
+                    id: true,
+                    file: {
+                      select: {
+                        secureUrl: true,
+                      },
+                    },
+                    isPrimary: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        [sortBy]: sortOrder,
+      },
+    });
+
+    // Map to DTOs
+    return orders.map((order) => this.mapOrderToAdminDto(order));
+  }
 }
