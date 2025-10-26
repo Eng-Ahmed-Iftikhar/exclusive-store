@@ -1,5 +1,6 @@
 import React from 'react';
 import { FiSearch } from 'react-icons/fi';
+import { DateRangePicker, DateRange } from '@/components/ui/date-range-picker';
 
 interface TransactionsSearchAndFiltersProps {
   searchTerm: string;
@@ -9,6 +10,8 @@ interface TransactionsSearchAndFiltersProps {
   onStatusFilterChange: (value: string) => void;
   paymentMethodFilter: string;
   onPaymentMethodFilterChange: (value: string) => void;
+  dateRange?: DateRange;
+  onDateRangeChange?: (range: DateRange) => void;
 }
 
 const TransactionsSearchAndFilters: React.FC<
@@ -21,6 +24,8 @@ const TransactionsSearchAndFilters: React.FC<
   onStatusFilterChange,
   paymentMethodFilter,
   onPaymentMethodFilterChange,
+  dateRange,
+  onDateRangeChange,
 }) => {
   return (
     <div className="px-6 pb-6">
@@ -38,6 +43,12 @@ const TransactionsSearchAndFilters: React.FC<
           </div>
         </form>
         <div className="flex flex-wrap gap-2">
+          <DateRangePicker
+            value={dateRange}
+            onChange={onDateRangeChange}
+            placeholder="Select date range"
+            className="w-full lg:w-auto"
+          />
           <select
             value={statusFilter}
             onChange={(e) => onStatusFilterChange(e.target.value)}

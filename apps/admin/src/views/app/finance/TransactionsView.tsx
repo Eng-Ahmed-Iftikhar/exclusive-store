@@ -1,21 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PermissionGuard } from '@/components/PermissionGuard';
 import TransactionsTable from '@/sections/app/finance/transactions/TransactionsTable';
+import { ROUTES } from '@/routers/routes';
+import {
+  useExportTransactionsCSVMutation,
+  TransactionQueryParams,
+} from '@/apis/services/transactionApi';
 
 const TransactionsView: React.FC = () => {
+  const navigate = useNavigate();
+  const [exportFilters, setExportFilters] = useState<TransactionQueryParams>(
+    {}
+  );
+  const [exportCSV] = useExportTransactionsCSVMutation();
+
   const handleViewTransaction = (transactionId: string) => {
-    // Navigate to transaction detail page
-    window.location.href = `/finance/transactions/${transactionId}`;
+    navigate(`${ROUTES.ADMIN_FINANCE}/transactions/${transactionId}`);
   };
 
-  const handleRefundTransaction = (transactionId: string) => {
-    // Handle transaction refund
-    console.log(`Processing refund for transaction ${transactionId}`);
-  };
-
-  const handleExportTransactions = (format: 'csv' | 'excel') => {
-    // Handle transaction export
-    console.log(`Exporting transactions in ${format} format`);
+  const handleExportTransactions = async () => {
+    try {
+      await exportCSV(exportFilters).unwrap();
+    } catch (error) {
+      console.error('Failed to export transactions as CSV:', error);
+    }
   };
 
   return (
@@ -30,25 +39,17 @@ const TransactionsView: React.FC = () => {
               All payment transactions made by users during order placement
             </p>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleExportTransactions('csv')}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
-            >
-              Export CSV
-            </button>
-            <button
-              onClick={() => handleExportTransactions('excel')}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-            >
-              Export Excel
-            </button>
-          </div>
+          <button
+            onClick={handleExportTransactions}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+          >
+            Export CSV
+          </button>
         </div>
 
         <TransactionsTable
           onViewTransaction={handleViewTransaction}
-          onRefundTransaction={handleRefundTransaction}
+          onFiltersChange={setExportFilters}
         />
       </div>
     </PermissionGuard>

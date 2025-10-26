@@ -54,6 +54,8 @@ const FINANCE_ROUTES = {
   ADMIN_ORDER_DETAIL: '/finance/orders/:id',
   ADMIN_ORDER_HISTORY: '/finance/order-history',
   ADMIN_TRANSACTIONS: '/finance/transactions',
+  ADMIN_TRANSACTION_DETAIL: '/finance/transactions/:id',
+  ADMIN_INVOICE: '/finance/invoice/:id',
 };
 
 const AUTH_ROUTES = {
@@ -126,6 +128,8 @@ export const ROUTE_NAMES = {
   ORDER_DETAIL: 'Order Detail',
   ORDER_HISTORY: 'Order History',
   TRANSACTIONS: 'Transactions',
+  TRANSACTION_DETAIL: 'Transaction Detail',
+  INVOICE: 'Invoice',
   SETUP_PASSWORD: 'Setup Password',
   FORGOT_PASSWORD: 'Forgot Password',
   RESET_PASSWORD: 'Reset Password',
@@ -383,6 +387,18 @@ export const ADMIN_ROUTES: AppRoute[] = [
     name: ROUTE_NAMES.TRANSACTIONS,
     element: 'Transactions',
     icon: 'transactions',
+  },
+  {
+    path: ROUTES.ADMIN_TRANSACTION_DETAIL,
+    name: ROUTE_NAMES.TRANSACTION_DETAIL,
+    element: 'TransactionDetail',
+    icon: 'transaction-detail',
+  },
+  {
+    path: ROUTES.ADMIN_INVOICE,
+    name: ROUTE_NAMES.INVOICE,
+    element: 'Invoice',
+    icon: 'invoice',
   },
 ];
 

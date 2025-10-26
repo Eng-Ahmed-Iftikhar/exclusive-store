@@ -25,6 +25,8 @@ import LiveOrdersPage from '@/pages/app/finance/LiveOrdersPage';
 import OrderDetailPage from '@/pages/app/finance/OrderDetailPage';
 import OrderHistoryPage from '@/pages/app/finance/OrderHistoryPage';
 import TransactionsPage from '@/pages/app/finance/TransactionsPage';
+import TransactionDetailPage from '@/pages/app/finance/TransactionDetailPage';
+import InvoicePage from '@/pages/app/finance/InvoicePage';
 import CreatePermissionPage from '@/pages/app/management/CreatePermissionPage';
 import CreateResourcePage from '@/pages/app/management/CreateResourcePage';
 import CreateRolePage from '@/pages/app/management/CreateRolePage';
@@ -89,6 +91,8 @@ const COMPONENT_MAP = {
   OrderDetail: OrderDetailPage,
   OrderHistory: OrderHistoryPage,
   Transactions: TransactionsPage,
+  TransactionDetail: TransactionDetailPage,
+  Invoice: InvoicePage,
   Login: Login,
   SetupPassword: SetupPasswordPage,
   ForgotPassword: ForgotPasswordPage,

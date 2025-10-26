@@ -1,13 +1,5 @@
 import React from 'react';
-import { PermissionGuard } from '@/components/PermissionGuard';
-import {
-  FiEye,
-  FiRefreshCw,
-  FiCreditCard,
-  FiUser,
-  FiDollarSign,
-  FiCalendar,
-} from 'react-icons/fi';
+import { FiCreditCard, FiUser, FiDollarSign, FiCalendar } from 'react-icons/fi';
 import {
   Table,
   TableBody,
@@ -25,13 +17,11 @@ import {
 interface TransactionsTableContentProps {
   transactions: Transaction[];
   onViewTransaction: (transactionId: string) => void;
-  onRefundTransaction: (transactionId: string) => void;
 }
 
 const TransactionsTableContent: React.FC<TransactionsTableContentProps> = ({
   transactions,
   onViewTransaction,
-  onRefundTransaction,
 }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -95,13 +85,12 @@ const TransactionsTableContent: React.FC<TransactionsTableContentProps> = ({
             <TableHead>Status</TableHead>
             <TableHead>Gateway</TableHead>
             <TableHead>Date</TableHead>
-            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {transactions.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="py-12 text-center">
+              <TableCell colSpan={7} className="py-12 text-center">
                 <p className="text-gray-600 dark:text-gray-400">
                   No transactions found
                 </p>
@@ -109,7 +98,11 @@ const TransactionsTableContent: React.FC<TransactionsTableContentProps> = ({
             </TableRow>
           ) : (
             transactions.map((transaction: Transaction) => (
-              <TableRow key={transaction.id}>
+              <TableRow
+                key={transaction.id}
+                className="cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+                onClick={() => onViewTransaction(transaction.id)}
+              >
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
@@ -217,31 +210,6 @@ const TransactionsTableContent: React.FC<TransactionsTableContentProps> = ({
                         </p>
                       )}
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <PermissionGuard action="view" subject="transactions">
-                      <button
-                        onClick={() => onViewTransaction(transaction.id)}
-                        className="p-2 rounded-lg transition-colors text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/30"
-                        title="View Transaction"
-                      >
-                        <FiEye className="w-4 h-4" />
-                      </button>
-                    </PermissionGuard>
-                    {transaction.status === TransactionStatus.COMPLETED &&
-                      transaction.type === TransactionType.ORDER_PAYMENT && (
-                        <PermissionGuard action="edit" subject="transactions">
-                          <button
-                            onClick={() => onRefundTransaction(transaction.id)}
-                            className="p-2 rounded-lg transition-colors text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/30"
-                            title="Process Refund"
-                          >
-                            <FiRefreshCw className="w-4 h-4" />
-                          </button>
-                        </PermissionGuard>
-                      )}
                   </div>
                 </TableCell>
               </TableRow>

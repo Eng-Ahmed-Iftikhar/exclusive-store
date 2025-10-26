@@ -8,7 +8,9 @@ import {
   Body,
   Query,
   UseGuards,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -343,5 +345,51 @@ export class TransactionsController {
       totalPlatformFees: 0, // Would be calculated separately
       netFees: stats.financial.totalFees,
     };
+  }
+
+  @Get('export/csv')
+  @ApiOperation({ summary: 'Export transactions as CSV' })
+  @ApiResponse({
+    status: 200,
+    description: 'CSV file exported successfully',
+  })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'status', required: false, type: String })
+  @ApiQuery({ name: 'paymentMethod', required: false, type: String })
+  @ApiQuery({ name: 'dateFrom', required: false, type: String })
+  @ApiQuery({ name: 'dateTo', required: false, type: String })
+  async exportTransactionsAsCSV(
+    @Query() query: TransactionQueryDto,
+    @Res() res: Response
+  ) {
+    const csvContent = await this.transactionsService.exportToCSV(query);
+    const filename = `transactions_${
+      new Date().toISOString().split('T')[0]
+    }.csv`;
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csvContent);
+  }
+
+  @Get(':id/invoice')
+  @ApiOperation({ summary: 'Generate invoice for a transaction' })
+  @ApiResponse({
+    status: 200,
+    description: 'Invoice generated successfully',
+  })
+  @ApiResponse({ status: 404, description: 'Transaction not found' })
+  async generateInvoice(
+    @Param('id') id: string,
+    @Res() res: Response
+  ): Promise<void> {
+    const pdfBuffer = await this.transactionsService.generateInvoice(id);
+    const filename = `invoice_${id.slice(-8)}_${
+      new Date().toISOString().split('T')[0]
+    }.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(pdfBuffer);
   }
 }

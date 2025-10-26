@@ -55,7 +55,30 @@ export interface Transaction {
     id: string;
     orderNumber: string;
     total: number;
+    subtotal?: number;
+    shippingCost?: number;
+    tax?: number;
     status: string;
+    guestUserInfo?: string;
+    isGuestOrder?: boolean;
+    user?: {
+      id: string;
+      name: string;
+      email: string;
+    };
+    items?: Array<{
+      id: string;
+      quantity: number;
+      price: number;
+      variant?: {
+        id: string;
+        name: string;
+        product?: {
+          id: string;
+          name: string;
+        };
+      };
+    }>;
   };
   user?: {
     id: string;
@@ -140,6 +163,49 @@ export const transactionApi = createApi({
     getTransactionStats: builder.query<any, void>({
       query: () => '/transactions/stats',
     }),
+
+    // Export transactions as CSV
+    exportTransactionsCSV: builder.mutation<void, TransactionQueryParams>({
+      query: (params) => ({
+        url: '/transactions/export/csv',
+        method: 'GET',
+        params,
+        responseHandler: async (response) => {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `transactions_${
+            new Date().toISOString().split('T')[0]
+          }.csv`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        },
+      }),
+    }),
+
+    // Download invoice PDF
+    downloadInvoice: builder.mutation<void, string>({
+      query: (transactionId) => ({
+        url: `/transactions/${transactionId}/invoice`,
+        method: 'GET',
+        responseHandler: async (response) => {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `invoice_${transactionId.slice(-8)}_${
+            new Date().toISOString().split('T')[0]
+          }.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        },
+      }),
+    }),
   }),
 });
 
@@ -148,4 +214,6 @@ export const {
   useGetTransactionsQuery,
   useGetTransactionByIdQuery,
   useGetTransactionStatsQuery,
+  useExportTransactionsCSVMutation,
+  useDownloadInvoiceMutation,
 } = transactionApi;

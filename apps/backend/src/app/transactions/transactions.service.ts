@@ -18,6 +18,7 @@ import {
   PaymentMethod,
 } from './dto/transaction.dto';
 import { Prisma } from '@prisma/client';
+import PDFDocument from 'pdfkit';
 
 @Injectable()
 export class TransactionsService {
@@ -302,7 +303,33 @@ export class TransactionsService {
             id: true,
             orderNumber: true,
             total: true,
+            subtotal: true,
+            shippingCost: true,
+            tax: true,
             status: true,
+            guestUserInfo: true,
+            isGuestOrder: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+            items: {
+              include: {
+                variant: {
+                  include: {
+                    product: {
+                      select: {
+                        id: true,
+                        name: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
         },
         user: {
@@ -705,5 +732,504 @@ export class TransactionsService {
       order: transaction.order,
       user: transaction.user,
     };
+  }
+
+  // ==================== EXPORT OPERATIONS ====================
+
+  async exportToCSV(query: TransactionQueryDto): Promise<string> {
+    // Fetch all transactions matching the query (no pagination for export)
+    const transactions = await this.getAllTransactionsForExport(query);
+
+    // Create CSV header
+    const headers = [
+      'Transaction ID',
+      'Order Number',
+      'Customer Name',
+      'Customer Email',
+      'Type',
+      'Status',
+      'Amount',
+      'Currency',
+      'Payment Method',
+      'Processing Fee',
+      'Platform Fee',
+      'Net Amount',
+      'Description',
+      'Reference',
+      'Created At',
+      'Processed At',
+    ];
+
+    // Create CSV rows
+    const rows = transactions.map((transaction) => [
+      transaction.id,
+      transaction.order?.orderNumber || 'N/A',
+      transaction.user?.name || 'Guest',
+      transaction.user?.email || 'N/A',
+      transaction.type.replace('_', ' ').toUpperCase(),
+      transaction.status.toUpperCase(),
+      transaction.amount.toString(),
+      transaction.currency,
+      transaction.paymentMethod?.replace('_', ' ').toUpperCase() || 'N/A',
+      transaction.processingFee?.toString() || '0',
+      transaction.platformFee?.toString() || '0',
+      transaction.netAmount.toString(),
+      transaction.description || 'N/A',
+      transaction.reference || 'N/A',
+      new Date(transaction.createdAt).toISOString(),
+      transaction.processedAt
+        ? new Date(transaction.processedAt).toISOString()
+        : 'N/A',
+    ]);
+
+    // Combine headers and rows
+    const csvLines = [headers.join(',')];
+    rows.forEach((row) => {
+      csvLines.push(row.map((cell) => `"${cell}"`).join(','));
+    });
+
+    return csvLines.join('\n');
+  }
+
+  private async getAllTransactionsForExport(
+    query: TransactionQueryDto
+  ): Promise<TransactionResponseDto[]> {
+    const {
+      search,
+      type,
+      status,
+      paymentMethod,
+      userId,
+      orderId,
+      minAmount,
+      maxAmount,
+      dateFrom,
+      dateTo,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = query;
+
+    // Build where clause
+    const where: Prisma.TransactionWhereInput = {};
+
+    if (search) {
+      where.OR = [
+        { description: { contains: search, mode: 'insensitive' } },
+        { reference: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (type) {
+      where.type = type;
+    }
+
+    if (status) {
+      where.status = status;
+    }
+
+    if (paymentMethod) {
+      where.paymentMethod = paymentMethod;
+    }
+
+    if (userId) {
+      where.userId = userId;
+    }
+
+    if (orderId) {
+      where.orderId = orderId;
+    }
+
+    if (minAmount !== undefined || maxAmount !== undefined) {
+      where.amount = {};
+      if (minAmount !== undefined) {
+        where.amount.gte = minAmount;
+      }
+      if (maxAmount !== undefined) {
+        where.amount.lte = maxAmount;
+      }
+    }
+
+    if (dateFrom || dateTo) {
+      where.createdAt = {};
+      if (dateFrom) {
+        where.createdAt.gte = new Date(dateFrom);
+      }
+      if (dateTo) {
+        where.createdAt.lte = new Date(dateTo);
+      }
+    }
+
+    // Build order by clause
+    const orderBy: Prisma.TransactionOrderByWithRelationInput = {};
+    orderBy[sortBy] = sortOrder;
+
+    // Fetch all transactions (no pagination)
+    const transactions = await this.prisma.transaction.findMany({
+      where,
+      orderBy,
+      include: {
+        order: {
+          select: {
+            id: true,
+            orderNumber: true,
+            total: true,
+            status: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    // Map to response DTOs
+    return transactions.map((transaction) =>
+      this.mapToTransactionResponse(transaction)
+    );
+  }
+
+  async generateInvoice(transactionId: string): Promise<Buffer> {
+    const transaction = await this.prisma.transaction.findUnique({
+      where: { id: transactionId },
+      include: {
+        order: {
+          select: {
+            id: true,
+            orderNumber: true,
+            subtotal: true,
+            shippingCost: true,
+            tax: true,
+            total: true,
+            status: true,
+            guestUserInfo: true,
+            items: {
+              include: {
+                variant: {
+                  include: {
+                    product: {
+                      select: {
+                        id: true,
+                        name: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    const formatCurrency = (amount: number, currency = 'USD') => {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency,
+      }).format(amount);
+    };
+
+    const formatDate = (date: Date) => {
+      return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    };
+
+    const order = transaction.order;
+    const subtotal = order?.subtotal || transaction.amount;
+    const shippingCost = order?.shippingCost || 0;
+    const tax = order?.tax || 0;
+    const processingFee = transaction.processingFee || 0;
+    const total = transaction.netAmount;
+
+    const items = order?.items || [];
+
+    // Create PDF document
+    const doc = new PDFDocument({ margin: 50 });
+    const buffers: Buffer[] = [];
+
+    doc.on('data', buffers.push.bind(buffers));
+
+    // Add content to PDF
+    // Header
+    doc.fontSize(28).fillColor('#3b82f6').text('EXCLUSIVE', 50, 50);
+
+    doc
+      .fontSize(36)
+      .fillColor('#1e40af')
+      .text('INVOICE', 50, 50, { align: 'right', width: 500 });
+
+    doc
+      .fontSize(11)
+      .fillColor('#666')
+      .text(
+        `Transaction ID: TXN-${transaction.id.slice(-8).toUpperCase()}`,
+        50,
+        92,
+        { align: 'right', width: 500 }
+      );
+
+    // Line separator
+    doc.moveTo(50, 105).lineTo(550, 105).stroke('#3b82f6').lineWidth(3);
+
+    // Bill To section
+    doc.fontSize(18).fillColor('#1e40af').text('Bill To', 50, 130);
+
+    // Parse guest user info if available
+    let guestInfo: any = null;
+    if (transaction.order?.guestUserInfo) {
+      try {
+        guestInfo = JSON.parse(transaction.order.guestUserInfo);
+      } catch {
+        // Ignore parse errors
+      }
+    }
+
+    const customerName = transaction.user?.name || guestInfo?.name || 'Guest';
+    const customerEmail = transaction.user?.email || guestInfo?.email || 'N/A';
+    const customerPhone = guestInfo?.phone || 'N/A';
+
+    doc.fontSize(12).fillColor('#333').text(customerName, 50, 155);
+
+    doc.fontSize(11).fillColor('#666').text(customerEmail, 50, 173);
+
+    doc.fontSize(11).fillColor('#666').text(customerPhone, 50, 191);
+
+    // Transaction Details section (right column)
+    doc
+      .fontSize(18)
+      .fillColor('#1e40af')
+      .text('Transaction Details', 50, 130, { align: 'right', width: 500 });
+
+    doc
+      .fontSize(12)
+      .fillColor('#555')
+      .text(`Date: ${formatDate(transaction.createdAt)}`, 50, 155, {
+        align: 'right',
+        width: 500,
+      });
+
+    doc
+      .fontSize(12)
+      .fillColor('#555')
+      .text(
+        `Order Number: ${transaction.order?.orderNumber || 'N/A'}`,
+        50,
+        173,
+        { align: 'right', width: 500 }
+      );
+
+    doc
+      .fontSize(12)
+      .fillColor('#555')
+      .text(`Status: ${transaction.status.toUpperCase()}`, 50, 191, {
+        align: 'right',
+        width: 500,
+      });
+
+    // Items table header
+    doc.rect(50, 220, 500, 30).fill('#3b82f6');
+
+    doc.fontSize(12).fillColor('#fff').text('Item', 60, 230, { width: 240 });
+    doc
+      .fontSize(12)
+      .fillColor('#fff')
+      .text('Quantity', 300, 230, { width: 80, align: 'center' });
+    doc
+      .fontSize(12)
+      .fillColor('#fff')
+      .text('Price', 380, 230, { align: 'right', width: 70 });
+    doc
+      .fontSize(12)
+      .fillColor('#fff')
+      .text('Total', 450, 230, { align: 'right', width: 90 });
+
+    // Items
+    let yPosition = 255;
+    items.forEach((item: any) => {
+      const productName =
+        item.variant?.product?.name || item.variant?.name || 'Product';
+      const variantName = item.variant?.name;
+
+      // Check if this item has a variant name separate from product name
+      const hasVariantDetails = variantName && item.variant?.product?.name;
+
+      doc
+        .fontSize(10)
+        .fillColor('#333')
+        .text(productName, 60, yPosition, { width: 240 });
+
+      if (hasVariantDetails) {
+        doc
+          .fontSize(8)
+          .fillColor('#666')
+          .text(variantName, 60, yPosition + 12, { width: 240 });
+      }
+
+      doc
+        .fontSize(10)
+        .fillColor('#333')
+        .text(`${item.quantity}`, 300, yPosition, {
+          width: 80,
+          align: 'center',
+        });
+
+      doc
+        .fontSize(10)
+        .fillColor('#333')
+        .text(
+          formatCurrency(item.price, transaction.currency),
+          380,
+          yPosition,
+          {
+            align: 'right',
+            width: 70,
+          }
+        );
+
+      doc
+        .fontSize(10)
+        .fillColor('#333')
+        .text(
+          formatCurrency(item.price * item.quantity, transaction.currency),
+          450,
+          yPosition,
+          { align: 'right', width: 90 }
+        );
+
+      yPosition += hasVariantDetails ? 32 : 22;
+    });
+
+    // Totals section
+    yPosition += 25;
+    doc.fontSize(12).fillColor('#333').text('Subtotal:', 350, yPosition);
+
+    doc
+      .fontSize(12)
+      .fillColor('#333')
+      .text(formatCurrency(subtotal, transaction.currency), 430, yPosition, {
+        align: 'right',
+        width: 120,
+      });
+
+    if (shippingCost > 0) {
+      yPosition += 20;
+      doc.fontSize(12).fillColor('#333').text('Shipping:', 350, yPosition);
+
+      doc
+        .fontSize(12)
+        .fillColor('#333')
+        .text(
+          formatCurrency(shippingCost, transaction.currency),
+          430,
+          yPosition,
+          {
+            align: 'right',
+            width: 120,
+          }
+        );
+    }
+
+    if (tax > 0) {
+      yPosition += 20;
+      doc.fontSize(12).fillColor('#333').text('Tax:', 350, yPosition);
+
+      doc
+        .fontSize(12)
+        .fillColor('#333')
+        .text(formatCurrency(tax, transaction.currency), 430, yPosition, {
+          align: 'right',
+          width: 120,
+        });
+    }
+
+    if (processingFee > 0) {
+      yPosition += 20;
+      doc
+        .fontSize(12)
+        .fillColor('#333')
+        .text('Processing Fee:', 350, yPosition);
+
+      doc
+        .fontSize(12)
+        .fillColor('#333')
+        .text(
+          formatCurrency(processingFee, transaction.currency),
+          430,
+          yPosition,
+          { align: 'right', width: 120 }
+        );
+    }
+
+    yPosition += 25;
+    doc
+      .fillColor('#1e40af')
+      .rect(350, yPosition - 5, 200, 35)
+      .fill('#eff6ff');
+
+    doc
+      .fontSize(14)
+      .fillColor('#1e40af')
+      .text('TOTAL:', 360, yPosition + 5);
+
+    doc
+      .fontSize(14)
+      .fillColor('#1e40af')
+      .text(formatCurrency(total, transaction.currency), 430, yPosition + 5, {
+        align: 'right',
+        width: 120,
+      });
+
+    // Footer
+    yPosition += 50;
+    doc
+      .fontSize(14)
+      .fillColor('#666')
+      .text('Thank you for your business!', 50, yPosition, {
+        align: 'center',
+        width: 500,
+      });
+
+    doc
+      .fontSize(12)
+      .fillColor('#999')
+      .text('This is a computer-generated invoice.', 50, yPosition + 22, {
+        align: 'center',
+        width: 500,
+      });
+
+    // Finalize PDF
+    doc.end();
+
+    // Wait for PDF to be generated
+    return new Promise((resolve) => {
+      doc.on('end', () => {
+        const pdfBuffer = Buffer.concat(buffers);
+        resolve(pdfBuffer);
+      });
+    });
   }
 }

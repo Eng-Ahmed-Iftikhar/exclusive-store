@@ -309,6 +309,9 @@ export class TransactionResponseDto {
     id: string;
     orderNumber: string;
     total: number;
+    subtotal?: number;
+    shippingCost?: number;
+    tax?: number;
     status: string;
   };
 

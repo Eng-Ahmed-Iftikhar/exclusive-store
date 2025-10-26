@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   useGetTransactionsQuery,
   TransactionStatus,
   PaymentMethod,
   TransactionQueryParams,
 } from '@/apis/services/transactionApi';
+import { DateRange } from '@/components/ui/date-range-picker';
 import TransactionsHeader from './TransactionsHeader';
 import TransactionsSearchAndFilters from './TransactionsSearchAndFilters';
 import TransactionsTableContent from './TransactionsTableContent';
@@ -12,18 +14,46 @@ import TransactionsPagination from './TransactionsPagination';
 
 interface TransactionsTableProps {
   onViewTransaction: (transactionId: string) => void;
-  onRefundTransaction: (transactionId: string) => void;
+  onFiltersChange?: (filters: TransactionQueryParams) => void;
 }
 
 const TransactionsTable: React.FC<TransactionsTableProps> = ({
   onViewTransaction,
-  onRefundTransaction,
+  onFiltersChange,
 }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
-  const [limit, setLimit] = useState(10);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Initialize state from URL params
+  const [currentPage, setCurrentPage] = useState(() => {
+    const page = searchParams.get('page');
+    return page ? parseInt(page, 10) : 1;
+  });
+
+  const [searchTerm, setSearchTerm] = useState(() => {
+    return searchParams.get('search') || '';
+  });
+
+  const [statusFilter, setStatusFilter] = useState(() => {
+    return searchParams.get('status') || 'all';
+  });
+
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState(() => {
+    return searchParams.get('paymentMethod') || 'all';
+  });
+
+  const [dateRange, setDateRange] = useState<DateRange>(() => {
+    const dateFrom = searchParams.get('dateFrom');
+    const dateTo = searchParams.get('dateTo');
+    return {
+      from: dateFrom ? new Date(dateFrom) : null,
+      to: dateTo ? new Date(dateTo) : null,
+    };
+  });
+
+  const [limit, setLimit] = useState(() => {
+    const limitParam = searchParams.get('limit');
+    return limitParam ? parseInt(limitParam, 10) : 10;
+  });
 
   // RTK Query hook for transactions
   const queryParams: TransactionQueryParams = {
@@ -45,6 +75,14 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
     queryParams.paymentMethod = paymentMethodFilter as PaymentMethod;
   }
 
+  if (dateRange.from) {
+    queryParams.dateFrom = dateRange.from.toISOString();
+  }
+
+  if (dateRange.to) {
+    queryParams.dateTo = dateRange.to.toISOString();
+  }
+
   const {
     data: transactionsResponse,
     isLoading,
@@ -56,6 +94,74 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
   const transactions = transactionsResponse?.transactions || [];
   const totalPages = transactionsResponse?.pagination?.totalPages || 0;
   const totalItems = transactionsResponse?.pagination?.total || 0;
+
+  // Update URL search params whenever filters or pagination change
+  useEffect(() => {
+    const newSearchParams = new URLSearchParams();
+
+    // Add pagination params (only if not default)
+    if (currentPage > 1) {
+      newSearchParams.set('page', currentPage.toString());
+    }
+    if (limit !== 10) {
+      newSearchParams.set('limit', limit.toString());
+    }
+
+    // Add filter params (only if not default/empty)
+    if (searchTerm) {
+      newSearchParams.set('search', searchTerm);
+    }
+    if (statusFilter !== 'all') {
+      newSearchParams.set('status', statusFilter);
+    }
+    if (paymentMethodFilter !== 'all') {
+      newSearchParams.set('paymentMethod', paymentMethodFilter);
+    }
+    if (dateRange.from) {
+      newSearchParams.set('dateFrom', dateRange.from.toISOString());
+    }
+    if (dateRange.to) {
+      newSearchParams.set('dateTo', dateRange.to.toISOString());
+    }
+
+    // Only update if params have changed
+    const currentParams = searchParams.toString();
+    const newParams = newSearchParams.toString();
+
+    if (currentParams !== newParams) {
+      setSearchParams(newSearchParams, { replace: true });
+    }
+  }, [
+    currentPage,
+    limit,
+    searchTerm,
+    statusFilter,
+    paymentMethodFilter,
+    dateRange,
+    searchParams,
+    setSearchParams,
+  ]);
+
+  // Update filters whenever they change (for export functionality)
+  useEffect(() => {
+    if (onFiltersChange) {
+      const exportFilters: TransactionQueryParams = {};
+      if (searchTerm) exportFilters.search = searchTerm;
+      if (statusFilter !== 'all')
+        exportFilters.status = statusFilter as TransactionStatus;
+      if (paymentMethodFilter !== 'all')
+        exportFilters.paymentMethod = paymentMethodFilter as PaymentMethod;
+      if (dateRange.from) exportFilters.dateFrom = dateRange.from.toISOString();
+      if (dateRange.to) exportFilters.dateTo = dateRange.to.toISOString();
+      onFiltersChange(exportFilters);
+    }
+  }, [
+    searchTerm,
+    statusFilter,
+    paymentMethodFilter,
+    dateRange,
+    onFiltersChange,
+  ]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +184,11 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
 
   const handlePaymentMethodFilterChange = (value: string) => {
     setPaymentMethodFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleDateRangeChange = (range: DateRange) => {
+    setDateRange(range);
     setCurrentPage(1);
   };
 
@@ -130,12 +241,13 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
         onStatusFilterChange={handleStatusFilterChange}
         paymentMethodFilter={paymentMethodFilter}
         onPaymentMethodFilterChange={handlePaymentMethodFilterChange}
+        dateRange={dateRange}
+        onDateRangeChange={handleDateRangeChange}
       />
 
       <TransactionsTableContent
         transactions={transactions}
         onViewTransaction={onViewTransaction}
-        onRefundTransaction={onRefundTransaction}
       />
 
       <TransactionsPagination
