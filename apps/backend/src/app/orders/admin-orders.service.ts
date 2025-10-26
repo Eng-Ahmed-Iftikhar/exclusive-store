@@ -3,8 +3,17 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import Stripe from 'stripe';
 import { PrismaService } from '../prisma/prisma.service';
 import { ActivityService } from '../activity/activity.service';
+import { OrderActivityService } from './order-activity.service';
+import { EmailService } from '../email/email.service';
+import { ConfigService } from '../config/config.service';
+import { TransactionsService } from '../transactions/transactions.service';
+import {
+  TransactionType,
+  TransactionStatus,
+} from '../transactions/dto/transaction.dto';
 import {
   AdminOrderDto,
   AdminOrderListDto,
@@ -28,10 +37,20 @@ interface ActivityMetadata {
 
 @Injectable()
 export class AdminOrdersService {
+  private stripe: Stripe;
+
   constructor(
     private prisma: PrismaService,
-    private activityService: ActivityService
-  ) {}
+    private activityService: ActivityService,
+    private orderActivityService: OrderActivityService,
+    private emailService: EmailService,
+    private configService: ConfigService,
+    private transactionsService: TransactionsService
+  ) {
+    this.stripe = new Stripe(this.configService.stripeSecretKey, {
+      apiVersion: '2025-07-30.basil',
+    });
+  }
 
   async getOrders(query: AdminOrderQueryDto): Promise<AdminOrderListDto> {
     const {
@@ -263,18 +282,25 @@ export class AdminOrdersService {
       throw new NotFoundException('Order not found');
     }
 
+    const updateData: any = {
+      status: updateDto.status,
+      internalNotes: updateDto.notes
+        ? `${
+            order.internalNotes || ''
+          }\n[${new Date().toISOString()}] Status changed to ${
+            updateDto.status
+          }: ${updateDto.notes}`.trim()
+        : order.internalNotes,
+    };
+
+    // Set actualDelivery when status is changed to "delivered"
+    if (updateDto.status === 'delivered') {
+      updateData.actualDelivery = new Date();
+    }
+
     const updatedOrder = await this.prisma.order.update({
       where: { id: orderId },
-      data: {
-        status: updateDto.status,
-        internalNotes: updateDto.notes
-          ? `${
-              order.internalNotes || ''
-            }\n[${new Date().toISOString()}] Status changed to ${
-              updateDto.status
-            }: ${updateDto.notes}`.trim()
-          : order.internalNotes,
-      },
+      data: updateData,
       include: {
         user: {
           select: {
@@ -325,6 +351,21 @@ export class AdminOrdersService {
       orderId,
       `status updated to ${updateDto.status}`,
       userId || 'admin'
+    );
+
+    // Track detailed order activity
+    await this.orderActivityService.createActivity(
+      {
+        orderId,
+        action: 'status_change',
+        field: 'status',
+        oldValue: order.status,
+        newValue: updateDto.status,
+        metadata: {
+          notes: updateDto.notes,
+        },
+      },
+      userId
     );
 
     return this.mapOrderToAdminDto(updatedOrder);
@@ -413,6 +454,56 @@ export class AdminOrdersService {
       userId || 'admin'
     );
 
+    // Track detailed shipping activities
+    if (updateDto.trackingNumber !== undefined) {
+      await this.orderActivityService.createActivity(
+        {
+          orderId,
+          action: 'shipping_update',
+          field: 'trackingNumber',
+          oldValue: order.trackingNumber || undefined,
+          newValue: updateDto.trackingNumber || undefined,
+        },
+        userId
+      );
+    }
+    if (updateDto.carrier !== undefined) {
+      await this.orderActivityService.createActivity(
+        {
+          orderId,
+          action: 'shipping_update',
+          field: 'carrier',
+          oldValue: order.carrier || undefined,
+          newValue: updateDto.carrier || undefined,
+        },
+        userId
+      );
+    }
+    if (updateDto.estimatedDelivery !== undefined) {
+      await this.orderActivityService.createActivity(
+        {
+          orderId,
+          action: 'shipping_update',
+          field: 'estimatedDelivery',
+          oldValue: order.estimatedDelivery?.toISOString() || undefined,
+          newValue: updateDto.estimatedDelivery || undefined,
+        },
+        userId
+      );
+    }
+    if (updateDto.actualDelivery !== undefined) {
+      await this.orderActivityService.createActivity(
+        {
+          orderId,
+          action: 'shipping_update',
+          field: 'actualDelivery',
+          oldValue: order.actualDelivery?.toISOString() || undefined,
+          newValue: updateDto.actualDelivery || undefined,
+        },
+        userId
+      );
+    }
+
     return this.mapOrderToAdminDto(updatedOrder);
   }
 
@@ -486,6 +577,32 @@ export class AdminOrdersService {
       'notes updated',
       userId || 'admin'
     );
+
+    // Track detailed notes activities
+    if (updateDto.notes !== undefined) {
+      await this.orderActivityService.createActivity(
+        {
+          orderId,
+          action: 'notes_update',
+          field: 'notes',
+          oldValue: order.notes || undefined,
+          newValue: updateDto.notes || undefined,
+        },
+        userId
+      );
+    }
+    if (updateDto.internalNotes !== undefined) {
+      await this.orderActivityService.createActivity(
+        {
+          orderId,
+          action: 'notes_update',
+          field: 'internalNotes',
+          oldValue: order.internalNotes || undefined,
+          newValue: updateDto.internalNotes || undefined,
+        },
+        userId
+      );
+    }
 
     return this.mapOrderToAdminDto(updatedOrder);
   }
@@ -850,6 +967,239 @@ export class AdminOrdersService {
       'marked as delivered',
       userId || 'admin'
     );
+
+    return this.mapOrderToAdminDto(updatedOrder);
+  }
+
+  async cancelOrder(
+    orderId: string,
+    notes?: string,
+    userId?: string
+  ): Promise<AdminOrderDto> {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        items: {
+          include: {
+            variant: true,
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.status === 'delivered') {
+      throw new BadRequestException('Cannot cancel delivered order');
+    }
+
+    if (order.status === 'cancelled') {
+      throw new BadRequestException('Order is already cancelled');
+    }
+
+    // Process refund if payment was made
+    let refundIntent;
+    if (order.paymentStatus === 'paid' && order.stripePaymentIntentId) {
+      try {
+        refundIntent = await this.stripe.refunds.create({
+          payment_intent: order.stripePaymentIntentId,
+          reason: 'requested_by_customer',
+          metadata: {
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            cancelledBy: userId || 'admin',
+            cancellationNotes: notes || '',
+          },
+        });
+      } catch (error) {
+        console.error('Error processing refund:', error);
+        throw new BadRequestException('Failed to process refund');
+      }
+    }
+
+    // Restore stock for all items
+    for (const item of order.items) {
+      if (item.variantId) {
+        const variantStock = await this.prisma.stock.findFirst({
+          where: { variantId: item.variantId },
+        });
+
+        if (variantStock) {
+          const newQuantity = variantStock.quantity + item.quantity;
+          await this.prisma.stock.update({
+            where: { id: variantStock.id },
+            data: {
+              quantity: newQuantity,
+              isInStock: newQuantity > 0,
+            },
+          });
+        }
+      }
+
+      // Also restore product-level stock
+      if (item.variant) {
+        const productStock = await this.prisma.stock.findFirst({
+          where: { productId: item.variant.productId },
+        });
+
+        if (productStock) {
+          const newQuantity = productStock.quantity + item.quantity;
+          await this.prisma.stock.update({
+            where: { id: productStock.id },
+            data: {
+              quantity: newQuantity,
+              isInStock: newQuantity > 0,
+            },
+          });
+        }
+      }
+    }
+
+    // Update order status
+    const updatedOrder = await this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: 'cancelled',
+        paymentStatus:
+          order.paymentStatus === 'paid' ? 'refunded' : order.paymentStatus,
+        internalNotes: notes
+          ? `${
+              order.internalNotes || ''
+            }\n[${new Date().toISOString()}] Order cancelled by admin: ${notes}`.trim()
+          : order.internalNotes,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        items: {
+          include: {
+            variant: {
+              include: {
+                product: {
+                  include: {
+                    category: {
+                      select: {
+                        id: true,
+                        name: true,
+                      },
+                    },
+                    subcategory: {
+                      select: {
+                        id: true,
+                        name: true,
+                      },
+                    },
+                  },
+                },
+                images: {
+                  include: {
+                    file: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        paymentHistory: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+      },
+    });
+
+    // Create transaction record for refund
+    if (order.paymentStatus === 'paid' && refundIntent) {
+      try {
+        await this.transactionsService.createTransaction(
+          {
+            orderId: order.id,
+            userId: order.userId || undefined,
+            type: TransactionType.REFUNDED,
+            status: TransactionStatus.COMPLETED,
+            amount: -order.total, // Negative amount for refund
+            currency: 'USD',
+            description: `Refund for cancelled order ${order.orderNumber}`,
+            reference: refundIntent.id,
+            metadata: {
+              refundId: refundIntent.id,
+              refundAmount: refundIntent.amount / 100, // Convert from cents
+              cancellationNotes: notes || '',
+              cancelledBy: userId || 'admin',
+            },
+            netAmount: -order.total,
+            processedAt: new Date().toISOString(),
+          },
+          userId
+        );
+      } catch (error) {
+        console.error('Error creating transaction record:', error);
+        // Don't throw - transaction logging failure shouldn't block cancellation
+      }
+    }
+
+    // Log activity
+    await this.activityService.logOrderActivity(
+      orderId,
+      'order cancelled and refunded',
+      userId || 'admin'
+    );
+
+    // Track detailed cancellation activity
+    await this.orderActivityService.createActivity(
+      {
+        orderId,
+        action: 'order_cancelled',
+        field: 'status',
+        oldValue: order.status,
+        newValue: 'cancelled',
+        metadata: {
+          notes,
+          refundProcessed: order.paymentStatus === 'paid',
+        },
+      },
+      userId
+    );
+
+    // Send cancellation email to customer
+    try {
+      const customerEmail =
+        order.user?.email || JSON.parse(order.guestUserInfo || '{}').email;
+      if (customerEmail) {
+        await this.emailService.sendEmail({
+          to: customerEmail,
+          subject: `Order ${order.orderNumber} Cancelled`,
+          html: `
+            <h2>Order Cancelled</h2>
+            <p>Your order ${order.orderNumber} has been cancelled.</p>
+            ${
+              order.paymentStatus === 'paid'
+                ? '<p>A refund has been processed and will appear in your account within 5-10 business days.</p>'
+                : ''
+            }
+            ${notes ? `<p>Reason: ${notes}</p>` : ''}
+            <p>If you have any questions, please contact our support team.</p>
+          `,
+        });
+      }
+    } catch (error) {
+      console.error('Error sending cancellation email:', error);
+      // Don't throw - email failure shouldn't block cancellation
+    }
 
     return this.mapOrderToAdminDto(updatedOrder);
   }

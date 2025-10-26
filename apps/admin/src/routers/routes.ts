@@ -51,6 +51,7 @@ const FINANCE_ROUTES = {
   ADMIN_FINANCE: '/finance',
   ADMIN_FINANCE_DASHBOARD: '/finance/dashboard',
   ADMIN_LIVE_ORDERS: '/finance/live-orders',
+  ADMIN_ORDER_DETAIL: '/finance/orders/:id',
   ADMIN_ORDER_HISTORY: '/finance/order-history',
   ADMIN_TRANSACTIONS: '/finance/transactions',
 };
@@ -122,6 +123,7 @@ export const ROUTE_NAMES = {
   EDIT_PRODUCT_REVIEW: 'Edit Product - Review',
   FINANCE_DASHBOARD: 'Financial Dashboard',
   LIVE_ORDERS: 'Live Orders',
+  ORDER_DETAIL: 'Order Detail',
   ORDER_HISTORY: 'Order History',
   TRANSACTIONS: 'Transactions',
   SETUP_PASSWORD: 'Setup Password',
@@ -363,6 +365,12 @@ export const ADMIN_ROUTES: AppRoute[] = [
     name: ROUTE_NAMES.LIVE_ORDERS,
     element: 'LiveOrders',
     icon: 'orders',
+  },
+  {
+    path: ROUTES.ADMIN_ORDER_DETAIL,
+    name: ROUTE_NAMES.ORDER_DETAIL,
+    element: 'OrderDetail',
+    icon: 'order-detail',
   },
   {
     path: ROUTES.ADMIN_ORDER_HISTORY,

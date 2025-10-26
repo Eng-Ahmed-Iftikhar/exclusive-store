@@ -30,6 +30,7 @@ model User {
   githubId        String?  @unique
   linkedinId      String?  @unique
   provider        String?  // 'google', 'facebook', 'twitter', 'github', 'linkedin', 'email'
+  avatar          String?  // Profile picture URL
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -45,6 +46,7 @@ model User {
   paymentHistory   PaymentHistory[]
   activities       Activity[]
   transactions     Transaction[]
+  orderActivities OrderActivity[]
   
   // RBAC Relations
   role            Role?           @relation("UserRole", fields: [roleId], references: [id])
@@ -338,8 +340,27 @@ model Order {
   items                 OrderItem[]
   paymentHistory        PaymentHistory[]
   transactions          Transaction[]
+  activities           OrderActivity[]
 
   @@map("orders")
+}
+
+model OrderActivity {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  action      String   // status_change, shipping_update, notes_update, etc.
+  field       String?  // which field was changed (status, trackingNumber, carrier, etc.)
+  oldValue    String?  // previous value
+  newValue    String?  // new value
+  performedBy String?  // admin/user ID who performed the action
+  performedByUser User? @relation(fields: [performedBy], references: [id], onDelete: SetNull)
+  metadata    Json?    // additional data (JSON)
+  createdAt   DateTime @default(now())
+
+  @@index([orderId])
+  @@index([performedBy])
+  @@map("order_activities")
 }
 
 model PaymentHistory {
@@ -589,7 +610,7 @@ model Transaction {
   id                    String        @id @default(cuid())
   orderId               String?       // Reference to the order that created this transaction
   userId                String?       // User who made the transaction (null for guest orders)
-  type                  String        // 'order_payment', 'refund', 'partial_refund', 'fee', 'adjustment'
+  type                  String        // 'order_payment', 'refunded', 'partial_refund', 'fee', 'adjustment'
   status                String        @default("pending") // 'pending', 'completed', 'failed', 'cancelled', 'refunded'
   amount                Float         // Transaction amount (positive for income, negative for expenses)
   currency              String        @default("USD")

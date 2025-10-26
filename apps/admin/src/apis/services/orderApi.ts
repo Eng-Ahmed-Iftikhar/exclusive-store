@@ -34,6 +34,28 @@ export interface AdminOrderItem {
   totalPrice: number;
 }
 
+export interface OrderActivity {
+  id: string;
+  orderId: string;
+  action: string;
+  field?: string;
+  oldValue?: string;
+  newValue?: string;
+  performedBy?: string;
+  metadata?: any;
+  createdAt: string;
+  performedByUser?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+export interface OrderActivityListResponse {
+  activities: OrderActivity[];
+  total: number;
+}
+
 export interface AdminOrder {
   id: string;
   orderNumber: string;
@@ -239,6 +261,14 @@ export const orderApi = createApi({
       providesTags: (result, error, id) => [{ type: 'AdminOrder', id }],
     }),
 
+    // Get order activities
+    getOrderActivities: builder.query<OrderActivityListResponse, string>({
+      query: (id) => `/admin/orders/${id}/activities`,
+      providesTags: (result, error, id) => [
+        { type: 'AdminOrder', id: `${id}-activities` },
+      ],
+    }),
+
     // Get order statistics
     getOrderStats: builder.query<OrderStats, void>({
       query: () => '/admin/orders/stats',
@@ -343,6 +373,23 @@ export const orderApi = createApi({
       ],
     }),
 
+    // Cancel order and process refund
+    cancelOrder: builder.mutation<
+      AdminOrder,
+      { id: string; data: { notes?: string } }
+    >({
+      query: ({ id, data }) => ({
+        url: `/admin/orders/${id}/cancel`,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'AdminOrder', id },
+        { type: 'AdminOrder', id: 'LIST' },
+        { type: 'AdminOrder', id: 'LIVE_LIST' },
+      ],
+    }),
+
     // Delete order
     deleteOrder: builder.mutation<void, string>({
       query: (id) => ({
@@ -363,6 +410,7 @@ export const {
   useGetOrdersQuery,
   useGetLiveOrdersQuery,
   useGetOrderByIdQuery,
+  useGetOrderActivitiesQuery,
   useGetOrderStatsQuery,
   useUpdateOrderStatusMutation,
   useUpdateOrderShippingMutation,
@@ -370,6 +418,7 @@ export const {
   useUpdateOrderPriorityMutation,
   useUpdateOrderTagsMutation,
   useMarkAsDeliveredMutation,
+  useCancelOrderMutation,
   useDeleteOrderMutation,
   useLazyGetOrdersQuery,
   useLazyGetLiveOrdersQuery,

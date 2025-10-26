@@ -3,6 +3,7 @@ import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
 import { AdminOrdersController } from './admin-orders.controller';
 import { AdminOrdersService } from './admin-orders.service';
+import { OrderActivityService } from './order-activity.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { CartModule } from '../cart/cart.module';
 import { AuthModule } from '../auth/auth.module';
@@ -22,7 +23,7 @@ import { TransactionsModule } from '../transactions/transactions.module';
     TransactionsModule,
   ],
   controllers: [OrdersController, AdminOrdersController],
-  providers: [OrdersService, AdminOrdersService],
-  exports: [OrdersService, AdminOrdersService],
+  providers: [OrdersService, AdminOrdersService, OrderActivityService],
+  exports: [OrdersService, AdminOrdersService, OrderActivityService],
 })
 export class OrdersModule {}

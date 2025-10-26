@@ -660,6 +660,29 @@ export class TransactionsService {
   }
 
   private mapToTransactionResponse(transaction: any): TransactionResponseDto {
+    // Mask sensitive payment method details
+    let maskedPaymentMethodDetails = transaction.paymentMethodDetails;
+    if (
+      maskedPaymentMethodDetails &&
+      typeof maskedPaymentMethodDetails === 'object'
+    ) {
+      maskedPaymentMethodDetails = { ...maskedPaymentMethodDetails };
+
+      // Mask card numbers (last4 field)
+      if (maskedPaymentMethodDetails.last4) {
+        maskedPaymentMethodDetails.last4 = `****${maskedPaymentMethodDetails.last4}`;
+      }
+
+      // Mask any fields that might contain sensitive data
+      if (maskedPaymentMethodDetails.card?.number) {
+        maskedPaymentMethodDetails.card.number = '****-****-****-****';
+      }
+
+      if (maskedPaymentMethodDetails.account_number) {
+        maskedPaymentMethodDetails.account_number = '****-****-****-****';
+      }
+    }
+
     return {
       id: transaction.id,
       orderId: transaction.orderId,
@@ -672,7 +695,7 @@ export class TransactionsService {
       reference: transaction.reference,
       metadata: transaction.metadata,
       paymentMethod: transaction.paymentMethod,
-      paymentMethodDetails: transaction.paymentMethodDetails,
+      paymentMethodDetails: maskedPaymentMethodDetails,
       processingFee: transaction.processingFee,
       platformFee: transaction.platformFee,
       netAmount: transaction.netAmount,

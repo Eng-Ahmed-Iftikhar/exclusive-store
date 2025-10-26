@@ -18,6 +18,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AdminOrdersService } from './admin-orders.service';
+import { OrderActivityService } from './order-activity.service';
 import {
   AdminOrderDto,
   AdminOrderListDto,
@@ -29,13 +30,17 @@ import {
   UpdateOrderTagsDto,
   OrderStatsDto,
 } from './dto/admin-order.dto';
+import { OrderActivityListDto } from './dto/order-activity.dto';
 
 @ApiTags('Admin Orders')
 @Controller('admin/orders')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth('JWT-auth')
 export class AdminOrdersController {
-  constructor(private readonly adminOrdersService: AdminOrdersService) {}
+  constructor(
+    private readonly adminOrdersService: AdminOrdersService,
+    private readonly orderActivityService: OrderActivityService
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get orders with filtering and pagination' })
@@ -92,6 +97,19 @@ export class AdminOrdersController {
     @CurrentUser() user: any
   ): Promise<AdminOrderDto> {
     return this.adminOrdersService.getOrderById(id);
+  }
+
+  @Get(':id/activities')
+  @ApiOperation({ summary: 'Get order activities' })
+  @ApiResponse({
+    status: 200,
+    description: 'Order activities retrieved successfully',
+    type: OrderActivityListDto,
+  })
+  async getOrderActivities(
+    @Param('id') id: string
+  ): Promise<OrderActivityListDto> {
+    return this.orderActivityService.getOrderActivities(id);
   }
 
   @Patch(':id/status')
@@ -188,5 +206,22 @@ export class AdminOrdersController {
     @CurrentUser() user: any
   ): Promise<AdminOrderDto> {
     return this.adminOrdersService.markAsDelivered(id, user.id);
+  }
+
+  @Post(':id/cancel')
+  @ApiOperation({ summary: 'Cancel order and process refund' })
+  @ApiResponse({
+    status: 200,
+    description: 'Order cancelled and refund processed successfully',
+    type: AdminOrderDto,
+  })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  @ApiResponse({ status: 400, description: 'Cannot cancel order' })
+  async cancelOrder(
+    @Param('id') id: string,
+    @Body() body: { notes?: string },
+    @CurrentUser() user: any
+  ): Promise<AdminOrderDto> {
+    return this.adminOrdersService.cancelOrder(id, body.notes, user.id);
   }
 }

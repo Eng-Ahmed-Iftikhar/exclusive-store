@@ -1,6 +1,6 @@
 import React from 'react';
 import { PermissionGuard } from '@/components/PermissionGuard';
-import TransactionsTable from '@/sections/app/finance/TransactionsTable';
+import TransactionsTable from '@/sections/app/finance/transactions/TransactionsTable';
 
 const TransactionsView: React.FC = () => {
   const handleViewTransaction = (transactionId: string) => {

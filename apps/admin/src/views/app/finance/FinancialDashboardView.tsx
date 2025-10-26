@@ -1,11 +1,11 @@
 import React from 'react';
 import { PermissionGuard } from '@/components/PermissionGuard';
-import FinancialOverview from '@/sections/app/finance/FinancialOverview';
-import SalesAnalytics from '@/sections/app/finance/SalesAnalytics';
-import ProfitLossAnalysis from '@/sections/app/finance/ProfitLossAnalysis';
-import RevenueCharts from '@/sections/app/finance/RevenueCharts';
-import TopProducts from '@/sections/app/finance/TopProducts';
-import PaymentMethodsBreakdown from '@/sections/app/finance/PaymentMethodsBreakdown';
+import FinancialOverview from '@/sections/app/finance/overview/FinancialOverview';
+import SalesAnalytics from '@/sections/app/finance/sales-analytics/SalesAnalytics';
+import ProfitLossAnalysis from '@/sections/app/finance/profit-loss/ProfitLossAnalysis';
+import RevenueCharts from '@/sections/app/finance/revenue/RevenueCharts';
+import TopProducts from '@/sections/app/finance/top-products/TopProducts';
+import PaymentMethodsBreakdown from '@/sections/app/finance/payment-methods/PaymentMethodsBreakdown';
 
 const FinancialDashboardView: React.FC = () => {
   return (

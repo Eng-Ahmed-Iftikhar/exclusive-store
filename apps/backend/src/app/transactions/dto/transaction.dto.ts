@@ -13,7 +13,7 @@ import {
 
 export enum TransactionType {
   ORDER_PAYMENT = 'order_payment',
-  REFUND = 'refund',
+  REFUNDED = 'refunded',
   PARTIAL_REFUND = 'partial_refund',
   FEE = 'fee',
   ADJUSTMENT = 'adjustment',

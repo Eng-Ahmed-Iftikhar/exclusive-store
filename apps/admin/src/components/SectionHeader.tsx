@@ -1,13 +1,13 @@
 import React from 'react';
 
-interface TableHeaderProps {
+interface SectionHeaderProps {
   title: string;
   description?: string;
   children?: React.ReactNode;
   className?: string;
 }
 
-const TableHeader: React.FC<TableHeaderProps> = ({
+const SectionHeader: React.FC<SectionHeaderProps> = ({
   title,
   description,
   children,
@@ -32,4 +32,4 @@ const TableHeader: React.FC<TableHeaderProps> = ({
   );
 };
 
-export default TableHeader;
+export default SectionHeader;

@@ -144,12 +144,14 @@ export class AuthService {
         },
       });
 
-      // Log user registration activity
-      await this.activityService.logUserActivity(
-        dbUser.id,
-        'User registered via Google OAuth',
-        dbUser.email
-      );
+      // Log user registration activity (dbUser is guaranteed to be non-null here)
+      if (dbUser) {
+        await this.activityService.logUserActivity(
+          dbUser.id,
+          'User registered via Google OAuth',
+          dbUser.email
+        );
+      }
     } else {
       // Update existing user with Google info if not already set
       if (!dbUser.googleId) {
@@ -173,6 +175,11 @@ export class AuthService {
           },
         });
       }
+    }
+
+    // Ensure dbUser is not null
+    if (!dbUser) {
+      throw new UnauthorizedException('Failed to create or retrieve user');
     }
 
     // Generate token pair

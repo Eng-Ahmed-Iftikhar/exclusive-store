@@ -1,21 +1,14 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PermissionGuard } from '@/components/PermissionGuard';
-import LiveOrdersTable from '@/sections/app/finance/LiveOrdersTable';
+import LiveOrdersTable from '@/sections/app/finance/live-orders/LiveOrdersTable';
+import { ROUTES } from '@/routers/routes';
 
 const LiveOrdersView: React.FC = () => {
+  const navigate = useNavigate();
+
   const handleViewOrder = (orderId: string) => {
-    // Navigate to order detail page
-    window.location.href = `/finance/orders/${orderId}`;
-  };
-
-  const handleUpdateStatus = (orderId: string, status: string) => {
-    // Handle order status update
-    console.log(`Updating order ${orderId} to status: ${status}`);
-  };
-
-  const handleMarkAsDelivered = (orderId: string) => {
-    // Handle marking order as delivered
-    console.log(`Marking order ${orderId} as delivered`);
+    navigate(`${ROUTES.ADMIN_FINANCE}/orders/${orderId}`);
   };
 
   return (
@@ -32,11 +25,7 @@ const LiveOrdersView: React.FC = () => {
           </div>
         </div>
 
-        <LiveOrdersTable
-          onViewOrder={handleViewOrder}
-          onUpdateStatus={handleUpdateStatus}
-          onMarkAsDelivered={handleMarkAsDelivered}
-        />
+        <LiveOrdersTable onViewOrder={handleViewOrder} />
       </div>
     </PermissionGuard>
   );

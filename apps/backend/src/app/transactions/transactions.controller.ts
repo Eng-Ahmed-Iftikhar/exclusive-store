@@ -91,7 +91,7 @@ export class TransactionsController {
     required: false,
     enum: [
       'order_payment',
-      'refund',
+      'refunded',
       'partial_refund',
       'fee',
       'adjustment',
@@ -216,7 +216,7 @@ export class TransactionsController {
     required: false,
     enum: [
       'order_payment',
-      'refund',
+      'refunded',
       'partial_refund',
       'fee',
       'adjustment',
@@ -260,7 +260,7 @@ export class TransactionsController {
     required: false,
     enum: [
       'order_payment',
-      'refund',
+      'refunded',
       'partial_refund',
       'fee',
       'adjustment',

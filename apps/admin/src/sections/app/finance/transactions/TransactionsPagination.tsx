@@ -1,39 +1,39 @@
 import React from 'react';
 import DataPagination from '@/components/data-pagination';
 
-interface PaginationControlsProps {
+interface TransactionsPaginationProps {
+  transactions: any[];
   currentPage: number;
   totalPages: number;
   totalItems: number;
-  itemsPerPage: number;
+  limit: number;
   onPageChange: (page: number) => void;
-  onItemsPerPageChange: (limit: number) => void;
-  className?: string;
+  onItemsPerPageChange: (newLimit: number) => void;
 }
 
-const PaginationControls: React.FC<PaginationControlsProps> = ({
+const TransactionsPagination: React.FC<TransactionsPaginationProps> = ({
+  transactions,
   currentPage,
   totalPages,
   totalItems,
-  itemsPerPage,
+  limit,
   onPageChange,
   onItemsPerPageChange,
-  className = '',
 }) => {
-  if (totalItems === 0) return null;
+  if (transactions.length === 0) return null;
 
   return (
-    <div className={className}>
+    <div className="px-6 pb-6">
       <DataPagination
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={onPageChange}
         onItemsPerPageChange={onItemsPerPageChange}
         totalItems={totalItems}
-        itemsPerPage={itemsPerPage}
+        itemsPerPage={limit}
       />
     </div>
   );
 };
 
-export default PaginationControls;
+export default TransactionsPagination;

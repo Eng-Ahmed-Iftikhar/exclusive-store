@@ -177,7 +177,7 @@ export class OrdersService {
         tax,
         total,
         status: 'confirmed',
-        paymentStatus: 'completed',
+        paymentStatus: 'paid',
         stripePaymentIntentId: paymentIntentId,
         notes: orderDetails.notes,
         isGuestOrder: orderDetails.isGuestOrder,
@@ -195,6 +195,47 @@ export class OrdersService {
     await this.prisma.orderItem.createMany({
       data: orderItems,
     });
+
+    // Decrease stock for each item after order is created
+    for (const item of cart.items) {
+      // Handle variant stock
+      if (item.variantId) {
+        const variantStock = await this.prisma.stock.findFirst({
+          where: { variantId: item.variantId },
+        });
+
+        if (variantStock) {
+          const newQuantity = variantStock.quantity - item.quantity;
+
+          await this.prisma.stock.update({
+            where: { id: variantStock.id },
+            data: {
+              quantity: newQuantity,
+              isInStock: newQuantity > 0,
+            },
+          });
+        }
+      }
+
+      // Handle product stock
+      if (item.productId) {
+        const productStock = await this.prisma.stock.findFirst({
+          where: { productId: item.productId },
+        });
+
+        if (productStock) {
+          const newQuantity = productStock.quantity - item.quantity;
+
+          await this.prisma.stock.update({
+            where: { id: productStock.id },
+            data: {
+              quantity: newQuantity,
+              isInStock: newQuantity > 0,
+            },
+          });
+        }
+      }
+    }
 
     // Extract payment details from Stripe response
     const charge = paymentIntent.charges?.data?.[0];
@@ -215,6 +256,29 @@ export class OrdersService {
         receiptUrl: charge?.receipt_url || null,
       },
     });
+
+    // Create transaction record for order payment
+    try {
+      await this.transactionsService.createOrderTransaction(
+        {
+          orderId: order.id,
+          userId: orderDetails.userId || undefined,
+          amount: total,
+          paymentMethod: (paymentIntent.payment_method_types?.[0] ||
+            'card') as PaymentMethod,
+          reference: paymentIntentId,
+          paymentMethodDetails: {
+            last4: cardDetails?.last4,
+            brand: cardDetails?.brand,
+            receiptUrl: charge?.receipt_url,
+          },
+        },
+        orderDetails.userId
+      );
+    } catch (error) {
+      console.error('Error creating transaction record:', error);
+      // Don't throw - transaction logging failure shouldn't block order creation
+    }
 
     // Clear the cart after successful order
     await this.cartService.clearCart(orderDetails.cartId);
@@ -780,7 +844,7 @@ export class OrdersService {
         tax,
         total,
         status: 'confirmed',
-        paymentStatus: 'completed',
+        paymentStatus: 'paid',
         stripePaymentIntentId,
         notes: createOrderDto.notes,
         isGuestOrder,
@@ -854,6 +918,47 @@ export class OrdersService {
     await this.prisma.orderItem.createMany({
       data: orderItems,
     });
+
+    // Decrease stock for each item after order is created
+    for (const item of cart.items) {
+      // Handle variant stock
+      if (item.variantId) {
+        const variantStock = await this.prisma.stock.findFirst({
+          where: { variantId: item.variantId },
+        });
+
+        if (variantStock) {
+          const newQuantity = variantStock.quantity - item.quantity;
+
+          await this.prisma.stock.update({
+            where: { id: variantStock.id },
+            data: {
+              quantity: newQuantity,
+              isInStock: newQuantity > 0,
+            },
+          });
+        }
+      }
+
+      // Handle product stock
+      if (item.productId) {
+        const productStock = await this.prisma.stock.findFirst({
+          where: { productId: item.productId },
+        });
+
+        if (productStock) {
+          const newQuantity = productStock.quantity - item.quantity;
+
+          await this.prisma.stock.update({
+            where: { id: productStock.id },
+            data: {
+              quantity: newQuantity,
+              isInStock: newQuantity > 0,
+            },
+          });
+        }
+      }
+    }
 
     // Create payment history record
     await this.prisma.paymentHistory.create({

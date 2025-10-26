@@ -22,6 +22,7 @@ import SubcategoryPage from '@/pages/app/contents/subcategories/SubcategoryPage'
 import Dashboard from '@/pages/app/DashboardPage';
 import FinancialDashboardPage from '@/pages/app/finance/FinancialDashboardPage';
 import LiveOrdersPage from '@/pages/app/finance/LiveOrdersPage';
+import OrderDetailPage from '@/pages/app/finance/OrderDetailPage';
 import OrderHistoryPage from '@/pages/app/finance/OrderHistoryPage';
 import TransactionsPage from '@/pages/app/finance/TransactionsPage';
 import CreatePermissionPage from '@/pages/app/management/CreatePermissionPage';
@@ -85,6 +86,7 @@ const COMPONENT_MAP = {
   EditProductReview: ReviewPage,
   FinancialDashboard: FinancialDashboardPage,
   LiveOrders: LiveOrdersPage,
+  OrderDetail: OrderDetailPage,
   OrderHistory: OrderHistoryPage,
   Transactions: TransactionsPage,
   Login: Login,

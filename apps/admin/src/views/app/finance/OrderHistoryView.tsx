@@ -1,6 +1,6 @@
 import React from 'react';
 import { PermissionGuard } from '@/components/PermissionGuard';
-import OrderHistoryTable from '@/sections/app/finance/OrderHistoryTable';
+import OrderHistoryTable from '@/sections/app/finance/order-history/OrderHistoryTable';
 
 const OrderHistoryView: React.FC = () => {
   const handleViewOrder = (orderId: string) => {

@@ -16,6 +16,7 @@ import { fileApi } from '@/apis/services/fileApi';
 import { subcategoryApi } from '@/apis/services/subcategoryApi';
 import { productApi } from '@/apis/services/productApi';
 import { orderApi } from '@/apis/services/orderApi';
+import { transactionApi } from '@/apis/services/transactionApi';
 
 const apiReducers = {
   [adminApi.reducerPath]: adminApi.reducer,
@@ -31,6 +32,7 @@ const apiReducers = {
   [subcategoryApi.reducerPath]: subcategoryApi.reducer,
   [productApi.reducerPath]: productApi.reducer,
   [orderApi.reducerPath]: orderApi.reducer,
+  [transactionApi.reducerPath]: transactionApi.reducer,
 };
 
 const rootReducer = combineReducers({

@@ -16,6 +16,7 @@ import { categoryApi } from '@/apis/services/categoryApi';
 import { subcategoryApi } from '@/apis/services/subcategoryApi';
 import { productApi } from '@/apis/services/productApi';
 import { orderApi } from '@/apis/services/orderApi';
+import { transactionApi } from '@/apis/services/transactionApi';
 
 // Persist config
 const persistConfig = {
@@ -40,6 +41,7 @@ const apiMiddleware = [
   subcategoryApi.middleware,
   productApi.middleware,
   orderApi.middleware,
+  transactionApi.middleware,
 ];
 
 export const store = configureStore({
