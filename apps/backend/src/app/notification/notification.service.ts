@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, forwardRef, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateNotificationDto,
@@ -8,9 +8,18 @@ import {
   NotificationCategory,
 } from './dto/notification.dto';
 
+interface INotificationGateway {
+  emitToUser(userId: string, event: string, data: unknown): Promise<void>;
+  emitToRole(role: string, event: string, data: unknown): Promise<void>;
+}
+
 @Injectable()
 export class NotificationService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => 'NotificationGateway'))
+    private notificationGateway?: INotificationGateway
+  ) {}
 
   /**
    * Create a new notification
@@ -146,6 +155,16 @@ export class NotificationService {
       },
     });
 
+    // Emit updated unread count via WebSocket
+    if (this.notificationGateway && result.count > 0) {
+      const unreadCount = await this.getUnreadCount(userId);
+      await this.notificationGateway.emitToUser(
+        userId,
+        'unread-count',
+        unreadCount
+      );
+    }
+
     return {
       success: true,
       updatedCount: result.count,
@@ -169,6 +188,16 @@ export class NotificationService {
         readAt: new Date(),
       },
     });
+
+    // Emit updated unread count via WebSocket
+    if (this.notificationGateway && result.count > 0) {
+      const unreadCount = await this.getUnreadCount(userId);
+      await this.notificationGateway.emitToUser(
+        userId,
+        'unread-count',
+        unreadCount
+      );
+    }
 
     return {
       success: true,
@@ -302,7 +331,7 @@ export class NotificationService {
       cancelled: `Order #${orderNumber} has been cancelled`,
     };
 
-    return this.createNotification({
+    const notification = await this.createNotification({
       type: NotificationType.ORDER,
       category:
         type === 'cancelled'
@@ -321,6 +350,14 @@ export class NotificationService {
       entityId: orderId,
       metadata: { orderNumber, type },
     });
+
+    // Emit notification via WebSocket to admin users
+    if (this.notificationGateway) {
+      await this.notificationGateway.emitToRole('admin', 'notification', notification);
+      await this.notificationGateway.emitToRole('super-admin', 'notification', notification);
+    }
+
+    return notification;
   }
 
   /**
@@ -345,7 +382,7 @@ export class NotificationService {
       out_of_stock: 'error',
     };
 
-    return this.createNotification({
+    const notification = await this.createNotification({
       type:
         type === 'low_stock' || type === 'out_of_stock'
           ? NotificationType.STOCK
@@ -374,6 +411,14 @@ export class NotificationService {
       entityId: productId,
       metadata: { productName, type },
     });
+
+    // Emit notification via WebSocket to admin users
+    if (this.notificationGateway) {
+      await this.notificationGateway.emitToRole('admin', 'notification', notification);
+      await this.notificationGateway.emitToRole('super-admin', 'notification', notification);
+    }
+
+    return notification;
   }
 
   /**
@@ -385,7 +430,7 @@ export class NotificationService {
     rating: number,
     userName: string
   ) {
-    return this.createNotification({
+    const notification = await this.createNotification({
       type: NotificationType.REVIEW,
       category: NotificationCategory.INFO,
       title: 'New Review',
@@ -398,6 +443,14 @@ export class NotificationService {
       entityId: reviewId,
       metadata: { productName, rating, userName },
     });
+
+    // Emit notification via WebSocket to admin users
+    if (this.notificationGateway) {
+      await this.notificationGateway.emitToRole('admin', 'notification', notification);
+      await this.notificationGateway.emitToRole('super-admin', 'notification', notification);
+    }
+
+    return notification;
   }
 
   /**
@@ -415,7 +468,7 @@ export class NotificationService {
       updated: `User ${userName} updated their profile`,
     };
 
-    return this.createNotification({
+    const notification = await this.createNotification({
       type: NotificationType.USER,
       category:
         type === 'registered'
@@ -434,6 +487,14 @@ export class NotificationService {
       entityId: userId,
       metadata: { userName, userEmail, type },
     });
+
+    // Emit notification via WebSocket to admin users
+    if (this.notificationGateway) {
+      await this.notificationGateway.emitToRole('admin', 'notification', notification);
+      await this.notificationGateway.emitToRole('super-admin', 'notification', notification);
+    }
+
+    return notification;
   }
 
   /**
@@ -461,7 +522,7 @@ export class NotificationService {
       refunded: 'warning',
     };
 
-    return this.createNotification({
+    const notification = await this.createNotification({
       type: NotificationType.PAYMENT,
       category: categories[status] as NotificationCategory,
       title:
@@ -482,5 +543,13 @@ export class NotificationService {
       entityId: orderId,
       metadata: { orderNumber, amount, status },
     });
+
+    // Emit notification via WebSocket to admin users
+    if (this.notificationGateway) {
+      await this.notificationGateway.emitToRole('admin', 'notification', notification);
+      await this.notificationGateway.emitToRole('super-admin', 'notification', notification);
+    }
+
+    return notification;
   }
 }

@@ -112,6 +112,8 @@ export class NotificationGateway
       const unreadCount = await this.notificationService.getUnreadCount(
         user.id
       );
+      console.log({ unreadCount });
+
       client.emit('unread-count', unreadCount);
 
       this.logger.log(
@@ -267,7 +269,9 @@ export class NotificationGateway
    * Emit notification to specific user
    */
   async emitToUser(userId: string, event: string, data: unknown) {
+    // Emit with both the generic event name and specific event names
     this.server.to(`user:${userId}`).emit(event, data);
+
     this.logger.log(`Emitted ${event} to user ${userId}`);
   }
 
@@ -275,7 +279,9 @@ export class NotificationGateway
    * Emit notification to all users with specific role
    */
   async emitToRole(role: string, event: string, data: unknown) {
+    // Emit with both the generic event name and specific event names
     this.server.to(`role:${role}`).emit(event, data);
+
     this.logger.log(`Emitted ${event} to role ${role}`);
   }
 

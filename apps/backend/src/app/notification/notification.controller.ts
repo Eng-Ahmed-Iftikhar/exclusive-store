@@ -8,6 +8,7 @@ import {
   Query,
   UseGuards,
   Request,
+  Patch,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -66,10 +67,10 @@ export class NotificationController {
     description: 'Unauthorized - Invalid or missing token',
   })
   async getNotifications(
-    @Request() req: { user: { userId: string } },
+    @Request() req: { user: { id: string } },
     @Query() query: GetNotificationsQueryDto
   ) {
-    return this.notificationService.getNotifications(req.user.userId, query);
+    return this.notificationService.getNotifications(req.user.id, query);
   }
 
   @Get('stats')
@@ -82,10 +83,29 @@ export class NotificationController {
     description: 'Statistics retrieved successfully',
     type: NotificationStatsResponseDto,
   })
-  async getNotificationStats(@Request() req: { user: { userId: string } }) {
-    return this.notificationService.getNotificationStats(req.user.userId);
+  async getNotificationStats(@Request() req: { user: { id: string } }) {
+    return this.notificationService.getNotificationStats(req.user.id);
   }
 
+  @Patch(':id/read')
+  @ApiOperation({
+    summary: 'Mark a single notification as read',
+    description: 'Mark a specific notification as read by its ID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification marked as read successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Notification not found',
+  })
+  async markSingleAsRead(
+    @Param('id') id: string,
+    @Request() req: { user: { id: string } }
+  ) {
+    return this.notificationService.markAsRead([id], req.user.id);
+  }
   @Get('unread-count')
   @ApiOperation({
     summary: 'Get unread notification count',
@@ -95,8 +115,8 @@ export class NotificationController {
     status: 200,
     description: 'Unread count retrieved successfully',
   })
-  async getUnreadCount(@Request() req: { user: { userId: string } }) {
-    return this.notificationService.getUnreadCount(req.user.userId);
+  async getUnreadCount(@Request() req: { user: { id: string } }) {
+    return this.notificationService.getUnreadCount(req.user.id);
   }
 
   @Get(':id')
@@ -115,9 +135,9 @@ export class NotificationController {
   })
   async getNotificationById(
     @Param('id') id: string,
-    @Request() req: { user: { userId: string } }
+    @Request() req: { user: { id: string } }
   ) {
-    return this.notificationService.getNotificationById(id, req.user.userId);
+    return this.notificationService.getNotificationById(id, req.user.id);
   }
 
   @Post('mark-as-read')
@@ -131,15 +151,15 @@ export class NotificationController {
   })
   async markAsRead(
     @Body() dto: MarkAsReadDto,
-    @Request() req: { user: { userId: string } }
+    @Request() req: { user: { id: string } }
   ) {
     return this.notificationService.markAsRead(
       dto.notificationIds,
-      req.user.userId
+      req.user.id
     );
   }
 
-  @Post('mark-all-as-read')
+  @Patch('mark-all-as-read')
   @ApiOperation({
     summary: 'Mark all notifications as read',
     description: 'Mark all notifications for the current user as read',
@@ -148,8 +168,8 @@ export class NotificationController {
     status: 200,
     description: 'All notifications marked as read successfully',
   })
-  async markAllAsRead(@Request() req: { user: { userId: string } }) {
-    return this.notificationService.markAllAsRead(req.user.userId);
+  async markAllAsRead(@Request() req: { user: { id: string } }) {
+    return this.notificationService.markAllAsRead(req.user.id);
   }
 
   @Delete(':id')
@@ -167,9 +187,9 @@ export class NotificationController {
   })
   async deleteNotification(
     @Param('id') id: string,
-    @Request() req: { user: { userId: string } }
+    @Request() req: { user: { id: string } }
   ) {
-    return this.notificationService.deleteNotification(id, req.user.userId);
+    return this.notificationService.deleteNotification(id, req.user.id);
   }
 
   @Post('delete-multiple')
@@ -183,11 +203,11 @@ export class NotificationController {
   })
   async deleteNotifications(
     @Body() dto: MarkAsReadDto,
-    @Request() req: { user: { userId: string } }
+    @Request() req: { user: { id: string } }
   ) {
     return this.notificationService.deleteNotifications(
       dto.notificationIds,
-      req.user.userId
+      req.user.id
     );
   }
 

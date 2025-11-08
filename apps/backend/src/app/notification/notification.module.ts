@@ -27,6 +27,10 @@ import { AppConfigModule, ConfigService } from '../config';
     NotificationGateway,
     NotificationEventService,
     NotificationListener,
+    {
+      provide: 'NotificationGateway',
+      useExisting: NotificationGateway,
+    },
   ],
   exports: [NotificationService, NotificationGateway, NotificationEventService],
 })

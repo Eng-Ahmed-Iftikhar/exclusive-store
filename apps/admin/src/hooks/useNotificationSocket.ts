@@ -12,6 +12,69 @@ interface UseNotificationSocketOptions {
   autoConnect?: boolean;
 }
 
+// Create audio element ID
+const NOTIFICATION_AUDIO_ID = 'notification-sound-player';
+
+// Helper function to get or create audio element in DOM
+const getAudioElement = (): HTMLAudioElement => {
+  let audioElement = document.getElementById(
+    NOTIFICATION_AUDIO_ID
+  ) as HTMLAudioElement;
+
+  if (!audioElement) {
+    audioElement = document.createElement('audio');
+    audioElement.id = NOTIFICATION_AUDIO_ID;
+    audioElement.preload = 'auto';
+    audioElement.volume = 0.5;
+
+    // Try to add notification sound source
+    const source = document.createElement('source');
+    source.src = '/notification-sound.mp3';
+    source.type = 'audio/mpeg';
+    audioElement.appendChild(source);
+
+    // Add to body (hidden)
+    audioElement.style.display = 'none';
+    document.body.appendChild(audioElement);
+  }
+
+  return audioElement;
+};
+
+// Helper function to play notification sound
+const playNotificationSound = () => {
+  try {
+    const audioElement = getAudioElement();
+
+    // Reset audio to start
+    audioElement.currentTime = 0;
+
+    // Play the audio
+    const playPromise = audioElement.play();
+
+    if (playPromise !== undefined) {
+      playPromise.catch((error) => {
+        console.warn('Failed to play notification sound:', error);
+        // Silently fail - audio blocked by browser policy or file not found
+      });
+    }
+  } catch (error) {
+    console.warn('Failed to play notification sound:', error);
+  }
+};
+
+// Store the original document title
+const originalTitle = document.title || 'Admin';
+
+// Helper function to update document title with notification count
+const updateDocumentTitle = (count: number) => {
+  if (count > 0) {
+    document.title = `(${count}) ${originalTitle}`;
+  } else {
+    document.title = originalTitle;
+  }
+};
+
 export const useNotificationSocket = (
   options: UseNotificationSocketOptions = {}
 ) => {
@@ -21,6 +84,20 @@ export const useNotificationSocket = (
   const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Create audio element on mount
+  useEffect(() => {
+    // Initialize audio element in DOM
+    getAudioElement();
+
+    return () => {
+      // Cleanup: Remove audio element on unmount
+      const audioElement = document.getElementById(NOTIFICATION_AUDIO_ID);
+      if (audioElement) {
+        audioElement.remove();
+      }
+    };
+  }, []);
 
   const connect = useCallback(() => {
     if (socketRef.current?.connected) {
@@ -62,9 +139,10 @@ export const useNotificationSocket = (
     // Handle new notifications
     socket.on('notification', (notification: Notification) => {
       console.log('📩 New notification received:', notification);
-
-      // Update unread count
       setUnreadCount((prev) => prev + 1);
+
+      // Play notification sound
+      playNotificationSound();
 
       // Call custom handler
       if (onNotification) {
@@ -95,12 +173,12 @@ export const useNotificationSocket = (
     });
 
     // Handle unread count updates
-    socket.on('unread-count', (data: { count: number }) => {
-      console.log('📊 Unread count updated:', data.count);
-      setUnreadCount(data.count);
+    socket.on('unread-count', (data: { unreadCount: number }) => {
+      console.log('📊 Unread count updated:', data.unreadCount);
+      setUnreadCount(data.unreadCount);
 
       if (onUnreadCountUpdate) {
-        onUnreadCountUpdate(data.count);
+        onUnreadCountUpdate(data.unreadCount);
       }
     });
 
@@ -117,15 +195,10 @@ export const useNotificationSocket = (
 
   const markAsRead = useCallback((notificationId: string) => {
     if (socketRef.current?.connected) {
-      socketRef.current.emit('mark-as-read', { notificationId });
+      socketRef.current.emit('mark-as-read', {
+        notificationIds: [notificationId],
+      });
       setUnreadCount((prev) => Math.max(0, prev - 1));
-    }
-  }, []);
-
-  const markAllAsRead = useCallback(() => {
-    if (socketRef.current?.connected) {
-      socketRef.current.emit('mark-all-as-read');
-      setUnreadCount(0);
     }
   }, []);
 
@@ -159,13 +232,21 @@ export const useNotificationSocket = (
     };
   }, [autoConnect, token, connect, disconnect]);
 
+  // Update document title when unread count changes
+  useEffect(() => {
+    updateDocumentTitle(unreadCount);
+
+    // Cleanup: Reset title on unmount
+    return () => {
+      document.title = originalTitle;
+    };
+  }, [unreadCount]);
+
   return {
     isConnected,
     unreadCount,
     connect,
     disconnect,
-    markAsRead,
-    markAllAsRead,
     getNotifications,
   };
 };

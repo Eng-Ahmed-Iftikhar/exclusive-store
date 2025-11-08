@@ -9,6 +9,8 @@ import {
   useMarkAllAsReadMutation,
 } from '../apis/services/notificationApi';
 
+import Badge from './ui/badge';
+
 interface NotificationBellProps {
   theme?: 'light' | 'dark';
 }
@@ -36,7 +38,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
     [refetch]
   );
 
-  const { unreadCount, markAsRead: markAsReadSocket } = useNotificationSocket({
+  const { unreadCount } = useNotificationSocket({
     onNotification,
   });
 
@@ -62,23 +64,36 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
-      await markAsRead(notificationId).unwrap();
-      markAsReadSocket(notificationId);
+      // Optimistically update UI
       setNotifications((prev) =>
         prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n))
       );
+
+      // Update via REST API
+      await markAsRead(notificationId).unwrap();
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
+      // Revert optimistic update on error
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, isRead: false } : n))
+      );
     }
   };
 
   const handleMarkAllAsRead = async () => {
     try {
-      await markAllAsRead().unwrap();
+      // Optimistically update UI
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+
+      // Update via REST API
+      await markAllAsRead().unwrap();
+
+      // Refetch to sync with backend
       refetch();
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
+      // Refetch to restore correct state on error
+      refetch();
     }
   };
 
@@ -125,8 +140,8 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
       >
         <FiBell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full animate-pulse">
-            {unreadCount > 99 ? '99+' : unreadCount}
+          <span className="absolute top-1 right-1 animate-pulse">
+            <Badge count={unreadCount} />
           </span>
         )}
       </button>
@@ -155,9 +170,10 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
                 Notifications
               </h3>
               {unreadCount > 0 && (
-                <span className="px-2 py-0.5 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full">
-                  {unreadCount} new
-                </span>
+                <Badge
+                  count={unreadCount}
+                  className="px-2 py-0.5 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full"
+                />
               )}
             </div>
             {unreadCount > 0 && (
@@ -261,7 +277,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
                           </span>
                           {notification.priority !== 'low' && (
                             <span
-                              className={`text-xs px-2 py-0.5 rounded-full border ${getPriorityColor(
+                              className={`text-xs capitalize px-2 py-0.5 rounded-full border ${getPriorityColor(
                                 notification.priority
                               )}`}
                             >

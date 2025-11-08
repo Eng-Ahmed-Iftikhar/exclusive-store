@@ -112,7 +112,7 @@ export const API_ROUTES = {
     BASE: '/notifications',
     LIST: '/notifications',
     UNREAD_COUNT: '/notifications/unread-count',
-    MARK_ALL_READ: '/notifications/mark-all-read',
+    MARK_ALL_READ: '/notifications/mark-all-as-read',
     BY_ID: (id: string) => `/notifications/${id}`,
   },
 
