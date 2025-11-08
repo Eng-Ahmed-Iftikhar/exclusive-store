@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   FiUsers,
   FiTrendingUp,
@@ -7,22 +7,173 @@ import {
   FiDollarSign,
   FiAlertCircle,
 } from 'react-icons/fi';
+import { DateRange } from '@/components/ui/date-range-picker';
+import { AdminPaymentStatus } from '@/apis/services/orderApi';
+import { useFinancialOrders } from '@/hooks/useFinancialOrders';
 
-const CustomersRefunds: React.FC = () => {
-  // TODO: Fetch data from API
-  const data = {
-    // Customer Insights
-    topCustomersRevenue: 0,
-    customerLifetimeValue: 0,
-    averageSpendPerCustomer: 0,
-    repeatPurchaseRate: 0,
-    guestVsRegisteredRatio: 0,
-    // Refunds
-    totalRefundAmount: 0,
-    refundCount: 0,
-    averageRefundValue: 0,
-    refundRate: 0,
-  };
+interface FinancialFilters {
+  dateRange?: DateRange;
+  userId: string;
+  categoryId: string;
+  productId: string;
+  paymentStatus: string;
+  orderStatus: string;
+}
+
+interface CustomersRefundsProps {
+  filters: FinancialFilters;
+}
+
+const CustomersRefunds: React.FC<CustomersRefundsProps> = ({ filters }) => {
+  const { orders, isLoading, error } = useFinancialOrders(filters);
+
+  // Calculate customer insights and refund metrics from filtered orders
+  const data = useMemo(() => {
+    if (!orders || orders.length === 0) {
+      return {
+        topCustomersRevenue: 0,
+        customerLifetimeValue: 0,
+        averageSpendPerCustomer: 0,
+        repeatPurchaseRate: 0,
+        guestVsRegisteredRatio: 0,
+        totalRefundAmount: 0,
+        refundCount: 0,
+        averageRefundValue: 0,
+        refundRate: 0,
+      };
+    }
+
+    // Calculate customer insights
+    // Group orders by user (for registered users)
+    const customerOrders = orders.filter((order) => order.userId);
+    const guestOrders = orders.filter((order) => !order.userId);
+
+    // Calculate revenue by customer
+    const customerRevenueMap = new Map<string, number>();
+    customerOrders.forEach((order) => {
+      if (order.userId) {
+        const currentRevenue = customerRevenueMap.get(order.userId) || 0;
+        customerRevenueMap.set(
+          order.userId,
+          currentRevenue + order.totals.total
+        );
+      }
+    });
+
+    // Top customers revenue (sum of top 10 customers)
+    const customerRevenues = Array.from(customerRevenueMap.values()).sort(
+      (a, b) => b - a
+    );
+    const topCustomersRevenue = customerRevenues
+      .slice(0, 10)
+      .reduce((sum, revenue) => sum + revenue, 0);
+
+    // Customer lifetime value (average revenue per registered customer)
+    const uniqueCustomers = customerRevenueMap.size;
+    const customerLifetimeValue =
+      uniqueCustomers > 0
+        ? customerRevenues.reduce((sum, rev) => sum + rev, 0) / uniqueCustomers
+        : 0;
+
+    // Average spend per customer (including guests)
+    const totalRevenue = orders.reduce(
+      (sum, order) => sum + order.totals.total,
+      0
+    );
+    const totalCustomers = uniqueCustomers + (guestOrders.length > 0 ? 1 : 0);
+    const averageSpendPerCustomer =
+      totalCustomers > 0 ? totalRevenue / totalCustomers : 0;
+
+    // Repeat purchase rate (customers with more than 1 order)
+    // Count orders per customer
+    const customerOrderCountMap = new Map<string, number>();
+    customerOrders.forEach((order) => {
+      if (order.userId) {
+        const currentCount = customerOrderCountMap.get(order.userId) || 0;
+        customerOrderCountMap.set(order.userId, currentCount + 1);
+      }
+    });
+
+    const customersWithMultipleOrders = Array.from(
+      customerOrderCountMap.values()
+    ).filter((count) => count > 1).length;
+
+    const repeatPurchaseRate =
+      uniqueCustomers > 0
+        ? (customersWithMultipleOrders / uniqueCustomers) * 100
+        : 0;
+
+    // Guest vs Registered ratio (percentage of guest orders)
+    const totalOrderCount = orders.length;
+    const guestOrderCount = guestOrders.length;
+    const guestVsRegisteredRatio =
+      totalOrderCount > 0 ? (guestOrderCount / totalOrderCount) * 100 : 0;
+
+    // Calculate refund metrics
+    const refundedOrders = orders.filter(
+      (order) => order.paymentStatus === AdminPaymentStatus.REFUNDED
+    );
+
+    const totalRefundAmount = refundedOrders.reduce(
+      (sum, order) => sum + order.totals.total,
+      0
+    );
+    const refundCount = refundedOrders.length;
+    const averageRefundValue =
+      refundCount > 0 ? totalRefundAmount / refundCount : 0;
+
+    // Refund rate (percentage of orders that were refunded)
+    const refundRate =
+      totalOrderCount > 0 ? (refundCount / totalOrderCount) * 100 : 0;
+
+    return {
+      topCustomersRevenue,
+      customerLifetimeValue,
+      averageSpendPerCustomer,
+      repeatPurchaseRate,
+      guestVsRegisteredRatio,
+      totalRefundAmount,
+      refundCount,
+      averageRefundValue,
+      refundRate,
+    };
+  }, [orders]);
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-6">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 dark:bg-slate-700 rounded w-64 mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="h-20 bg-gray-200 dark:bg-slate-700 rounded-lg"
+              ></div>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="h-20 bg-gray-200 dark:bg-slate-700 rounded-lg"
+              ></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6">
+        <p className="text-red-600 dark:text-red-400">
+          Error loading customers and refunds data. Please try again.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-6">

@@ -1,21 +1,102 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   FiShoppingCart,
   FiCheckCircle,
   FiXCircle,
   FiRefreshCw,
 } from 'react-icons/fi';
+import { DateRange } from '@/components/ui/date-range-picker';
+import { AdminPaymentStatus } from '@/apis/services/orderApi';
+import { useFinancialOrders } from '@/hooks/useFinancialOrders';
 
-const OrdersPaymentPerformance: React.FC = () => {
-  // TODO: Fetch data from API
-  const performance = {
-    totalOrders: 0,
-    paidOrders: 0,
-    pendingOrders: 0,
-    refundedOrders: 0,
-    failedPayments: 0,
-    paymentSuccessRate: 0,
-  };
+interface FinancialFilters {
+  dateRange?: DateRange;
+  userId: string;
+  categoryId: string;
+  productId: string;
+  paymentStatus: string;
+  orderStatus: string;
+}
+
+interface OrdersPaymentPerformanceProps {
+  filters: FinancialFilters;
+}
+
+const OrdersPaymentPerformance: React.FC<OrdersPaymentPerformanceProps> = ({
+  filters,
+}) => {
+  const { orders, isLoading, error } = useFinancialOrders(filters);
+
+  // Calculate performance metrics from filtered orders
+  const performance = useMemo(() => {
+    if (!orders || orders.length === 0) {
+      return {
+        totalOrders: 0,
+        paidOrders: 0,
+        pendingOrders: 0,
+        refundedOrders: 0,
+        failedPayments: 0,
+        paymentSuccessRate: 0,
+      };
+    }
+
+    // Calculate performance metrics
+    const totalOrders = orders.length;
+    const paidOrders = orders.filter(
+      (order) => order.paymentStatus === AdminPaymentStatus.PAID
+    ).length;
+    const pendingOrders = orders.filter(
+      (order) => order.paymentStatus === AdminPaymentStatus.PENDING
+    ).length;
+    const refundedOrders = orders.filter(
+      (order) => order.paymentStatus === AdminPaymentStatus.REFUNDED
+    ).length;
+    const failedPayments = orders.filter(
+      (order) => order.paymentStatus === AdminPaymentStatus.FAILED
+    ).length;
+
+    // Calculate payment success rate: (paid / (paid + failed)) * 100
+    const totalPaymentAttempts = paidOrders + failedPayments;
+    const paymentSuccessRate =
+      totalPaymentAttempts > 0 ? (paidOrders / totalPaymentAttempts) * 100 : 0;
+
+    return {
+      totalOrders,
+      paidOrders,
+      pendingOrders,
+      refundedOrders,
+      failedPayments,
+      paymentSuccessRate,
+    };
+  }, [orders]);
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-6">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 dark:bg-slate-700 rounded w-64 mb-4"></div>
+          <div className="grid grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="h-20 bg-gray-200 dark:bg-slate-700 rounded-lg"
+              ></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6">
+        <p className="text-red-600 dark:text-red-400">
+          Error loading orders and payment performance data. Please try again.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-6">

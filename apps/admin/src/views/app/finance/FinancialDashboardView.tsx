@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { DateRange } from '@/components/ui/date-range-picker';
 import FinancialFilters from '@/sections/app/finance/financial-filters/FinancialFilters';
@@ -9,13 +10,95 @@ import CustomersRefunds from '@/sections/app/finance/customers-refunds/Customers
 import InventoryProducts from '@/sections/app/finance/inventory-products/InventoryProducts';
 import AnalyticsTaxActivity from '@/sections/app/finance/analytics-tax/AnalyticsTaxActivity';
 
+interface FinancialFiltersData {
+  dateRange?: DateRange;
+  userId: string;
+  categoryId: string;
+  productId: string;
+  paymentStatus: string;
+  orderStatus: string;
+}
+
 const FinancialDashboardView: React.FC = () => {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [userId, setUserId] = useState<string>('all');
-  const [categoryId, setCategoryId] = useState<string>('all');
-  const [productId, setProductId] = useState<string>('all');
-  const [paymentStatus, setPaymentStatus] = useState<string>('all');
-  const [orderStatus, setOrderStatus] = useState<string>('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Initialize state from URL params
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+    const dateFrom = searchParams.get('dateFrom');
+    const dateTo = searchParams.get('dateTo');
+    if (dateFrom && dateTo) {
+      return {
+        from: new Date(dateFrom),
+        to: new Date(dateTo),
+      };
+    }
+    return undefined;
+  });
+  const [userId, setUserId] = useState<string>(() => {
+    return searchParams.get('userId') || 'all';
+  });
+  const [categoryId, setCategoryId] = useState<string>(() => {
+    return searchParams.get('categoryId') || 'all';
+  });
+  const [productId, setProductId] = useState<string>(() => {
+    return searchParams.get('productId') || 'all';
+  });
+  const [paymentStatus, setPaymentStatus] = useState<string>(() => {
+    return searchParams.get('paymentStatus') || 'all';
+  });
+  const [orderStatus, setOrderStatus] = useState<string>(() => {
+    return searchParams.get('orderStatus') || 'all';
+  });
+
+  // Update URL params when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    if (dateRange?.from) {
+      params.set('dateFrom', dateRange.from.toISOString());
+    }
+    if (dateRange?.to) {
+      params.set('dateTo', dateRange.to.toISOString());
+    }
+    if (userId && userId !== 'all') {
+      params.set('userId', userId);
+    }
+    if (categoryId && categoryId !== 'all') {
+      params.set('categoryId', categoryId);
+    }
+    if (productId && productId !== 'all') {
+      params.set('productId', productId);
+    }
+    if (paymentStatus && paymentStatus !== 'all') {
+      params.set('paymentStatus', paymentStatus);
+    }
+    if (orderStatus && orderStatus !== 'all') {
+      params.set('orderStatus', orderStatus);
+    }
+
+    setSearchParams(params, { replace: true });
+  }, [
+    dateRange,
+    userId,
+    categoryId,
+    productId,
+    paymentStatus,
+    orderStatus,
+    setSearchParams,
+  ]);
+
+  // Build filters object for components
+  const filters = useMemo<FinancialFiltersData>(
+    () => ({
+      dateRange,
+      userId,
+      categoryId,
+      productId,
+      paymentStatus,
+      orderStatus,
+    }),
+    [dateRange, userId, categoryId, productId, paymentStatus, orderStatus]
+  );
 
   const handleResetFilters = () => {
     setDateRange(undefined);
@@ -28,14 +111,7 @@ const FinancialDashboardView: React.FC = () => {
 
   const handleExport = () => {
     // TODO: Implement export functionality
-    console.log('Exporting financial report with filters:', {
-      dateRange,
-      userId,
-      categoryId,
-      productId,
-      paymentStatus,
-      orderStatus,
-    });
+    console.log('Exporting financial report with filters:', filters);
   };
 
   return (
@@ -71,22 +147,22 @@ const FinancialDashboardView: React.FC = () => {
         />
 
         {/* Financial Overview Cards */}
-        <FinancialOverview />
+        <FinancialOverview filters={filters} />
 
         {/* Revenue, Expenses & Cash Flow */}
-        <RevenueExpensesCashFlow />
+        <RevenueExpensesCashFlow filters={filters} />
 
         {/* Orders & Payment Performance */}
-        <OrdersPaymentPerformance />
+        <OrdersPaymentPerformance filters={filters} />
 
         {/* Customers & Refunds */}
-        <CustomersRefunds />
+        <CustomersRefunds filters={filters} />
 
         {/* Inventory & Products */}
-        <InventoryProducts />
+        <InventoryProducts filters={filters} />
 
         {/* Analytics, Tax & Activity */}
-        <AnalyticsTaxActivity />
+        <AnalyticsTaxActivity filters={filters} />
       </div>
     </PermissionGuard>
   );

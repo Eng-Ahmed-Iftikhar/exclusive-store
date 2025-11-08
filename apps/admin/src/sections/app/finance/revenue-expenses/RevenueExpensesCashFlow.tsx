@@ -1,56 +1,179 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   FiDollarSign,
   FiTrendingUp,
   FiTrendingDown,
   FiCreditCard,
-  FiAlertCircle,
 } from 'react-icons/fi';
+import { DateRange } from '@/components/ui/date-range-picker';
+import { AdminPaymentStatus } from '@/apis/services/orderApi';
+import { useFinancialOrders } from '@/hooks/useFinancialOrders';
 
-const RevenueExpensesCashFlow: React.FC = () => {
-  // TODO: Fetch data from API
-  const data = {
-    // Revenue
-    grossRevenue: 0,
-    netRevenue: 0,
-    netIncome: 0,
-    // Expenses
-    stripeFees: 0,
-    platformFees: 0,
-    refundCosts: 0,
-    shippingCosts: 0,
-    taxLiabilities: 0,
-    totalExpenses: 0,
-    // Cash Flow
-    dailyInflow: 0,
-    dailyOutflow: 0,
-    netCashFlow: 0,
-    cumulativeBalance: 0,
-  };
+interface FinancialFilters {
+  dateRange?: DateRange;
+  userId: string;
+  categoryId: string;
+  productId: string;
+  paymentStatus: string;
+  orderStatus: string;
+}
+
+interface RevenueExpensesCashFlowProps {
+  filters: FinancialFilters;
+}
+
+const RevenueExpensesCashFlow: React.FC<RevenueExpensesCashFlowProps> = ({
+  filters,
+}) => {
+  const { orders, isLoading, error } = useFinancialOrders(filters);
+
+  // Calculate expenses and cash flow from orders
+  const data = useMemo(() => {
+    if (!orders || orders.length === 0) {
+      return {
+        netRevenue: 0,
+        netIncome: 0,
+        stripeFees: 0,
+        platformFees: 0,
+        shippingCosts: 0,
+        totalExpenses: 0,
+        dailyInflow: 0,
+        dailyOutflow: 0,
+        netCashFlow: 0,
+        cumulativeBalance: 0,
+      };
+    }
+
+    // Calculate revenue (net of refunds)
+    const grossRevenue = orders.reduce(
+      (sum, order) => sum + order.totals.total,
+      0
+    );
+
+    // Calculate refund costs
+    const refundCosts = orders
+      .filter(
+        (order) =>
+          order.paymentStatus === AdminPaymentStatus.REFUNDED
+      )
+      .reduce((sum, order) => sum + order.totals.total, 0);
+
+    // Net revenue = Gross revenue - refunds
+    const netRevenue = grossRevenue - refundCosts;
+
+    // Calculate expenses from orders
+    const shippingCosts = orders.reduce(
+      (sum, order) => sum + (order.totals.shippingCost || 0),
+      0
+    );
+
+    // Estimate Stripe fees (typically 2.9% + $0.30 per transaction)
+    const stripeFees = orders
+      .filter((order) => order.paymentStatus === AdminPaymentStatus.PAID)
+      .reduce((sum, order) => {
+        const fee = order.totals.total * 0.029 + 0.3; // 2.9% + $0.30
+        return sum + fee;
+      }, 0);
+
+    // Platform fees (if any) - placeholder
+    const platformFees = 0;
+
+    const totalExpenses = stripeFees + platformFees + shippingCosts;
+
+    // Net income = Net revenue - expenses
+    const netIncome = netRevenue - totalExpenses;
+
+    // Calculate daily cash flow
+    // Group orders by date
+    const ordersByDate = orders.reduce(
+      (acc, order) => {
+        const date = new Date(order.timestamps.createdAt)
+          .toISOString()
+          .split('T')[0];
+        if (!acc[date]) {
+          acc[date] = { inflow: 0, outflow: 0 };
+        }
+        // Inflow: paid orders
+        if (order.paymentStatus === AdminPaymentStatus.PAID) {
+          acc[date].inflow += order.totals.total;
+        }
+        // Outflow: refunds, shipping, fees
+        if (order.paymentStatus === AdminPaymentStatus.REFUNDED) {
+          acc[date].outflow += order.totals.total;
+        }
+        acc[date].outflow += order.totals.shippingCost || 0;
+        return acc;
+      },
+      {} as Record<string, { inflow: number; outflow: number }>
+    );
+
+    // Calculate average daily inflow/outflow
+    const dates = Object.keys(ordersByDate);
+    const totalDays = dates.length || 1;
+    const dailyInflow =
+      dates.reduce((sum, date) => sum + ordersByDate[date].inflow, 0) /
+      totalDays;
+    const dailyOutflow =
+      dates.reduce((sum, date) => sum + ordersByDate[date].outflow, 0) /
+      totalDays;
+
+    const netCashFlow = dailyInflow - dailyOutflow;
+    const cumulativeBalance = netRevenue - totalExpenses;
+
+    return {
+      netRevenue,
+      netIncome,
+      stripeFees,
+      platformFees,
+      shippingCosts,
+      totalExpenses,
+      dailyInflow,
+      dailyOutflow,
+      netCashFlow,
+      cumulativeBalance,
+    };
+  }, [orders, filters]);
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-6">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 dark:bg-slate-700 rounded w-64 mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-20 bg-gray-200 dark:bg-slate-700 rounded-lg"
+              ></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6">
+        <p className="text-red-600 dark:text-red-400">
+          Error loading revenue and expenses data. Please try again.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-6">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        Revenue, Expenses & Cash Flow
+        Expenses & Cash Flow
       </h3>
 
-      {/* Revenue Section */}
+      {/* Revenue & Income Summary */}
       <div className="mb-6">
         <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-          Revenue
+          Revenue & Income
         </h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-            <FiDollarSign className="w-8 h-8 text-green-600 dark:text-green-400" />
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Gross Revenue
-              </p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">
-                ${data.grossRevenue.toLocaleString()}
-              </p>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
             <FiTrendingUp className="w-8 h-8 text-blue-600 dark:text-blue-400" />
             <div>
@@ -81,7 +204,7 @@ const RevenueExpensesCashFlow: React.FC = () => {
         <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
           Expenses & Fees
         </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
             <div className="flex items-center gap-2">
               <FiCreditCard className="w-5 h-5 text-red-600 dark:text-red-400" />
@@ -106,17 +229,6 @@ const RevenueExpensesCashFlow: React.FC = () => {
           </div>
           <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
             <div className="flex items-center gap-2">
-              <FiAlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                Refund Costs
-              </span>
-            </div>
-            <span className="text-lg font-semibold text-gray-900 dark:text-white">
-              ${data.refundCosts.toLocaleString()}
-            </span>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
-            <div className="flex items-center gap-2">
               <FiDollarSign className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 Shipping Costs
@@ -124,17 +236,6 @@ const RevenueExpensesCashFlow: React.FC = () => {
             </div>
             <span className="text-lg font-semibold text-gray-900 dark:text-white">
               ${data.shippingCosts.toLocaleString()}
-            </span>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <FiDollarSign className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                Tax Liabilities
-              </span>
-            </div>
-            <span className="text-lg font-semibold text-gray-900 dark:text-white">
-              ${data.taxLiabilities.toLocaleString()}
             </span>
           </div>
           <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
