@@ -5,7 +5,7 @@ import { baseQueryWithReauth } from './baseApi';
 export const adminApi = createApi({
   reducerPath: 'adminApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Dashboard', 'Products', 'Orders', 'Customers', 'Activity'],
+  tagTypes: ['Dashboard', 'Products', 'Orders', 'Activity'],
   endpoints: (builder) => ({
     // Dashboard Statistics
     getDashboardStats: builder.query({
@@ -111,20 +111,6 @@ export const adminApi = createApi({
       ],
     }),
 
-    // Customers
-    getCustomers: builder.query({
-      query: (params) => ({
-        url: API_ROUTES.USERS.LIST,
-        params,
-      }),
-      providesTags: ['Customers'],
-    }),
-
-    getCustomerById: builder.query({
-      query: (id) => API_ROUTES.USERS.BY_ID(id),
-      providesTags: (result, error, id) => [{ type: 'Customers', id }],
-    }),
-
     // Categories
     getCategories: builder.query({
       query: (params) => ({
@@ -171,8 +157,6 @@ export const {
   useGetOrdersQuery,
   useGetOrderByIdQuery,
   useUpdateOrderStatusMutation,
-  useGetCustomersQuery,
-  useGetCustomerByIdQuery,
   useGetCategoriesQuery,
   useGetFlashSalesQuery,
   useGetPendingReviewsQuery,

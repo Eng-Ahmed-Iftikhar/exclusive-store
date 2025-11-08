@@ -77,8 +77,9 @@ export const API_ROUTES = {
 
   // Users/Customers Routes
   USERS: {
-    LIST: '/auth/users',
-    BY_ID: (id: string) => `/auth/users/${id}`,
+    LIST: '/users',
+    CUSTOMERS: '/users/customers',
+    BY_ID: (id: string) => `/users/${id}`,
   },
 
   // Permissions Routes
