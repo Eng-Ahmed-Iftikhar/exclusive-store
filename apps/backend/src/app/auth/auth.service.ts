@@ -14,6 +14,7 @@ import * as crypto from 'crypto';
 import { CustomLoggerService } from '../logger/logger.service';
 import { JwtPayload } from './strategies/jwt.strategy';
 import { ActivityService } from '../activity/activity.service';
+import { NotificationEventService } from '../notification/notification-event.service';
 
 export interface TokenPair {
   accessToken: string;
@@ -32,7 +33,8 @@ export class AuthService {
     private emailService: EmailService,
     private logger: CustomLoggerService,
     private configService: ConfigService,
-    private activityService: ActivityService
+    private activityService: ActivityService,
+    private notificationEventService: NotificationEventService
   ) {}
 
   private get accessTokenExpiry(): string {
@@ -275,6 +277,13 @@ export class AuthService {
     await this.activityService.logUserActivity(
       user.id,
       'registered',
+      user.email
+    );
+
+    // Send notification for new user registration
+    this.notificationEventService.notifyUserRegistered(
+      user.id,
+      user.name,
       user.email
     );
 
@@ -539,6 +548,7 @@ export class AuthService {
       where: { id: userId },
       select: {
         id: true,
+        name: true,
         email: true,
         isEmailVerified: true,
       },
@@ -581,6 +591,13 @@ export class AuthService {
         data: { isEmailVerified: true },
       }),
     ]);
+
+    // Send notification for email verification
+    this.notificationEventService.notifyUserVerified(
+      user.id,
+      user.name,
+      user.email
+    );
 
     return { message: 'Email verified successfully' };
   }

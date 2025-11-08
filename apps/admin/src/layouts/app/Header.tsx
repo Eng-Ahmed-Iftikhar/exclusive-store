@@ -9,22 +9,21 @@ import {
 import { useLogoutMutation } from '../../apis/services/authApi';
 import {
   FiSearch,
-  FiBell,
   FiSun,
   FiMoon,
   FiUser,
   FiLogOut,
   FiSettings,
 } from 'react-icons/fi';
+import NotificationBell from '../../components/NotificationBell';
 
 const Header: React.FC = () => {
   const dispatch = useDispatch();
-  const { theme, notifications } = useSelector((state: RootState) => state.ui);
+  const { theme } = useSelector((state: RootState) => state.ui);
   const { user } = useSelector((state: RootState) => state.user);
   const [logout] = useLogoutMutation();
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
 
   const handleThemeToggle = () => {
     //change in perfers-color scheme media query
@@ -140,93 +139,7 @@ const Header: React.FC = () => {
             </button>
 
             {/* Notifications */}
-            <div className="relative">
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className={`p-2.5 rounded-xl transition-all duration-200 relative ${
-                  theme === 'dark'
-                    ? 'text-slate-400 hover:text-white hover:bg-slate-700'
-                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <FiBell className="w-5 h-5" />
-                {notifications.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-                )}
-              </button>
-
-              {/* Notifications Dropdown */}
-              {showNotifications && (
-                <div
-                  className={`absolute right-0 mt-3 w-80 rounded-2xl shadow-xl border z-50 ${
-                    theme === 'dark'
-                      ? 'bg-slate-800 border-slate-600'
-                      : 'bg-white border-slate-200'
-                  }`}
-                >
-                  <div
-                    className={`p-5 border-b ${
-                      theme === 'dark' ? 'border-slate-700' : 'border-slate-100'
-                    }`}
-                  >
-                    <h3
-                      className={`text-lg font-semibold ${
-                        theme === 'dark' ? 'text-white' : 'text-slate-900'
-                      }`}
-                    >
-                      Notifications
-                    </h3>
-                  </div>
-                  <div className="max-h-64 overflow-y-auto">
-                    {notifications.length === 0 ? (
-                      <div
-                        className={`p-5 text-center ${
-                          theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
-                        }`}
-                      >
-                        No notifications
-                      </div>
-                    ) : (
-                      notifications.map((notification) => (
-                        <div
-                          key={notification.id}
-                          className={`p-4 border-b last:border-b-0 hover:transition-colors ${
-                            theme === 'dark'
-                              ? 'border-slate-700 hover:bg-slate-700'
-                              : 'border-slate-100 hover:bg-slate-50'
-                          }`}
-                        >
-                          <div className="flex items-start space-x-3">
-                            <div
-                              className={`w-2 h-2 rounded-full mt-2.5 ${
-                                notification.type === 'success'
-                                  ? 'bg-emerald-500'
-                                  : notification.type === 'error'
-                                  ? 'bg-red-500'
-                                  : notification.type === 'warning'
-                                  ? 'bg-amber-500'
-                                  : 'bg-slate-500'
-                              }`}
-                            ></div>
-                            <div className="flex-1">
-                              <p
-                                className={`text-sm ${
-                                  theme === 'dark'
-                                    ? 'text-white'
-                                    : 'text-slate-900'
-                                }`}
-                              >
-                                {notification.message}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            <NotificationBell theme={theme} />
 
             {/* User Menu */}
             <div className="relative">

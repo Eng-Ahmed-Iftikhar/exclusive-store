@@ -19,7 +19,7 @@ export interface CreateNotificationDto {
 }
 
 export interface NotificationResponse {
-  notifications: Notification[];
+  data: Notification[];
   total: number;
   page: number;
   limit: number;
@@ -35,11 +35,11 @@ export const notificationApi = createApi({
     // Get all notifications with pagination
     getNotifications: builder.query<
       NotificationResponse,
-      { page?: number; limit?: number; unreadOnly?: boolean }
+      { page?: number; limit?: number }
     >({
-      query: ({ page = 1, limit = 10, unreadOnly = false }) => ({
+      query: ({ page = 1, limit = 10 }) => ({
         url: API_ROUTES.NOTIFICATIONS.LIST,
-        params: { page, limit, unreadOnly },
+        params: { page, limit },
       }),
       providesTags: ['Notification'],
     }),

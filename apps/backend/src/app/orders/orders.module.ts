@@ -11,6 +11,7 @@ import { EmailModule } from '../email/email.module';
 import { AppConfigModule } from '../config/config.module';
 import { ActivityModule } from '../activity/activity.module';
 import { TransactionsModule } from '../transactions/transactions.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { TransactionsModule } from '../transactions/transactions.module';
     EmailModule,
     ActivityModule,
     TransactionsModule,
+    NotificationModule,
   ],
   controllers: [OrdersController, AdminOrdersController],
   providers: [OrdersService, AdminOrdersService, OrderActivityService],

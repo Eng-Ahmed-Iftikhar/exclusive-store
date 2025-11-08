@@ -11,6 +11,7 @@ import { EmailService } from '../email/email.service';
 import { ConfigService } from '../config/config.service';
 import { ActivityService } from '../activity/activity.service';
 import { TransactionsService } from '../transactions/transactions.service';
+import { NotificationEventService } from '../notification/notification-event.service';
 import {
   CreateOrderDto,
   OrderDto,
@@ -30,7 +31,8 @@ export class OrdersService {
     private emailService: EmailService,
     private configService: ConfigService,
     private activityService: ActivityService,
-    private transactionsService: TransactionsService
+    private transactionsService: TransactionsService,
+    private notificationEventService: NotificationEventService
   ) {
     this.stripe = new Stripe(this.configService.stripeSecretKey, {
       apiVersion: '2025-07-30.basil',
@@ -406,6 +408,8 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
+    const oldStatus = order.status;
+
     const updatedOrder = await this.prisma.order.update({
       where: { id: orderId },
       data: { status },
@@ -417,6 +421,14 @@ export class OrdersService {
       orderId,
       `status updated to ${status}`,
       order.userId || 'system'
+    );
+
+    // Send notification for order status change
+    this.notificationEventService.notifyOrderStatusChanged(
+      orderId,
+      order.orderNumber,
+      oldStatus,
+      status
     );
 
     return this.mapOrderToDto(updatedOrder);
@@ -440,6 +452,12 @@ export class OrdersService {
       data: { status: OrderStatus.CANCELLED },
       include: { items: true },
     });
+
+    // Send notification for order cancellation
+    this.notificationEventService.notifyOrderCancelled(
+      orderId,
+      order.orderNumber
+    );
 
     return this.mapOrderToDto(updatedOrder);
   }
@@ -613,6 +631,23 @@ export class OrdersService {
           order.id,
           'created',
           userId || 'guest'
+        );
+
+        // Send notification for new order
+        const customerName = orderDetails.isGuestOrder
+          ? JSON.parse(orderDetails.guestUserInfo || '{}')?.name
+          : undefined;
+        this.notificationEventService.notifyOrderCreated(
+          order.id,
+          order.orderNumber,
+          customerName
+        );
+
+        // Send payment notification
+        this.notificationEventService.notifyPaymentReceived(
+          order.id,
+          order.orderNumber,
+          order.total
         );
 
         return {

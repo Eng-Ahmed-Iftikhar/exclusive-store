@@ -26,6 +26,7 @@ import { ActivityModule } from './activity/activity.module';
 import { FilesModule } from './files/files.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
+import { NotificationModule } from './notification/notification.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
@@ -40,6 +41,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     RedisModule,
     AuthModule,
     UsersModule,
+    NotificationModule,
     AdminModule,
     CategoryModule,
     SubcategoryModule,

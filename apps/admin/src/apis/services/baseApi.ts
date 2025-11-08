@@ -6,7 +6,7 @@ import {
 } from '@reduxjs/toolkit/query/react';
 import { RootState } from '@/store';
 
-const BASE_URL = import.meta.env.VITE_APP_BACKEND_URL;
+const BASE_URL = import.meta.env.VITE_APP_BACKEND_URL + '/api';
 
 // Custom base query with authentication and refresh token logic
 const baseQuery = fetchBaseQuery({

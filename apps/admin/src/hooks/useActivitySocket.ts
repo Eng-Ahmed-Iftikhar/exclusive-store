@@ -29,15 +29,22 @@ export const useActivitySocket = ({
 
   useEffect(() => {
     // Initialize socket connection
-    const socket = io(`${import.meta.env.VITE_APP_BACKEND_URL}/activity`, {
-      transports: ['websocket'],
+    // Backend gateway namespace is '/activity', so connect directly to that path
+    const baseUrl = import.meta.env.VITE_APP_BACKEND_URL;
+    const socket = io(`${baseUrl}/activity`, {
+      transports: ['websocket', 'polling'],
       autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     });
 
     socketRef.current = socket;
 
     // Join admin room for activity updates
-    socket.emit('join-admin-room');
+    socket.on('connect', () => {
+      socket.emit('join-admin-room');
+    });
 
     // Listen for new activities
     socket.on('new-activity', (activity: Activity) => {

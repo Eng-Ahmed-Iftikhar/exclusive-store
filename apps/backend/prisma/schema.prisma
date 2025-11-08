@@ -16,54 +16,55 @@ datasource db {
 }
 
 model User {
-  id              String   @id @default(cuid())
-  email           String   @unique
+  id              String  @id @default(cuid())
+  email           String  @unique
   name            String
   password        String?
-  roleId          String?  // Link to roles table instead of hardcoded string
-  isEmailVerified Boolean  @default(false)
-  
+  roleId          String? // Link to roles table instead of hardcoded string
+  isEmailVerified Boolean @default(false)
+
   // Social login fields
-  googleId        String?  @unique
-  facebookId      String?  @unique
-  twitterId       String?  @unique
-  githubId        String?  @unique
-  linkedinId      String?  @unique
-  provider        String?  // 'google', 'facebook', 'twitter', 'github', 'linkedin', 'email'
-  avatar          String?  // Profile picture URL
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  googleId   String? @unique
+  facebookId String? @unique
+  twitterId  String? @unique
+  githubId   String? @unique
+  linkedinId String? @unique
+  provider   String? // 'google', 'facebook', 'twitter', 'github', 'linkedin', 'email'
+  avatar     String? // Profile picture URL
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   verificationCodes VerificationCode[]
   passwordResets    PasswordReset[]
-  reviews          Review[]
-  favorites        Favorite[]
-  ratings          Rating[]
-  cart             Cart?
-  orders           Order[]
-  paymentHistory   PaymentHistory[]
-  activities       Activity[]
-  transactions     Transaction[]
-  orderActivities OrderActivity[]
-  
+  reviews           Review[]
+  favorites         Favorite[]
+  ratings           Rating[]
+  cart              Cart?
+  orders            Order[]
+  paymentHistory    PaymentHistory[]
+  activities        Activity[]
+  transactions      Transaction[]
+  orderActivities   OrderActivity[]
+  notifications     Notification[]     @relation("NotificationRecipient")
+
   // RBAC Relations
-  role            Role?           @relation("UserRole", fields: [roleId], references: [id])
-  userTeams       UserTeam[]
-  createdRoles    Role[]          @relation("RoleCreator")
-  createdTeams    Team[]          @relation("TeamCreator")
+  role         Role?      @relation("UserRole", fields: [roleId], references: [id])
+  userTeams    UserTeam[]
+  createdRoles Role[]     @relation("RoleCreator")
+  createdTeams Team[]     @relation("TeamCreator")
 
   @@map("users")
 }
 
 model Activity {
   id          String   @id @default(cuid())
-  type        String   // 'order', 'user', 'product', 'payment', 'revenue', 'system'
+  type        String // 'order', 'user', 'product', 'payment', 'revenue', 'system'
   title       String
   description String
-  metadata    Json?    // Additional data like order ID, user ID, etc.
-  userId      String?  // User who performed the action (if applicable)
+  metadata    Json? // Additional data like order ID, user ID, etc.
+  userId      String? // User who performed the action (if applicable)
   createdAt   DateTime @default(now())
 
   // Relations
@@ -72,11 +73,56 @@ model Activity {
   @@map("activities")
 }
 
+model Notification {
+  id          String  @id @default(cuid())
+  type        String // 'order', 'user', 'product', 'payment', 'review', 'stock', 'system', 'security'
+  category    String // 'info', 'success', 'warning', 'error', 'critical'
+  title       String
+  message     String
+  actionUrl   String? // Link to related resource (e.g., /orders/123, /products/456)
+  actionLabel String? // Label for action button (e.g., "View Order", "Review Product")
+
+  // Targeting
+  recipientId   String? // Specific admin user (null = broadcast to all admins)
+  recipientRole String? // Target specific role (e.g., 'admin', 'superadmin')
+
+  // Status
+  isRead Boolean   @default(false)
+  readAt DateTime?
+
+  // Priority
+  priority String @default("normal") // 'low', 'normal', 'high', 'urgent'
+
+  // Metadata
+  metadata Json? // Additional data (order details, user info, etc.)
+  icon     String? // Icon identifier for UI
+
+  // Related entities
+  entityType String? // 'order', 'user', 'product', 'review', etc.
+  entityId   String? // ID of the related entity
+
+  // Expiration
+  expiresAt DateTime? // Auto-archive after this date
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  recipient User? @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, isRead])
+  @@index([type, category])
+  @@index([createdAt])
+  @@index([priority])
+  @@map("notifications")
+}
+
 // RBAC System Tables
 model Resource {
   id          String   @id @default(cuid())
   name        String   @unique // e.g., "customer", "order", "product"
-  displayName String   // e.g., "Customer Management", "Order Management"
+  displayName String // e.g., "Customer Management", "Order Management"
   description String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -91,7 +137,7 @@ model Resource {
 model Permission {
   id          String   @id @default(cuid())
   name        String   @unique // e.g., "view", "create", "edit", "delete"
-  displayName String   // e.g., "View", "Create", "Edit", "Delete"
+  displayName String // e.g., "View", "Create", "Edit", "Delete"
   description String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -106,25 +152,25 @@ model Permission {
 model Role {
   id          String   @id @default(cuid())
   name        String   @unique // e.g., "user", "admin", "superadmin"
-  displayName String   // e.g., "User", "Admin", "Super Admin"
+  displayName String // e.g., "User", "Admin", "Super Admin"
   description String?
   isSystem    Boolean  @default(false) // System roles cannot be deleted
   isActive    Boolean  @default(true)
-  createdBy   String?  // Made optional for system roles
+  createdBy   String? // Made optional for system roles
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now())
 
   // Relations
-  creator      User?          @relation("RoleCreator", fields: [createdBy], references: [id])
+  creator       User?          @relation("RoleCreator", fields: [createdBy], references: [id])
   roleResources RoleResource[]
-  teamRoles    TeamRole[]
-  users        User[]         @relation("UserRole")
+  teamRoles     TeamRole[]
+  users         User[]         @relation("UserRole")
 
   @@map("roles")
 }
 
 model RoleResource {
-  id           String @id @default(cuid())
+  id           String   @id @default(cuid())
   roleId       String
   resourceId   String
   permissionId String
@@ -150,7 +196,7 @@ model Team {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  creator    User       @relation("TeamCreator", fields: [createdBy], references: [id])
+  creator   User       @relation("TeamCreator", fields: [createdBy], references: [id])
   userTeams UserTeam[]
   teamRoles TeamRole[]
 
@@ -158,9 +204,9 @@ model Team {
 }
 
 model UserTeam {
-  id     String @id @default(cuid())
-  userId String
-  teamId String
+  id       String   @id @default(cuid())
+  userId   String
+  teamId   String
   joinedAt DateTime @default(now())
 
   // Relations
@@ -172,9 +218,9 @@ model UserTeam {
 }
 
 model TeamRole {
-  id     String @id @default(cuid())
-  teamId String
-  roleId String
+  id        String   @id @default(cuid())
+  teamId    String
+  roleId    String
   createdAt DateTime @default(now())
 
   // Relations
@@ -190,7 +236,7 @@ model VerificationCode {
   userId    String
   email     String
   code      String
-  type      String   // 'email_verification'
+  type      String // 'email_verification'
   expiresAt DateTime
   isUsed    Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -221,7 +267,7 @@ model Category {
   name        String
   slug        String   @unique
   description String?
-  iconFileId  String?  // Reference to File model
+  iconFileId  String? // Reference to File model
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
@@ -230,7 +276,7 @@ model Category {
   // Relations
   subcategories Subcategory[]
   products      Product[]
-  iconFile      File?   @relation("CategoryIcon", fields: [iconFileId], references: [id])
+  iconFile      File?         @relation("CategoryIcon", fields: [iconFileId], references: [id])
 
   @@map("categories")
 }
@@ -240,7 +286,7 @@ model Subcategory {
   name        String
   slug        String   @unique
   description String?
-  iconFileId  String?  // Reference to File model
+  iconFileId  String? // Reference to File model
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
   categoryId  String
@@ -248,9 +294,9 @@ model Subcategory {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   products Product[]
-  iconFile File?   @relation("SubcategoryIcon", fields: [iconFileId], references: [id])
+  iconFile File?     @relation("SubcategoryIcon", fields: [iconFileId], references: [id])
 
   @@map("subcategories")
 }
@@ -260,7 +306,7 @@ model Product {
   id            String   @id @default(cuid())
   name          String
   description   String?
-  sku           String?  @unique  // Base SKU for the product
+  sku           String?  @unique // Base SKU for the product
   isActive      Boolean  @default(true)
   isFeatured    Boolean  @default(false)
   sortOrder     Int      @default(0)
@@ -273,14 +319,14 @@ model Product {
   category       Category?        @relation(fields: [categoryId], references: [id])
   subcategory    Subcategory?     @relation(fields: [subcategoryId], references: [id])
   variants       ProductVariant[] // Product can have multiple variants
-  images         ProductImage[]   // Product-level images
-  prices         Price[]          // Product-level pricing
-  stock          Stock[]          // Product-level stock (one-to-many)
+  images         ProductImage[] // Product-level images
+  prices         Price[] // Product-level pricing
+  stock          Stock[] // Product-level stock (one-to-many)
   reviews        Review[]
   ratings        Rating[]
   favorites      Favorite[]
   flashSaleItems FlashSaleItem[]
-  cartItems      CartItem[]       // Products in cart
+  cartItems      CartItem[] // Products in cart
 
   @@map("products")
 }
@@ -289,10 +335,10 @@ model Product {
 model ProductVariant {
   id         String   @id @default(cuid())
   productId  String
-  sku        String   @unique  // Unique SKU for this variant
-  name       String   // Variant name (e.g., "Red - Large", "128GB - Black")
-  attributes Json?    // JSON object: { color: "Red", size: "Large", material: "Cotton" }
-  isDefault  Boolean  @default(false)  // Mark one variant as default
+  sku        String   @unique // Unique SKU for this variant
+  name       String // Variant name (e.g., "Red - Large", "128GB - Black")
+  attributes Json? // JSON object: { color: "Red", size: "Large", material: "Cotton" }
+  isDefault  Boolean  @default(false) // Mark one variant as default
   isActive   Boolean  @default(true)
   sortOrder  Int      @default(0)
   createdAt  DateTime @default(now())
@@ -300,8 +346,8 @@ model ProductVariant {
 
   // Relations
   product    Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
-  prices     Price[]        // Each variant has its own pricing
-  stock      Stock[]        // Each variant can have multiple stock entries
+  prices     Price[] // Each variant has its own pricing
+  stock      Stock[] // Each variant can have multiple stock entries
   images     ProductImage[] // Each variant can have its own images
   cartItems  CartItem[]
   orderItems OrderItem[]
@@ -309,54 +355,53 @@ model ProductVariant {
   @@map("product_variants")
 }
 
-
 model Order {
-  id                    String        @id @default(cuid())
-  orderNumber           String        @unique @default(cuid()) // Human-readable order number
+  id                    String    @id @default(cuid())
+  orderNumber           String    @unique @default(cuid()) // Human-readable order number
   userId                String?
-  guestUserInfo         String?       // JSON string for guest user info
-  shippingAddress       String        // JSON string for shipping address
-  billingAddress        String        // JSON string for billing address
+  guestUserInfo         String? // JSON string for guest user info
+  shippingAddress       String // JSON string for shipping address
+  billingAddress        String // JSON string for billing address
   subtotal              Float
   shippingCost          Float
   tax                   Float
   total                 Float
-  status                String        @default("pending") // pending, confirmed, processing, shipped, out_for_delivery, delivered, cancelled, refunded
-  paymentStatus         String        @default("pending") // pending, paid, failed, refunded
+  status                String    @default("pending") // pending, confirmed, processing, shipped, out_for_delivery, delivered, cancelled, refunded
+  paymentStatus         String    @default("pending") // pending, paid, failed, refunded
   stripePaymentIntentId String?
   notes                 String?
-  isGuestOrder          Boolean       @default(false)     // Whether this is a guest order
-  estimatedDelivery     DateTime?     // Estimated delivery date
-  actualDelivery        DateTime?     // Actual delivery date
-  trackingNumber        String?       // Shipping tracking number
-  carrier               String?       // Shipping carrier (UPS, FedEx, etc.)
-  priority              String        @default("normal")  // normal, high, urgent
-  tags                  String[]      // Array of tags for categorization
-  internalNotes         String?       // Internal notes for admin use
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
-  
-  user                  User?         @relation(fields: [userId], references: [id])
-  items                 OrderItem[]
-  paymentHistory        PaymentHistory[]
-  transactions          Transaction[]
-  activities           OrderActivity[]
+  isGuestOrder          Boolean   @default(false) // Whether this is a guest order
+  estimatedDelivery     DateTime? // Estimated delivery date
+  actualDelivery        DateTime? // Actual delivery date
+  trackingNumber        String? // Shipping tracking number
+  carrier               String? // Shipping carrier (UPS, FedEx, etc.)
+  priority              String    @default("normal") // normal, high, urgent
+  tags                  String[] // Array of tags for categorization
+  internalNotes         String? // Internal notes for admin use
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user           User?            @relation(fields: [userId], references: [id])
+  items          OrderItem[]
+  paymentHistory PaymentHistory[]
+  transactions   Transaction[]
+  activities     OrderActivity[]
 
   @@map("orders")
 }
 
 model OrderActivity {
-  id          String   @id @default(cuid())
-  orderId     String
-  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  action      String   // status_change, shipping_update, notes_update, etc.
-  field       String?  // which field was changed (status, trackingNumber, carrier, etc.)
-  oldValue    String?  // previous value
-  newValue    String?  // new value
-  performedBy String?  // admin/user ID who performed the action
-  performedByUser User? @relation(fields: [performedBy], references: [id], onDelete: SetNull)
-  metadata    Json?    // additional data (JSON)
-  createdAt   DateTime @default(now())
+  id              String   @id @default(cuid())
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  action          String // status_change, shipping_update, notes_update, etc.
+  field           String? // which field was changed (status, trackingNumber, carrier, etc.)
+  oldValue        String? // previous value
+  newValue        String? // new value
+  performedBy     String? // admin/user ID who performed the action
+  performedByUser User?    @relation(fields: [performedBy], references: [id], onDelete: SetNull)
+  metadata        Json? // additional data (JSON)
+  createdAt       DateTime @default(now())
 
   @@index([orderId])
   @@index([performedBy])
@@ -366,21 +411,21 @@ model OrderActivity {
 model PaymentHistory {
   id                    String   @id @default(cuid())
   orderId               String
-  userId                String?  // User who made the payment (null for guest orders)
+  userId                String? // User who made the payment (null for guest orders)
   stripePaymentIntentId String
   amount                Float
   currency              String   @default("USD")
-  status                String   // succeeded, failed, pending, cancelled
-  paymentMethod         String?  // card, bank_transfer, etc.
-  last4                 String?  // Last 4 digits of card
-  brand                 String?  // Visa, Mastercard, etc.
-  receiptUrl            String?  // Stripe receipt URL
-  failureReason         String?  // Reason for failure if any
+  status                String // succeeded, failed, pending, cancelled
+  paymentMethod         String? // card, bank_transfer, etc.
+  last4                 String? // Last 4 digits of card
+  brand                 String? // Visa, Mastercard, etc.
+  receiptUrl            String? // Stripe receipt URL
+  failureReason         String? // Reason for failure if any
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
-  
-  order                 Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  user                  User?    @relation(fields: [userId], references: [id])
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id])
 
   @@map("payment_history")
 }
@@ -388,12 +433,12 @@ model PaymentHistory {
 model OrderItem {
   id        String   @id @default(cuid())
   orderId   String
-  variantId String   // Links to product variant
+  variantId String // Links to product variant
   quantity  Int
   price     Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
   variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
@@ -401,17 +446,17 @@ model OrderItem {
 }
 
 model Price {
-  id        String   @id @default(cuid())
-  productId String?  // Links to product (for product-level pricing)
-  variantId String?  // Links to product variant (for variant-level pricing)
-  price     Decimal  @db.Decimal(10, 2)
-  salePrice Decimal? @db.Decimal(10, 2)
-  currency  String   @default("USD")
-  isActive  Boolean  @default(true)
-  validFrom DateTime @default(now())
+  id        String    @id @default(cuid())
+  productId String? // Links to product (for product-level pricing)
+  variantId String? // Links to product variant (for variant-level pricing)
+  price     Decimal   @db.Decimal(10, 2)
+  salePrice Decimal?  @db.Decimal(10, 2)
+  currency  String    @default("USD")
+  isActive  Boolean   @default(true)
+  validFrom DateTime  @default(now())
   validTo   DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   // Relations
   product Product?        @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -422,8 +467,8 @@ model Price {
 
 model Stock {
   id           String   @id @default(cuid())
-  productId    String?  // Links to product (for product-level stock)
-  variantId    String?  // Links to product variant (for variant-level stock)
+  productId    String? // Links to product (for product-level stock)
+  variantId    String? // Links to product variant (for variant-level stock)
   quantity     Int      @default(0)
   reserved     Int      @default(0)
   minThreshold Int      @default(5)
@@ -442,9 +487,9 @@ model Stock {
 // Product Images - Can link to either product or variant
 model ProductImage {
   id        String   @id @default(cuid())
-  productId String?  // Optional: for product-level images
-  variantId String?  // Optional: for variant-specific images
-  fileId    String   // Reference to File model
+  productId String? // Optional: for product-level images
+  variantId String? // Optional: for variant-specific images
+  fileId    String // Reference to File model
   altText   String?
   isPrimary Boolean  @default(false)
   sortOrder Int      @default(0)
@@ -465,7 +510,7 @@ model Review {
   userId     String
   title      String?
   content    String
-  rating     Int      // 1-5 stars
+  rating     Int // 1-5 stars
   isApproved Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -482,7 +527,7 @@ model Rating {
   id        String   @id @default(cuid())
   productId String
   userId    String
-  rating    Int      // 1-5 stars
+  rating    Int // 1-5 stars
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -515,7 +560,7 @@ model FlashSale {
   startDate   DateTime
   endDate     DateTime
   isActive    Boolean  @default(true)
-  discount    Int      // Percentage discount
+  discount    Int // Percentage discount
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -544,41 +589,41 @@ model FlashSaleItem {
 }
 
 model File {
-  id          String   @id @default(cuid())
+  id           String   @id @default(cuid())
   originalName String
-  publicId    String   @unique
-  url         String
-  secureUrl   String
-  format      String
-  bytes       Int
-  width       Int?
-  height      Int?
-  type        String   // image, video, document, audio, other
-  status      String   // uploading, processing, ready, error, deleted
-  folder      String?
-  tags        String[]
-  metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  publicId     String   @unique
+  url          String
+  secureUrl    String
+  format       String
+  bytes        Int
+  width        Int?
+  height       Int?
+  type         String // image, video, document, audio, other
+  status       String // uploading, processing, ready, error, deleted
+  folder       String?
+  tags         String[]
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
-  categoryIcons     Category[]       @relation("CategoryIcon")
-  subcategoryIcons  Subcategory[]    @relation("SubcategoryIcon")
-  productImages     ProductImage[]   @relation("ProductImage")
+  categoryIcons    Category[]     @relation("CategoryIcon")
+  subcategoryIcons Subcategory[]  @relation("SubcategoryIcon")
+  productImages    ProductImage[] @relation("ProductImage")
 
   @@map("files")
 }
 
 model Cart {
-  id            String   @id @default(cuid())
-  userId        String?  @unique
-  totalItems    Int      @default(0)
-  subtotal      Decimal  @default(0) @db.Decimal(10, 2)
-  shippingCost  Decimal  @default(0) @db.Decimal(10, 2)
-  tax           Decimal  @default(0) @db.Decimal(10, 2)
-  total         Decimal  @default(0) @db.Decimal(10, 2)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  userId       String?  @unique
+  totalItems   Int      @default(0)
+  subtotal     Decimal  @default(0) @db.Decimal(10, 2)
+  shippingCost Decimal  @default(0) @db.Decimal(10, 2)
+  tax          Decimal  @default(0) @db.Decimal(10, 2)
+  total        Decimal  @default(0) @db.Decimal(10, 2)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
   user  User?      @relation(fields: [userId], references: [id])
@@ -598,8 +643,8 @@ model CartItem {
   updatedAt DateTime @updatedAt
 
   // Relations
-  cart    Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  product Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cart    Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
   variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
   @@unique([cartId, productId, variantId])
@@ -607,34 +652,34 @@ model CartItem {
 }
 
 model Transaction {
-  id                    String        @id @default(cuid())
-  orderId               String?       // Reference to the order that created this transaction
-  userId                String?       // User who made the transaction (null for guest orders)
-  type                  String        // 'order_payment', 'refunded', 'partial_refund', 'fee', 'adjustment'
-  status                String        @default("pending") // 'pending', 'completed', 'failed', 'cancelled', 'refunded'
-  amount                Float         // Transaction amount (positive for income, negative for expenses)
-  currency              String        @default("USD")
-  description           String        // Human-readable description
-  reference             String?       // External reference (e.g., Stripe payment intent ID)
-  metadata              Json?         // Additional transaction data (JSON)
-  
+  id          String  @id @default(cuid())
+  orderId     String? // Reference to the order that created this transaction
+  userId      String? // User who made the transaction (null for guest orders)
+  type        String // 'order_payment', 'refunded', 'partial_refund', 'fee', 'adjustment'
+  status      String  @default("pending") // 'pending', 'completed', 'failed', 'cancelled', 'refunded'
+  amount      Float // Transaction amount (positive for income, negative for expenses)
+  currency    String  @default("USD")
+  description String // Human-readable description
+  reference   String? // External reference (e.g., Stripe payment intent ID)
+  metadata    Json? // Additional transaction data (JSON)
+
   // Payment method information
-  paymentMethod         String?       // 'card', 'paypal', 'bank_transfer', etc.
-  paymentMethodDetails  Json?         // Payment method specific details
-  
+  paymentMethod        String? // 'card', 'paypal', 'bank_transfer', etc.
+  paymentMethodDetails Json? // Payment method specific details
+
   // Fee breakdown
-  processingFee         Float?        // Processing fee amount
-  platformFee           Float?        // Platform fee amount
-  netAmount             Float         // Amount after fees (amount - processingFee - platformFee)
-  
+  processingFee Float? // Processing fee amount
+  platformFee   Float? // Platform fee amount
+  netAmount     Float // Amount after fees (amount - processingFee - platformFee)
+
   // Timestamps
-  processedAt           DateTime?     // When the transaction was processed
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
+  processedAt DateTime? // When the transaction was processed
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   // Relations
-  order                 Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
-  user                  User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@map("transactions")
 }

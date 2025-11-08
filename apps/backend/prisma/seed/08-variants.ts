@@ -446,9 +446,17 @@ export async function seedVariants() {
         ? Number(basePrice) * priceVariation * 0.8
         : undefined;
 
-      // Create variant
-      const variant = await prisma.productVariant.create({
-        data: {
+      // Upsert variant (create or update if exists)
+      const variant = await prisma.productVariant.upsert({
+        where: { sku: variantSku },
+        update: {
+          name: template.name,
+          attributes: template.attributes,
+          isDefault: template.isDefault,
+          isActive: true,
+          sortOrder: template.sortOrder,
+        },
+        create: {
           productId: product.id,
           sku: variantSku,
           name: template.name,
@@ -457,6 +465,14 @@ export async function seedVariants() {
           isActive: true,
           sortOrder: template.sortOrder,
         },
+      });
+
+      // Delete existing prices and stock for this variant before creating new ones
+      await prisma.price.deleteMany({
+        where: { variantId: variant.id },
+      });
+      await prisma.stock.deleteMany({
+        where: { variantId: variant.id },
       });
 
       // Create prices for variant

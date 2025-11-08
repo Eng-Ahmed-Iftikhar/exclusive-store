@@ -14,6 +14,7 @@ import { RolesGuard } from './guards/roles.guard';
 import { PermissionsGuard } from './guards/permissions.guard';
 import { AccessControlService } from './services/access-control.service';
 import { ActivityModule } from '../activity/activity.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ActivityModule } from '../activity/activity.module';
     EmailModule,
     LoggerModule,
     ActivityModule,
+    NotificationModule,
     JwtModule.registerAsync({
       imports: [AppConfigModule],
       useFactory: async (configService: ConfigService) => ({

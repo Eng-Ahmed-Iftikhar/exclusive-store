@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ActivityService } from '../activity/activity.service';
+import { NotificationEventService } from '../notification/notification-event.service';
 import {
   CreateProductDto,
   UpdateProductDto,
@@ -30,7 +31,8 @@ import {
 export class ProductsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly activityService: ActivityService
+    private readonly activityService: ActivityService,
+    private readonly notificationEventService: NotificationEventService
   ) {}
 
   // ==================== PRODUCT OPERATIONS ====================
@@ -876,6 +878,10 @@ export class ProductsService {
   ): Promise<StockResponseDto> {
     const existingStock = await this.prisma.stock.findUnique({
       where: { id },
+      include: {
+        product: true,
+        variant: true,
+      },
     });
 
     if (!existingStock) {
@@ -886,6 +892,26 @@ export class ProductsService {
       where: { id },
       data: updateStockDto,
     });
+
+    // Check stock levels and send notifications
+    if (updateStockDto.quantity !== undefined) {
+      const productName =
+        existingStock.product?.name || existingStock.variant?.name || 'Product';
+      const productId =
+        existingStock.productId || existingStock.variantId || id;
+
+      if (updateStockDto.quantity === 0) {
+        // Out of stock
+        this.notificationEventService.notifyOutOfStock(productId, productName);
+      } else if (updateStockDto.quantity <= existingStock.minThreshold) {
+        // Low stock
+        this.notificationEventService.notifyLowStock(
+          productId,
+          productName,
+          updateStockDto.quantity
+        );
+      }
+    }
 
     return this.mapToStockResponse(stock);
   }

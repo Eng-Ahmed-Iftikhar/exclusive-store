@@ -13,7 +13,7 @@ import { ActivityService } from './activity.service';
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.FRONTEND_URL,
+    origin: process.env.ADMIN_URL,
     credentials: true,
   },
   namespace: '/activity',
