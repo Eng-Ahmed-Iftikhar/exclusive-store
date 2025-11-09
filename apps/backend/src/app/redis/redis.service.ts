@@ -22,7 +22,11 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     console.log('🔌 Redis disconnected');
   }
 
-  async set(key: string, value: string, expireInSeconds?: number): Promise<void> {
+  async set(
+    key: string,
+    value: string,
+    expireInSeconds?: number
+  ): Promise<void> {
     if (expireInSeconds) {
       await this.client.setEx(key, expireInSeconds, value);
     } else {
@@ -31,7 +35,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   async get(key: string): Promise<string | null> {
-    return await this.client.get(key);
+    return (await this.client.get(key)) as any;
   }
 
   async del(key: string): Promise<void> {
