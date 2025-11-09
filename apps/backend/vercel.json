@@ -1,8 +1,15 @@
 {
   "version": 2,
-  "buildCommand": "cd ../.. && npm run backend:build && npx prisma generate",
-  "outputDirectory": "dist/apps/backend",
-  "installCommand": "cd ../.. && npm install -f",
-  "framework": null,
-  "regions": ["iad1"]
+  "builds": [
+    {
+      "src": "dist/apps/backend/main.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "dist/apps/backend/main.js"
+    }
+  ]
 }
