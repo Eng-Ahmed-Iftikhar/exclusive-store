@@ -3,6 +3,7 @@ import { defineConfig } from 'vite';
 import path from 'node:path';
 import vue from '@vitejs/plugin-vue';
 import vuetifyPlugin from 'vite-plugin-vuetify';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
   root: __dirname,
@@ -23,6 +24,7 @@ export default defineConfig(() => ({
     (typeof (vuetifyPlugin as any) === 'function'
       ? (vuetifyPlugin as any)
       : (vuetifyPlugin as any)?.default || undefined)?.({ autoImport: true }),
+    nxCopyAssetsPlugin(['*.md', 'vercel.json']),
   ].filter(Boolean) as any,
   base: '/',
   // Uncomment this if you are using workers.
@@ -36,7 +38,14 @@ export default defineConfig(() => ({
     commonjsOptions: {
       transformMixedEsModules: true,
     },
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+    copyPublicDir: true,
   },
+  publicDir: 'public',
   resolve: {
     alias: {
       '@frontend': path.resolve(__dirname, './src'),

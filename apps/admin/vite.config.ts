@@ -16,7 +16,11 @@ export default defineConfig(() => ({
     port: 5473,
     host: 'localhost',
   },
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  plugins: [
+    react(),
+    nxViteTsPaths(),
+    nxCopyAssetsPlugin(['*.md', 'vercel.json']),
+  ],
   base: '/',
   // Uncomment this if you are using workers.
   // worker: {
