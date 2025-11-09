@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, forwardRef, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  forwardRef,
+  Inject,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateNotificationDto,
@@ -353,8 +358,16 @@ export class NotificationService {
 
     // Emit notification via WebSocket to admin users
     if (this.notificationGateway) {
-      await this.notificationGateway.emitToRole('admin', 'notification', notification);
-      await this.notificationGateway.emitToRole('super-admin', 'notification', notification);
+      await this.notificationGateway.emitToRole(
+        'admin',
+        'notification',
+        notification
+      );
+      await this.notificationGateway.emitToRole(
+        'super-admin',
+        'notification',
+        notification
+      );
     }
 
     return notification;
@@ -414,8 +427,16 @@ export class NotificationService {
 
     // Emit notification via WebSocket to admin users
     if (this.notificationGateway) {
-      await this.notificationGateway.emitToRole('admin', 'notification', notification);
-      await this.notificationGateway.emitToRole('super-admin', 'notification', notification);
+      await this.notificationGateway.emitToRole(
+        'admin',
+        'notification',
+        notification
+      );
+      await this.notificationGateway.emitToRole(
+        'super-admin',
+        'notification',
+        notification
+      );
     }
 
     return notification;
@@ -446,8 +467,16 @@ export class NotificationService {
 
     // Emit notification via WebSocket to admin users
     if (this.notificationGateway) {
-      await this.notificationGateway.emitToRole('admin', 'notification', notification);
-      await this.notificationGateway.emitToRole('super-admin', 'notification', notification);
+      await this.notificationGateway.emitToRole(
+        'admin',
+        'notification',
+        notification
+      );
+      await this.notificationGateway.emitToRole(
+        'super-admin',
+        'notification',
+        notification
+      );
     }
 
     return notification;
@@ -490,8 +519,16 @@ export class NotificationService {
 
     // Emit notification via WebSocket to admin users
     if (this.notificationGateway) {
-      await this.notificationGateway.emitToRole('admin', 'notification', notification);
-      await this.notificationGateway.emitToRole('super-admin', 'notification', notification);
+      await this.notificationGateway.emitToRole(
+        'admin',
+        'notification',
+        notification
+      );
+      await this.notificationGateway.emitToRole(
+        'super-admin',
+        'notification',
+        notification
+      );
     }
 
     return notification;
@@ -546,8 +583,16 @@ export class NotificationService {
 
     // Emit notification via WebSocket to admin users
     if (this.notificationGateway) {
-      await this.notificationGateway.emitToRole('admin', 'notification', notification);
-      await this.notificationGateway.emitToRole('super-admin', 'notification', notification);
+      await this.notificationGateway.emitToRole(
+        'admin',
+        'notification',
+        notification
+      );
+      await this.notificationGateway.emitToRole(
+        'super-admin',
+        'notification',
+        notification
+      );
     }
 
     return notification;

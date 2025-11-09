@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
 interface Activity {
@@ -16,22 +16,16 @@ interface Activity {
   };
 }
 
-interface UseActivitySocketProps {
-  onNewActivity: (activity: Activity) => void;
-  onRecentActivities: (activities: Activity[]) => void;
-}
-
-export const useActivitySocket = ({
-  onNewActivity,
-  onRecentActivities,
-}: UseActivitySocketProps) => {
+export const useActivitySocket = () => {
   const socketRef = useRef<Socket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [newActivity, setNewActivity] = useState<any>(null);
 
   useEffect(() => {
     // Initialize socket connection
     // Backend gateway namespace is '/activity', so connect directly to that path
     const baseUrl = import.meta.env.VITE_APP_BACKEND_URL;
-    const socket = io(`${baseUrl}/activity`, {
+    const socket = io(`${baseUrl}/api/activity`, {
       transports: ['websocket', 'polling'],
       autoConnect: true,
       reconnection: true,
@@ -43,36 +37,23 @@ export const useActivitySocket = ({
 
     // Join admin room for activity updates
     socket.on('connect', () => {
-      socket.emit('join-admin-room');
+      setIsConnected(true);
+      console.log('Connected to Activity WebSocket');
     });
 
     // Listen for new activities
     socket.on('new-activity', (activity: Activity) => {
-      onNewActivity(activity);
+      setNewActivity(activity);
     });
-
-    // Listen for recent activities
-    socket.on('recent-activities', (activities: Activity[]) => {
-      onRecentActivities(activities);
-    });
-
-    // Request recent activities on connection
-    socket.emit('get-recent-activities', { limit: 10 });
-
     // Cleanup on unmount
     return () => {
       socket.emit('leave-admin-room');
       socket.disconnect();
     };
-  }, [onNewActivity, onRecentActivities]);
-
-  const requestRecentActivities = (limit = 10) => {
-    if (socketRef.current) {
-      socketRef.current.emit('get-recent-activities', { limit });
-    }
-  };
+  }, []);
 
   return {
-    requestRecentActivities,
+    isConnected,
+    newActivity,
   };
 };

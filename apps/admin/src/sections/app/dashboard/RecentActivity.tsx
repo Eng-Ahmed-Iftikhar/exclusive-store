@@ -30,13 +30,13 @@ interface ActivityItem {
 const RecentActivity: React.FC = () => {
   const { theme } = useSelector((state: RootState) => state.ui);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
 
   // Fetch initial activities
   const {
     data: initialActivities,
     isLoading,
     error,
+    refetch: requestRecentActivities,
   } = useGetRecentActivitiesQuery({ limit: 10 });
 
   // Handle new activity from WebSocket
@@ -44,20 +44,8 @@ const RecentActivity: React.FC = () => {
     setActivities((prev) => [activity, ...prev.slice(0, 9)]); // Keep only 10 most recent
   }, []);
 
-  // Handle recent activities from WebSocket
-  const handleRecentActivities = useCallback(
-    (newActivities: ActivityItem[]) => {
-      setActivities(newActivities);
-      setIsConnected(true);
-    },
-    []
-  );
-
   // Set up WebSocket connection
-  const { requestRecentActivities } = useActivitySocket({
-    onNewActivity: handleNewActivity,
-    onRecentActivities: handleRecentActivities,
-  });
+  const { isConnected, newActivity } = useActivitySocket();
 
   // Update activities when initial data loads
   React.useEffect(() => {
@@ -65,6 +53,12 @@ const RecentActivity: React.FC = () => {
       setActivities(initialActivities);
     }
   }, [initialActivities]);
+  // Update activities when a new activity is received
+  React.useEffect(() => {
+    if (newActivity) {
+      handleNewActivity(newActivity);
+    }
+  }, [newActivity, handleNewActivity]);
 
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
@@ -169,7 +163,7 @@ const RecentActivity: React.FC = () => {
           </div>
         </div>
         <button
-          onClick={() => requestRecentActivities(10)}
+          onClick={() => requestRecentActivities()}
           className={`text-sm font-medium transition-colors ${
             theme === 'dark'
               ? 'text-blue-400 hover:text-blue-300'
@@ -232,7 +226,7 @@ const RecentActivity: React.FC = () => {
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-96 overflow-y-auto">
           {activities.map((activity) => {
             const amount = getAmountFromMetadata(
               activity.metadata || {},

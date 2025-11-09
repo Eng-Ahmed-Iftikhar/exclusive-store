@@ -112,7 +112,6 @@ export class NotificationGateway
       const unreadCount = await this.notificationService.getUnreadCount(
         user.id
       );
-      console.log({ unreadCount });
 
       client.emit('unread-count', unreadCount);
 
@@ -203,24 +202,6 @@ export class NotificationGateway
       this.logger.error(`Authentication error for client ${client.id}:`, error);
       return { success: false, message: 'Authentication failed' };
     }
-  }
-
-  @SubscribeMessage('get-notifications')
-  @UseGuards(WsJwtGuard)
-  async handleGetNotifications(
-    @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { page?: number; limit?: number }
-  ) {
-    if (!client.userId) {
-      return { error: 'Not authenticated' };
-    }
-
-    const notifications = await this.notificationService.getNotifications(
-      client.userId,
-      { page: data.page || 1, limit: data.limit || 20 }
-    );
-
-    return notifications;
   }
 
   @SubscribeMessage('mark-as-read')
