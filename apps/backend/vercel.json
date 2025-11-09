@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "buildCommand": "cd ../.. && npm run backend:build && npx prisma generate",
+  "outputDirectory": "dist/apps/backend",
+  "installCommand": "cd ../.. && npm install -f",
+  "framework": null,
+  "regions": ["iad1"]
+}
