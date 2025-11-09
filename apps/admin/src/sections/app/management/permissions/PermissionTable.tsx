@@ -1,15 +1,13 @@
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store';
 import {
-  useGetPermissionsQuery,
-  useDeletePermissionMutation,
   Permission,
+  useDeletePermissionMutation,
+  useGetPermissionsQuery,
 } from '@/apis/services/permissionApi';
-import { FiEdit, FiTrash2, FiPlus, FiSearch, FiFilter } from 'react-icons/fi';
 import DataPagination from '@/components/data-pagination';
 import { PermissionGuard } from '@/components/PermissionGuard';
-import { PERMISSIONS } from '@/lib/abilities';
+import { useAppSelector } from '@/hooks/useAppSelector';
+import React, { useState } from 'react';
+import { FiEdit, FiFilter, FiPlus, FiSearch, FiTrash2 } from 'react-icons/fi';
 
 interface PermissionTableProps {
   onEdit: (permission: Permission) => void;
@@ -20,7 +18,7 @@ const PermissionTable: React.FC<PermissionTableProps> = ({
   onEdit,
   onCreate,
 }) => {
-  const { theme } = useSelector((state: RootState) => state.ui);
+  const { theme } = useAppSelector((state) => state.ui);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [limit, setLimit] = useState(10);
