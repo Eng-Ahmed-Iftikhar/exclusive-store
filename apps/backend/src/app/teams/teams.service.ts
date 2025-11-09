@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { EmailService } from '../email/email.service';
+import { ActivityService } from '../activity/activity.service';
 import {
   CreateTeamDto,
   UpdateTeamDto,
@@ -32,7 +33,8 @@ export class TeamsService {
   constructor(
     private prisma: PrismaService,
     private redisService: RedisService,
-    private emailService: EmailService
+    private emailService: EmailService,
+    private activityService: ActivityService
   ) {}
 
   // ==================== TEAM MANAGEMENT ====================
@@ -48,12 +50,26 @@ export class TeamsService {
       );
     }
 
-    return this.prisma.team.create({
+    const team = await this.prisma.team.create({
       data: {
         ...createTeamDto,
         createdBy,
       },
     });
+
+    // Log activity
+    await this.activityService.logSystemActivity(
+      'Team Created',
+      `New team "${team.displayName || team.name}" has been created`,
+      {
+        teamId: team.id,
+        teamName: team.name,
+        teamDisplayName: team.displayName,
+        action: 'create',
+      }
+    );
+
+    return team;
   }
 
   async createTeamWithUsers(
@@ -183,6 +199,22 @@ export class TeamsService {
       }
     }
 
+    // Log activity
+    await this.activityService.logSystemActivity(
+      'Team Created with Members',
+      `New team "${team.displayName || team.name}" created with ${
+        results.length
+      } member(s) invited`,
+      {
+        teamId: team.id,
+        teamName: team.name,
+        teamDisplayName: team.displayName,
+        memberCount: results.length,
+        roleCount: roleIds.length,
+        action: 'create_with_members',
+      }
+    );
+
     return {
       team,
       members: results,
@@ -285,10 +317,25 @@ export class TeamsService {
   async updateTeam(id: string, updateTeamDto: UpdateTeamDto) {
     await this.getTeamById(id);
 
-    return this.prisma.team.update({
+    const team = await this.prisma.team.update({
       where: { id },
       data: updateTeamDto,
     });
+
+    // Log activity
+    await this.activityService.logSystemActivity(
+      'Team Updated',
+      `Team "${team.displayName || team.name}" has been updated`,
+      {
+        teamId: team.id,
+        teamName: team.name,
+        teamDisplayName: team.displayName,
+        action: 'update',
+        changes: updateTeamDto,
+      }
+    );
+
+    return team;
   }
 
   async deleteTeam(id: string) {
@@ -309,9 +356,24 @@ export class TeamsService {
       });
 
       // Hard delete the team (completely remove from database)
-      return tx.team.delete({
+      const deletedTeam = await tx.team.delete({
         where: { id },
       });
+
+      // Log activity (outside transaction to ensure it runs)
+      await this.activityService.logSystemActivity(
+        'Team Deleted',
+        `Team "${team.displayName || team.name}" has been deleted`,
+        {
+          teamId: team.id,
+          teamName: team.name,
+          teamDisplayName: team.displayName,
+          memberCount: team.userTeams.length,
+          action: 'delete',
+        }
+      );
+
+      return deletedTeam;
     });
   }
 
@@ -335,8 +397,37 @@ export class TeamsService {
       throw new ConflictException('User is already in this team');
     }
 
-    return this.prisma.userTeam.create({
+    const userTeam = await this.prisma.userTeam.create({
       data: addUserDto,
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        team: { select: { id: true, name: true, displayName: true } },
+      },
+    });
+
+    // Log activity
+    await this.activityService.logSystemActivity(
+      'Team Member Added',
+      `User "${userTeam.user.name}" added to team "${
+        userTeam.team.displayName || userTeam.team.name
+      }"`,
+      {
+        teamId: userTeam.teamId,
+        teamName: userTeam.team.name,
+        userId: userTeam.userId,
+        userName: userTeam.user.name,
+        userEmail: userTeam.user.email,
+        action: 'team_member_add',
+      }
+    );
+
+    return this.prisma.userTeam.findUnique({
+      where: {
+        userId_teamId: {
+          userId: addUserDto.userId,
+          teamId: addUserDto.teamId,
+        },
+      },
       include: {
         user: {
           select: { id: true, name: true, email: true },

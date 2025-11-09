@@ -83,12 +83,14 @@ export class AuthService {
       loginDto.rememberMe
     );
 
-    // Log login activity
-    await this.activityService.logUserActivity(
-      dbUser.id,
-      'logged in',
-      dbUser.email
-    );
+    // Log login activity (only for non-customer roles - admin panel activities)
+    if (dbUser.role?.name !== 'customer') {
+      await this.activityService.logUserActivity(
+        dbUser.id,
+        'logged in',
+        dbUser.email
+      );
+    }
 
     return {
       accessToken,
@@ -146,8 +148,8 @@ export class AuthService {
         },
       });
 
-      // Log user registration activity (dbUser is guaranteed to be non-null here)
-      if (dbUser) {
+      // Log user registration activity (only for non-customer roles - admin panel activities)
+      if (dbUser && dbUser.role?.name !== 'customer') {
         await this.activityService.logUserActivity(
           dbUser.id,
           'User registered via Google OAuth',
@@ -193,12 +195,14 @@ export class AuthService {
     console.log('Generated token pair:', tokenPair);
     const { accessToken } = tokenPair;
 
-    // Log login activity
-    await this.activityService.logUserActivity(
-      dbUser.id,
-      'User logged in via Google OAuth',
-      dbUser.email
-    );
+    // Log login activity (only for non-customer roles - admin panel activities)
+    if (dbUser.role?.name !== 'customer') {
+      await this.activityService.logUserActivity(
+        dbUser.id,
+        'User logged in via Google OAuth',
+        dbUser.email
+      );
+    }
 
     const result = {
       accessToken,
@@ -273,12 +277,14 @@ export class AuthService {
     // Send welcome email (non-blocking)
     this.sendWelcomeEmailAsync(user);
 
-    // Log registration activity
-    await this.activityService.logUserActivity(
-      user.id,
-      'registered',
-      user.email
-    );
+    // Log registration activity (only for non-customer roles - admin panel activities)
+    if (user.role !== 'customer') {
+      await this.activityService.logUserActivity(
+        user.id,
+        'registered',
+        user.email
+      );
+    }
 
     // Send notification for new user registration
     this.notificationEventService.notifyUserRegistered(
@@ -298,16 +304,23 @@ export class AuthService {
     try {
       const payload = this.jwtService.verify(accessToken) as JwtPayload;
       userId = payload.sub;
-    } catch (error) {
+    } catch {
       // Token might be invalid, continue with logout
     }
 
     // Revoke the token pair from Redis
     await this.revokeTokenPair(accessToken);
 
-    // Log logout activity if user ID is available
+    // Log logout activity if user ID is available (only for non-customer roles - admin panel activities)
     if (userId) {
-      await this.activityService.logUserActivity(userId, 'logged out');
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: { role: { select: { name: true } } },
+      });
+
+      if (user && user.role?.name !== 'customer') {
+        await this.activityService.logUserActivity(userId, 'logged out');
+      }
     }
 
     return { message: 'Logged out successfully' };
@@ -819,13 +832,20 @@ export class AuthService {
       // Delete the magic link token (one-time use)
       await this.redisService.del(`magic_link:${token}`);
 
-      // Log the activity
-      await this.activityService.createActivity({
-        type: 'user',
-        title: 'Password Setup',
-        description: 'User set up password via magic link',
-        userId,
+      // Log the activity (only for non-customer roles - admin panel activities)
+      const userWithRole = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: { role: { select: { name: true } } },
       });
+
+      if (userWithRole && userWithRole.role?.name !== 'customer') {
+        await this.activityService.createActivity({
+          type: 'user',
+          title: 'Password Setup',
+          description: 'User set up password via magic link',
+          userId,
+        });
+      }
 
       return {
         message: 'Password set successfully! You can now log in.',

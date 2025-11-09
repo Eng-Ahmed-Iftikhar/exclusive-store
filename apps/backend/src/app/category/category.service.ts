@@ -9,10 +9,14 @@ import {
   UpdateCategoryDto,
   CategoryResponseDto,
 } from './dto/category.dto';
+import { ActivityService } from '../activity/activity.service';
 
 @Injectable()
 export class CategoryService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly activityService: ActivityService
+  ) {}
 
   // Create a new category
   async createCategory(
@@ -40,6 +44,18 @@ export class CategoryService {
         },
       },
     });
+
+    // Log activity
+    await this.activityService.logSystemActivity(
+      'Category Created',
+      `New category "${category.name}" has been created`,
+      {
+        categoryId: category.id,
+        categoryName: category.name,
+        categorySlug: category.slug,
+        action: 'create',
+      }
+    );
 
     return this.mapToCategoryResponse(category);
   }
@@ -161,6 +177,19 @@ export class CategoryService {
       },
     });
 
+    // Log activity
+    await this.activityService.logSystemActivity(
+      'Category Updated',
+      `Category "${updatedCategory.name}" has been updated`,
+      {
+        categoryId: updatedCategory.id,
+        categoryName: updatedCategory.name,
+        categorySlug: updatedCategory.slug,
+        action: 'update',
+        changes: updateCategoryDto,
+      }
+    );
+
     return this.mapToCategoryResponse(updatedCategory);
   }
 
@@ -179,20 +208,59 @@ export class CategoryService {
     await this.prisma.category.delete({
       where: { id },
     });
+
+    // Log activity
+    await this.activityService.logSystemActivity(
+      'Category Deleted',
+      `Category "${existingCategory.name}" has been deleted`,
+      {
+        categoryId: existingCategory.id,
+        categoryName: existingCategory.name,
+        categorySlug: existingCategory.slug,
+        action: 'delete',
+      }
+    );
   }
 
   // Helper method to map category to response DTO
-  private mapToCategoryResponse(category: any): CategoryResponseDto {
+  private mapToCategoryResponse(category: {
+    id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    iconFileId: string | null;
+    isActive: boolean;
+    sortOrder: number;
+    createdAt: Date;
+    updatedAt: Date;
+    _count?: { subcategories: number };
+    subcategories?: Array<{
+      id: string;
+      name: string;
+      slug: string;
+      description?: string | null;
+      iconFileId?: string | null;
+      isActive: boolean;
+      sortOrder: number;
+      categoryId: string;
+      createdAt: Date;
+      updatedAt: Date;
+    }>;
+  }): CategoryResponseDto {
     return {
       id: category.id,
       name: category.name,
       slug: category.slug,
-      description: category.description,
-      iconFileId: category.iconFileId,
+      description: category.description ?? undefined,
+      iconFileId: category.iconFileId ?? undefined,
       isActive: category.isActive,
       sortOrder: category.sortOrder,
       subcategoryCount: category._count?.subcategories || 0,
-      subcategories: category.subcategories || [],
+      subcategories: (category.subcategories || []).map((sub) => ({
+        ...sub,
+        description: sub.description ?? undefined,
+        iconFileId: sub.iconFileId ?? undefined,
+      })),
       createdAt: category.createdAt,
       updatedAt: category.updatedAt,
     };

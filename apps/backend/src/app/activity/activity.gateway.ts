@@ -1,19 +1,14 @@
 import { OnEvent } from '@nestjs/event-emitter';
 import {
-  ConnectedSocket,
-  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { ActivityService } from './activity.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
-import { Logger, UseGuards } from '@nestjs/common';
-import { WsJwtGuard } from '../notification/guards/ws-jwt.guard';
+import { Logger } from '@nestjs/common';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -37,7 +32,6 @@ export class ActivityGateway
   private connectedClients = new Map<string, Set<string>>(); // userId -> socketIds
 
   constructor(
-    private readonly activityService: ActivityService,
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService
   ) {}
@@ -92,19 +86,23 @@ export class ActivityGateway
       }
       socketSet.add(client.id);
 
+      // Only allow non-customer roles (activities are admin-panel only)
+      if (user.role?.name === 'customer') {
+        this.logger.warn(
+          `Customer attempted to connect to activity gateway: ${client.id}`
+        );
+        client.disconnect();
+        return;
+      }
+
       // join user and role rooms
       client.join(`user:${user.id}`);
       if (user.role?.name) {
         client.join(`role:${user.role.name}`);
       }
 
-      // Back-compat: join legacy admin room for admins
-      if (user.role?.name === 'admin' || user.role?.name === 'super-admin') {
-        client.join('admin-room');
-      }
-
       this.logger.log(
-        `✅Activity client authenticated: ${client.id} (User: ${
+        `✅ Activity client authenticated: ${client.id} (User: ${
           user.id
         }, Role: ${user.role?.name || 'none'})`
       );
@@ -126,32 +124,6 @@ export class ActivityGateway
     }
   }
 
-  @SubscribeMessage('join-admin-room')
-  handleJoinAdminRoom(@ConnectedSocket() client: Socket) {
-    client.join('admin-room');
-    console.log(`Client ${client.id} joined admin room`);
-  }
-
-  @SubscribeMessage('leave-admin-room')
-  handleLeaveAdminRoom(@ConnectedSocket() client: Socket) {
-    client.leave('admin-room');
-    console.log(`Client ${client.id} left admin room`);
-  }
-
-  @SubscribeMessage('get-user-activities')
-  @UseGuards(WsJwtGuard)
-  async handleGetUserActivities(
-    @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { limit?: number }
-  ) {
-    if (!client.userId) return;
-    const activities = await this.activityService.getActivitiesByUser(
-      client.userId,
-      data.limit || 10
-    );
-    client.emit('user-activities', activities);
-  }
-
   @OnEvent('activity.created')
   async handleActivityCreated(activity: {
     id?: string;
@@ -161,18 +133,7 @@ export class ActivityGateway
     createdAt?: Date;
     [key: string]: unknown;
   }) {
-    // Broadcast to admin roles
-    this.server.to('role:admin').emit('new-activity', activity);
-    this.server.to('role:super-admin').emit('new-activity', activity);
-
-    // If activity is tied to a specific user, also emit directly to that user
-    if (activity?.userId) {
-      this.server.to(`user:${activity.userId}`).emit('new-activity', activity);
-    }
-  }
-
-  // Method to broadcast activity to all connected clients
-  broadcastActivity(activity: unknown) {
-    this.server.to('admin-room').emit('new-activity', activity);
+    // Broadcast to all connected admin users (excludes customers as they can't connect)
+    this.server.emit('new-activity', activity);
   }
 }
