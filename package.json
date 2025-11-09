@@ -8,7 +8,6 @@
     "build": "nx run-many -t build -p frontend,backend,admin",
     "lint": "nx run-many -t lint -p frontend,backend,admin",
     "typecheck": "nx run-many -t typecheck -p frontend,backend,admin",
-    
     "frontend:dev": "npx nx run frontend:dev",
     "frontend:build": "npx nx run frontend:build",
     "frontend:prod": "npx nx run frontend:prod",

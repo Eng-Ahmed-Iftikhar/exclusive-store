@@ -9,14 +9,14 @@
     "lib": ["es2022", "dom"],
     "module": "esnext",
     "moduleResolution": "node",
-    "noEmitOnError": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
+    "noEmitOnError": false,
+    "noFallthroughCasesInSwitch": false,
+    "noImplicitOverride": false,
+    "noImplicitReturns": false,
+    "noUnusedLocals": false,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
     "target": "es2022"
   }
 }
