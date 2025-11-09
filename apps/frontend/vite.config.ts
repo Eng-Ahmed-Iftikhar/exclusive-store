@@ -24,6 +24,7 @@ export default defineConfig(() => ({
       ? (vuetifyPlugin as any)
       : (vuetifyPlugin as any)?.default || undefined)?.({ autoImport: true }),
   ].filter(Boolean) as any,
+  base: '/',
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
