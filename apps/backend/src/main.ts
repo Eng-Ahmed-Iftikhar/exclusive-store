@@ -13,8 +13,7 @@ const server = express();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
-  const port = process.env.PORT || 3000;
-  await app.listen(port, '0.0.0.0');
+
   // Get config + logger
   const configService = app.get(ConfigService);
   const logger = app.get(CustomLoggerService);
@@ -60,8 +59,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, document);
 
-  await app.init();
+  // ✅ IMPORTANT PART — start listening on Render’s port
+  const port = process.env.PORT || 3000;
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 Server is running on port ${port}`);
 }
 
-// Initialize Nest app once on cold start
 bootstrap();
