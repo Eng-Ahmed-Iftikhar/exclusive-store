@@ -13,7 +13,8 @@ const server = express();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
-
+  const port = process.env.PORT || 3000;
+  await app.listen(port, '0.0.0.0');
   // Get config + logger
   const configService = app.get(ConfigService);
   const logger = app.get(CustomLoggerService);
@@ -64,11 +65,3 @@ async function bootstrap() {
 
 // Initialize Nest app once on cold start
 bootstrap();
-
-/**
- * Vercel serverless handler
- * Vercel calls this export for each HTTP request
- */
-export default function handler(req: Request, res: Response) {
-  server(req, res);
-}
