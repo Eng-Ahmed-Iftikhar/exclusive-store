@@ -1,26 +1,57 @@
 <template>
-  <div class="product-card" :class="{ 'out-of-stock': !isInStock }" @click="navigateToProduct">
+  <div
+    class="product-card"
+    :class="{ 'out-of-stock': !isInStock }"
+    @click="navigateToProduct"
+  >
     <div class="product-image">
       <!-- Image Display -->
       <div class="image-container">
-        <img v-if="productImages.length > 0" :src="currentImage.url" :alt="currentImage.altText || product.name"
-          class="product-image-img" @error="handleImageError" />
-        <img v-else src="https://picsum.photos/400/300?random=16" :alt="product.name"
-          class="product-image-img placeholder-image" />
+        <img
+          v-if="productImages.length > 0"
+          :src="currentImage.url"
+          :alt="currentImage.altText || product.name"
+          class="product-image-img"
+          @error="handleImageError"
+        />
+        <img
+          v-else
+          src="https://picsum.photos/400/300?random=16"
+          :alt="product.name"
+          class="product-image-img placeholder-image"
+        />
 
         <!-- Image Indicators -->
         <div v-if="hasMultipleImages" class="image-indicators">
-          <button v-for="(image, index) in productImages" :key="index" @click.stop="goToImage(index)"
-            class="indicator-dot" :class="{ active: currentImageIndex === index }" type="button" />
+          <button
+            v-for="(_, index) in productImages"
+            :key="index"
+            @click.stop="goToImage(index)"
+            class="indicator-dot"
+            :class="{ active: currentImageIndex === index }"
+            type="button"
+          />
         </div>
       </div>
 
       <!-- Action Icons Overlay -->
       <div class="action-overlay">
-        <v-btn :icon="isFavorited ? 'mdi-heart' : 'mdi-heart-outline'" variant="text" size="small"
-          class="overlay-btn favorite-btn" :class="{ 'favorited': isFavorited }" @click.stop="handleFavoriteClick"
-          :loading="favoriteLoading" />
-        <v-btn icon="mdi-eye" variant="text" size="small" class="overlay-btn" @click.stop="openProductModal" />
+        <v-btn
+          :icon="isFavorited ? 'mdi-heart' : 'mdi-heart-outline'"
+          variant="text"
+          size="small"
+          class="overlay-btn favorite-btn"
+          :class="{ favorited: isFavorited }"
+          @click.stop="handleFavoriteClick"
+          :loading="favoriteLoading"
+        />
+        <v-btn
+          icon="mdi-eye"
+          variant="text"
+          size="small"
+          class="overlay-btn"
+          @click.stop="openProductModal"
+        />
       </div>
 
       <div v-if="showSaleTag && isOnSale" class="sale-badge">Sale</div>
@@ -32,35 +63,69 @@
         <h3 class="product-name">{{ product.name }}</h3>
         <div class="product-rating">
           <div class="stars">
-            <v-icon v-for="star in 5" :key="star" icon="mdi-star" size="14"
-              :color="star <= getAverageRating(product) ? '#FFD700' : '#E0E0E0'" />
+            <v-icon
+              v-for="star in 5"
+              :key="star"
+              icon="mdi-star"
+              size="14"
+              :color="star <= getAverageRating(product) ? '#FFD700' : '#E0E0E0'"
+            />
           </div>
-          <span class="rating-count">({{ getReviewCount(product) }} reviews)</span>
+          <span class="rating-count"
+            >({{ getReviewCount(product) }} reviews)</span
+          >
         </div>
       </div>
 
       <div class="product-price">
-        <span v-if="isOnSale" class="current-price">${{ getSalePrice(product).toFixed(2) }}</span>
-        <span v-else class="current-price">${{ getOriginalPrice(product).toFixed(2) }}</span>
-        <span v-if="isOnSale" class="original-price">${{ getOriginalPrice(product).toFixed(2) }}</span>
+        <span v-if="isOnSale" class="current-price"
+          >${{ getSalePrice(product).toFixed(2) }}</span
+        >
+        <span v-else class="current-price"
+          >${{ getOriginalPrice(product).toFixed(2) }}</span
+        >
+        <span v-if="isOnSale" class="original-price"
+          >${{ getOriginalPrice(product).toFixed(2) }}</span
+        >
       </div>
 
       <div class="product-actions">
         <!-- Add to Cart Button (when not in cart) -->
-        <v-btn v-if="!isInCart" color="primary" variant="flat" size="small" class="add-to-cart-btn"
-          :loading="cartLoading" :disabled="!isInStock" @click.stop="handleAddToCart" block>
+        <v-btn
+          v-if="!isInCart"
+          color="primary"
+          variant="flat"
+          size="small"
+          class="add-to-cart-btn"
+          :loading="cartLoading"
+          :disabled="!isInStock"
+          @click.stop="handleAddToCart"
+          block
+        >
           <v-icon icon="mdi-cart-plus" size="16" class="me-1" />
           {{ isInStock ? 'Add To Cart' : 'Out of Stock' }}
         </v-btn>
 
         <!-- Cart Actions (when in cart) -->
         <div v-else class="cart-actions">
-          <v-btn color="success" variant="flat" size="small" class="in-cart-btn" disabled>
+          <v-btn
+            color="success"
+            variant="flat"
+            size="small"
+            class="in-cart-btn"
+            disabled
+          >
             <v-icon icon="mdi-check" size="16" class="me-1" />
             In Cart
           </v-btn>
-          <v-btn color="error" variant="outlined" size="small" class="remove-from-cart-btn" :loading="cartLoading"
-            @click.stop="handleRemoveFromCart">
+          <v-btn
+            color="error"
+            variant="outlined"
+            size="small"
+            class="remove-from-cart-btn"
+            :loading="cartLoading"
+            @click.stop="handleRemoveFromCart"
+          >
             <v-icon icon="mdi-cart-minus" size="16" class="me-1" />
             Remove
           </v-btn>
@@ -68,7 +133,13 @@
       </div>
 
       <!-- View Details Button -->
-      <v-btn variant="text" size="small" class="view-details-btn" @click.stop="navigateToProduct" block>
+      <v-btn
+        variant="text"
+        size="small"
+        class="view-details-btn"
+        @click.stop="navigateToProduct"
+        block
+      >
         <v-icon icon="mdi-eye" size="16" class="me-1" />
         View Details
       </v-btn>
@@ -76,14 +147,23 @@
   </div>
 
   <!-- Product Modal -->
-  <ProductModal v-model="showProductModal" :product="product" @add-to-cart="handleAddToCart" />
+  <ProductModal
+    v-model="showProductModal"
+    :product="product"
+    @add-to-cart="handleAddToCart"
+  />
 </template>
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { useFavoritesStore, useNotificationsStore, useCartStore, useAuthStore } from '../stores/index';
+import {
+  useFavoritesStore,
+  useNotificationsStore,
+  useCartStore,
+  useAuthStore,
+} from '../stores/index';
 import ProductModal from './ProductModal.vue';
 
 interface ProductCardProps {
@@ -92,7 +172,7 @@ interface ProductCardProps {
 }
 
 const props = withDefaults(defineProps<ProductCardProps>(), {
-  showSaleTag: true
+  showSaleTag: true,
 });
 
 const router = useRouter();
@@ -131,10 +211,16 @@ const hasMultipleImages = computed(() => {
 });
 
 const currentImage = computed(() => {
-  if (productImages.value.length > 0 && productImages.value[currentImageIndex.value]) {
+  if (
+    productImages.value.length > 0 &&
+    productImages.value[currentImageIndex.value]
+  ) {
     return productImages.value[currentImageIndex.value];
   }
-  return { url: 'https://picsum.photos/400/300?random=16', altText: props.product.name };
+  return {
+    url: 'https://picsum.photos/400/300?random=16',
+    altText: props.product.name,
+  };
 });
 
 // Handle image load errors
@@ -146,7 +232,9 @@ const handleImageError = (event: Event) => {
 // Favorite functionality
 const isFavorited = computed(() => {
   // First check local state, then fallback to store
-  return localFavoriteStatus.value || favoritesStore.isItemFavorite(props.product.id);
+  return (
+    localFavoriteStatus.value || favoritesStore.isItemFavorite(props.product.id)
+  );
 });
 
 // Cart functionality
@@ -192,9 +280,13 @@ const handleFavoriteClick = async () => {
 
     // Show notification
     if (localFavoriteStatus.value) {
-      notificationsStore.showSuccess(`${props.product.name} ${t('notifications.favorites.added')}`);
+      notificationsStore.showSuccess(
+        `${props.product.name} ${t('notifications.favorites.added')}`
+      );
     } else {
-      notificationsStore.showInfo(`${props.product.name} ${t('notifications.favorites.removed')}`);
+      notificationsStore.showInfo(
+        `${props.product.name} ${t('notifications.favorites.removed')}`
+      );
     }
   } catch (error) {
     // Error toggling favorite
@@ -254,7 +346,8 @@ const navigateToProduct = () => {
 // Slideshow functions
 const nextImage = () => {
   if (hasMultipleImages.value) {
-    currentImageIndex.value = (currentImageIndex.value + 1) % productImages.value.length;
+    currentImageIndex.value =
+      (currentImageIndex.value + 1) % productImages.value.length;
   }
 };
 
@@ -300,7 +393,9 @@ const getDefaultVariant = (product: any) => {
   if (defaultVariant) return defaultVariant;
 
   // If no default, find the first variant with images
-  const variantWithImages = product.variants.find((v: any) => v.images && v.images.length > 0);
+  const variantWithImages = product.variants.find(
+    (v: any) => v.images && v.images.length > 0
+  );
   if (variantWithImages) return variantWithImages;
 
   // Otherwise return the first variant
@@ -314,41 +409,36 @@ const getProductImages = (product: any) => {
   // First, try to get images from the default variant
   const defaultVariant = getDefaultVariant(product);
   if (defaultVariant?.images && defaultVariant.images.length > 0) {
-    images.push(...defaultVariant.images.map((img: any) => ({
-      url: img.file?.secureUrl || img.file?.url || '',
-      altText: img.altText || product.name,
-      isPrimary: img.isPrimary,
-      sortOrder: img.sortOrder
-    })));
+    images.push(
+      ...defaultVariant.images.map((img: any) => ({
+        url: img.file?.secureUrl || img.file?.url || '',
+        altText: img.altText || product.name,
+        isPrimary: img.isPrimary,
+        sortOrder: img.sortOrder,
+      }))
+    );
   }
 
   // If no variant images, try product-level images
   if (images.length === 0 && product.images && product.images.length > 0) {
-    images.push(...product.images.map((img: any) => ({
-      url: img.file?.secureUrl || img.file?.url || '',
-      altText: img.altText || product.name,
-      isPrimary: img.isPrimary,
-      sortOrder: img.sortOrder
-    })));
+    images.push(
+      ...product.images.map((img: any) => ({
+        url: img.file?.secureUrl || img.file?.url || '',
+        altText: img.altText || product.name,
+        isPrimary: img.isPrimary,
+        sortOrder: img.sortOrder,
+      }))
+    );
   }
 
   // Filter out invalid images and sort
   return images
-    .filter(img => img.url && img.url.trim() !== '')
+    .filter((img) => img.url && img.url.trim() !== '')
     .sort((a, b) => {
       if (a.isPrimary && !b.isPrimary) return -1;
       if (!a.isPrimary && b.isPrimary) return 1;
       return (a.sortOrder || 0) - (b.sortOrder || 0);
     });
-};
-
-// Helper function to get primary image
-const getPrimaryImage = (product: any) => {
-  const images = getProductImages(product);
-  if (images.length > 0) {
-    return images[0].url;
-  }
-  return 'https://picsum.photos/400/300?random=16';
 };
 
 // Helper function to get average rating
@@ -357,7 +447,10 @@ const getAverageRating = (product: any) => {
     return product.averageRating;
   }
   if (product.reviews && product.reviews.length > 0) {
-    const totalRating = product.reviews.reduce((sum: number, review: any) => sum + review.rating, 0);
+    const totalRating = product.reviews.reduce(
+      (sum: number, review: any) => sum + review.rating,
+      0
+    );
     return Math.round(totalRating / product.reviews.length);
   }
   return 0;
@@ -388,7 +481,9 @@ const getOriginalPrice = (product: any) => {
   // Otherwise get price from default variant
   const defaultVariant = getDefaultVariant(product);
   if (defaultVariant?.prices && defaultVariant.prices.length > 0) {
-    const activePrice = defaultVariant.prices.find((price: any) => price.isActive);
+    const activePrice = defaultVariant.prices.find(
+      (price: any) => price.isActive
+    );
     if (activePrice) {
       return Number(activePrice.price);
     }
@@ -411,7 +506,9 @@ const getSalePrice = (product: any) => {
   // Otherwise get sale price from default variant
   const defaultVariant = getDefaultVariant(product);
   if (defaultVariant?.prices && defaultVariant.prices.length > 0) {
-    const activePrice = defaultVariant.prices.find((price: any) => price.isActive);
+    const activePrice = defaultVariant.prices.find(
+      (price: any) => price.isActive
+    );
     if (activePrice?.salePrice && Number(activePrice.salePrice) > 0) {
       return Number(activePrice.salePrice);
     }
@@ -532,14 +629,13 @@ const getAvailableStock = (product: any) => {
 }
 
 .overlay-btn.favorite-btn.favorited {
-  color: #DB4444 !important;
+  color: #db4444 !important;
   background: rgba(219, 68, 68, 0.1) !important;
 }
 
 .overlay-btn.favorite-btn.favorited:hover {
   background: rgba(219, 68, 68, 0.2) !important;
 }
-
 
 .image-indicators {
   position: absolute;
@@ -566,15 +662,15 @@ const getAvailableStock = (product: any) => {
 }
 
 .indicator-dot.active {
-  background: #DB4444;
-  border-color: #DB4444;
+  background: #db4444;
+  border-color: #db4444;
 }
 
 .sale-badge {
   position: absolute;
   top: 12px;
   left: 12px;
-  background: #DB4444;
+  background: #db4444;
   color: white;
   padding: 6px 10px;
   border-radius: 6px;
@@ -659,7 +755,7 @@ const getAvailableStock = (product: any) => {
 .current-price {
   font-size: 18px;
   font-weight: 700;
-  color: #DB4444;
+  color: #db4444;
 }
 
 .original-price {
@@ -680,7 +776,6 @@ const getAvailableStock = (product: any) => {
   border-radius: 8px !important;
   font-weight: 600;
   letter-spacing: 0.3px;
-
 }
 
 .cart-actions {
@@ -696,13 +791,12 @@ const getAvailableStock = (product: any) => {
   height: 40px;
   text-transform: none;
   border-radius: 8px !important;
-  background-color: #4CAF50 !important;
+  background-color: #4caf50 !important;
   color: white !important;
   cursor: default;
   flex: 1;
   font-weight: 600;
   border-radius: 8px !important;
-
 }
 
 .remove-from-cart-btn {
@@ -711,14 +805,14 @@ const getAvailableStock = (product: any) => {
   height: 40px;
   text-transform: none;
   border-radius: 8px !important;
-  border-color: #DB4444 !important;
-  color: #DB4444 !important;
+  border-color: #db4444 !important;
+  color: #db4444 !important;
   flex: 1;
   font-weight: 600;
 }
 
 .remove-from-cart-btn:hover {
-  background-color: #DB4444 !important;
+  background-color: #db4444 !important;
   color: white !important;
 }
 
@@ -729,14 +823,14 @@ const getAvailableStock = (product: any) => {
   height: 40px;
   text-transform: none;
   border-radius: 8px !important;
-  border-color: #DB4444 !important;
-  color: #DB4444 !important;
+  border-color: #db4444 !important;
+  color: #db4444 !important;
   flex: 1;
   font-weight: 600;
 }
 
 .view-details-btn:hover {
-  background-color: #DB4444 !important;
+  background-color: #db4444 !important;
   color: white !important;
 }
 

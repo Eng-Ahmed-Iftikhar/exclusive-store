@@ -24,7 +24,12 @@
       </div>
 
       <div v-else-if="newArrivalItems.length > 0" class="products-container">
-        <ProductCard v-for="product in newArrivalProducts" :key="product.id" :product="product" :show-sale-tag="true" />
+        <ProductCard
+          v-for="product in newArrivalProducts"
+          :key="product.id"
+          :product="product"
+          :show-sale-tag="true"
+        />
       </div>
 
       <div v-else class="empty-state">
@@ -56,17 +61,19 @@ onMounted(async () => {
 // Fetch new arrival items
 const fetchNewArrivals = async () => {
   try {
-    await productsStore.fetchNewArrivalItems();
+    await productsStore.fetchProducts({ isFeatured: true, limit: 8 });
   } catch (error) {
     // Failed to fetch new arrivals
   }
 };
 
 // Get new arrival items from store
-const newArrivalItems = computed(() => (productsStore.items || []) as unknown as Product[]);
+const newArrivalItems = computed(
+  () => (productsStore.products || []) as unknown as Product[]
+);
 
 // Computed property for new arrival products
-const newArrivalProducts = computed(() => productsStore.items || []);
+const newArrivalProducts = computed(() => productsStore.products || []);
 
 // Loading state
 const loading = computed(() => productsStore.loading);
@@ -94,7 +101,7 @@ const error = computed(() => productsStore.error);
 .red-bar {
   width: 4px;
   height: 40px;
-  background: #DB4444;
+  background: #db4444;
   border-radius: 2px;
 }
 

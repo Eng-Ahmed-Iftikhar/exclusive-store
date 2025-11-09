@@ -144,7 +144,7 @@ export const useAuthStore = defineStore('auth', () => {
     errorMessage.value = null;
 
     try {
-      const response = await AuthActions.forgotPassword(email);
+      await AuthActions.forgotPassword(email);
       return true;
     } catch (error: any) {
       const errorMessage =
@@ -164,7 +164,7 @@ export const useAuthStore = defineStore('auth', () => {
     errorMessage.value = null;
 
     try {
-      const response = await AuthActions.resetPassword(token, newPassword);
+      await AuthActions.resetPassword(token, newPassword);
       return true;
     } catch (error: any) {
       const errorMessage =

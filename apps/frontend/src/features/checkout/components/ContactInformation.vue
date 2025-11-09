@@ -3,8 +3,12 @@
     <div class="section-header">
       <div class="section-icon">
         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+          />
         </svg>
       </div>
       <h2 class="section-title">Contact Information</h2>
@@ -13,19 +17,40 @@
     <v-form ref="form" @submit.prevent>
       <div class="form-grid">
         <div class="form-group">
-          <v-text-field v-model="formData.name" label="Full Name" variant="outlined" density="comfortable"
-            :rules="nameRules" required prepend-inner-icon="mdi-account" hide-details="auto"
-            :error-messages="getFieldError('name')" />
+          <v-text-field
+            v-model="formData.name"
+            label="Full Name"
+            variant="outlined"
+            density="comfortable"
+            :rules="nameRules"
+            required
+            prepend-inner-icon="mdi-account"
+            hide-details="auto"
+            :error-messages="getFieldError('name')"
+          />
         </div>
 
         <div class="form-group">
-          <v-text-field v-model="formData.email" label="Email Address" variant="outlined" density="comfortable"
-            type="email" :rules="emailRules" required prepend-inner-icon="mdi-email" hide-details="auto"
-            :error-messages="getFieldError('email')" />
+          <v-text-field
+            v-model="formData.email"
+            label="Email Address"
+            variant="outlined"
+            density="comfortable"
+            type="email"
+            :rules="emailRules"
+            required
+            prepend-inner-icon="mdi-email"
+            hide-details="auto"
+            :error-messages="getFieldError('email')"
+          />
         </div>
 
         <div class="form-group phone-group">
-          <PhoneNumberInput v-model="formData.phone" required :error-messages="getFieldError('phone')" />
+          <PhoneNumberInput
+            v-model="formData.phone"
+            required
+            :error-messages="getFieldError('phone')"
+          />
         </div>
       </div>
     </v-form>
@@ -33,103 +58,112 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import PhoneNumberInput from './PhoneNumberInput.vue'
+import { ref, watch } from 'vue';
+import PhoneNumberInput from './PhoneNumberInput.vue';
 
 interface FormData {
-  name: string
-  email: string
-  phone: string
+  name: string;
+  email: string;
+  phone: string;
 }
 
 interface UserInfo {
-  id: string
-  name: string
-  email: string
+  id: string;
+  name: string;
+  email: string;
 }
 
 interface Props {
-  isLoggedIn: boolean
-  userInfo: UserInfo | null
-  errors?: string[]
+  isLoggedIn: boolean;
+  userInfo: UserInfo | null;
+  errors?: string[];
 }
 
 interface Emits {
-  (e: 'update', value: FormData): void
+  (e: 'update', value: FormData): void;
 }
 
-const props = defineProps<Props>()
-const emit = defineEmits<Emits>()
+const props = defineProps<Props>();
+const emit = defineEmits<Emits>();
 
-const form = ref()
+const form = ref();
 
 // Form data
 const formData = ref<FormData>({
   name: '',
   email: '',
-  phone: ''
-})
+  phone: '',
+});
 
 // Helper function to get field-specific errors
 const getFieldError = (fieldName: string): string => {
-  if (!props.errors || props.errors.length === 0) return ''
+  if (!props.errors || props.errors.length === 0) return '';
 
   // Map field names to error messages
   const fieldErrorMap: Record<string, string> = {
-    name: props.errors.find(err => err.includes('Name')) || '',
-    email: props.errors.find(err => err.includes('Email')) || '',
-    phone: props.errors.find(err => err.includes('Phone')) || ''
-  }
+    name: props.errors.find((err) => err.includes('Name')) || '',
+    email: props.errors.find((err) => err.includes('Email')) || '',
+    phone: props.errors.find((err) => err.includes('Phone')) || '',
+  };
 
-  return fieldErrorMap[fieldName] || ''
-}
+  return fieldErrorMap[fieldName] || '';
+};
 
 // Watch for user info changes and pre-fill form
-watch(() => props.userInfo, (newUserInfo) => {
-  if (newUserInfo && props.isLoggedIn) {
-    formData.value = {
-      name: newUserInfo.name || '',
-      email: newUserInfo.email || '',
-      phone: ''
+watch(
+  () => props.userInfo,
+  (newUserInfo) => {
+    if (newUserInfo && props.isLoggedIn) {
+      formData.value = {
+        name: newUserInfo.name || '',
+        email: newUserInfo.email || '',
+        phone: '',
+      };
+      emitUpdate();
     }
-    emitUpdate()
-  }
-}, { immediate: true })
+  },
+  { immediate: true }
+);
 
 // Watch for form data changes and emit updates
-watch(formData, () => {
-  emitUpdate()
-}, { deep: true })
+watch(
+  formData,
+  () => {
+    emitUpdate();
+  },
+  { deep: true }
+);
 
 // Emit update to parent
 const emitUpdate = () => {
-  emit('update', { ...formData.value })
-}
+  emit('update', { ...formData.value });
+};
 
 // Validation rules
 const nameRules = [
   (v: string) => !!v || 'Name is required',
   (v: string) => v.length >= 2 || 'Name must be at least 2 characters',
   (v: string) => v.length <= 50 || 'Name must be less than 50 characters',
-  (v: string) => /^[a-zA-Z\s]*$/.test(v) || 'Name can only contain letters and spaces'
-]
+  (v: string) =>
+    /^[a-zA-Z\s]*$/.test(v) || 'Name can only contain letters and spaces',
+];
 
 const emailRules = [
   (v: string) => !!v || 'Email is required',
   (v: string) => /.+@.+\..+/.test(v) || 'Please enter a valid email address',
-  (v: string) => v.length <= 100 || 'Email must be less than 100 characters'
-]
+  (v: string) => v.length <= 100 || 'Email must be less than 100 characters',
+];
 
 // Expose form validation method
 defineExpose({
   validate: async () => {
     if (form.value) {
-      const { valid } = await form.value.validate()
-      return valid
+      const { valid } = await form.value.validate();
+      return valid;
     }
-    return false
-  }
-})
+    return false;
+  },
+});
 </script>
 
 <style scoped>

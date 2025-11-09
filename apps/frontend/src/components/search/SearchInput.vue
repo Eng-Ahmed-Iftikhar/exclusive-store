@@ -18,16 +18,16 @@
         <template #prepend-inner>
           <v-icon icon="mdi-magnify" size="18" color="grey" />
         </template>
-        
+
         <template #append-inner>
-          <v-icon 
-            v-if="searchQuery" 
-            icon="mdi-close" 
-            size="18" 
+          <v-icon
+            v-if="searchQuery"
+            icon="mdi-close"
+            size="18"
             color="grey"
             class="clear-icon"
             @click="clearSearch"
-            style="cursor: pointer;"
+            style="cursor: pointer"
           />
         </template>
       </v-text-field>
@@ -50,14 +50,7 @@ import { useRouter } from 'vue-router';
 import { searchAPI, SearchResult } from '../../stores/apis/search.api';
 import SearchDropdown from './SearchDropdown.vue';
 
-interface SearchInputProps {
-  placeholder?: string;
-}
-
-
-
 const router = useRouter();
-
 
 // Refs
 const searchContainer = ref<HTMLElement>();
@@ -68,18 +61,18 @@ const loading = ref(false);
 const searchResults = ref<SearchResult>({
   categories: [],
   products: [],
-  total: 0
+  total: 0,
 });
 
 // Debounce timer
-let debounceTimer: NodeJS.Timeout | null = null;
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 const DEBOUNCE_DELAY = 300; // 300ms delay
 
 // Lifecycle
 onMounted(() => {
   // Add click outside listener
   document.addEventListener('click', handleClickOutside);
-  
+
   // Listen for close dropdown event
   window.addEventListener('close-search-dropdown', () => {
     showDropdown.value = false;
@@ -93,7 +86,7 @@ const clearSearchFromExternal = () => {
 
 // Expose method for external use
 defineExpose({
-  clearSearchFromExternal
+  clearSearchFromExternal,
 });
 
 onUnmounted(() => {
@@ -125,7 +118,7 @@ const handleBlur = () => {
 
 const handleInput = () => {
   const query = searchQuery.value.trim();
-  
+
   // Clear previous timer
   if (debounceTimer) {
     clearTimeout(debounceTimer);
@@ -164,7 +157,9 @@ const handleInput = () => {
 
 const handleEnter = () => {
   if (searchQuery.value.trim()) {
-    router.push(`/products?search=${encodeURIComponent(searchQuery.value.trim())}`);
+    router.push(
+      `/products?search=${encodeURIComponent(searchQuery.value.trim())}`
+    );
     showDropdown.value = false;
   }
 };
@@ -184,7 +179,10 @@ const clearSearch = () => {
 };
 
 const handleClickOutside = (event: Event) => {
-  if (searchContainer.value && !searchContainer.value.contains(event.target as Node)) {
+  if (
+    searchContainer.value &&
+    !searchContainer.value.contains(event.target as Node)
+  ) {
     showDropdown.value = false;
   }
 };
@@ -211,7 +209,7 @@ const handleProductSelected = (product: any) => {
 
 .search-field :deep(.v-field) {
   border-radius: 8px;
-  background: #F5F5F5;
+  background: #f5f5f5;
   min-height: 40px;
   box-shadow: none;
   height: 40px;
@@ -219,7 +217,7 @@ const handleProductSelected = (product: any) => {
 }
 
 .search-field :deep(.v-field:hover) {
-  background: #EBEBEB;
+  background: #ebebeb;
 }
 
 .search-field :deep(.v-field--focused) {
@@ -258,17 +256,17 @@ const handleProductSelected = (product: any) => {
     min-height: 38px;
     height: 38px;
   }
-  
+
   .search-field :deep(input) {
     font-size: 13px;
     padding-top: 5px;
     padding-bottom: 5px;
   }
-  
+
   .search-field :deep(.v-field__prepend-inner) {
     padding-left: 10px;
   }
-  
+
   .search-field :deep(.v-field__append-inner) {
     padding-right: 10px;
   }
@@ -279,17 +277,17 @@ const handleProductSelected = (product: any) => {
     min-height: 36px;
     height: 36px;
   }
-  
+
   .search-field :deep(input) {
     font-size: 12px;
     padding-top: 4px;
     padding-bottom: 4px;
   }
-  
+
   .search-field :deep(.v-field__prepend-inner) {
     padding-left: 8px;
   }
-  
+
   .search-field :deep(.v-field__append-inner) {
     padding-right: 8px;
   }

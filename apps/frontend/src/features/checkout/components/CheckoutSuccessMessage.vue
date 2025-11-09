@@ -6,7 +6,9 @@
       </template>
       <div class="success-content">
         <h4 class="success-title">Order Placed Successfully!</h4>
-        <p class="success-description">Your order has been confirmed and will be processed shortly.</p>
+        <p class="success-description">
+          Your order has been confirmed and will be processed shortly.
+        </p>
         <div class="order-details">
           <p><strong>Order ID:</strong> {{ orderId }}</p>
           <p><strong>Total:</strong> ${{ orderTotal }}</p>
@@ -18,14 +20,14 @@
 
 <script setup lang="ts">
 interface Props {
-  orderId?: string
-  orderTotal?: string
+  orderId?: string;
+  orderTotal?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   orderId: '',
-  orderTotal: '0.00'
-})
+  orderTotal: '0.00',
+});
 </script>
 
 <style scoped>

@@ -5,66 +5,141 @@
         <!-- Search Filter -->
         <div class="filter-group">
           <label class="filter-label">Search Products</label>
-          <v-text-field v-model="filters.search" placeholder="Search..." prepend-inner-icon="mdi-magnify"
-            variant="outlined" density="compact" clearable hide-details @update:model-value="applyFilters" />
+          <v-text-field
+            v-model="filters.search"
+            placeholder="Search..."
+            prepend-inner-icon="mdi-magnify"
+            variant="outlined"
+            density="compact"
+            clearable
+            hide-details
+            @update:model-value="handleFilterChange"
+          />
         </div>
 
         <!-- Category Filter -->
         <div class="filter-group">
           <label class="filter-label">Category</label>
-          <v-select v-model="filters.category" :items="categories" item-title="name" item-value="slug"
-            placeholder="Select category" variant="outlined" density="compact" clearable hide-details
-            @update:model-value="handleCategoryChange" />
+          <v-select
+            v-model="filters.category"
+            :items="categories"
+            item-title="name"
+            item-value="slug"
+            placeholder="Select category"
+            variant="outlined"
+            density="compact"
+            clearable
+            hide-details
+            @update:model-value="handleCategoryChange"
+          />
         </div>
 
         <!-- Subcategory Filter -->
         <div class="filter-group">
           <label class="filter-label">Subcategory</label>
-          <v-select v-model="filters.subcategory" :items="availableSubcategories" item-title="name" item-value="slug"
-            placeholder="Select subcategory" variant="outlined" density="compact" clearable
-            :disabled="!filters.category" hide-details @update:model-value="applyFilters" />
+          <v-select
+            v-model="filters.subcategory"
+            :items="availableSubcategories"
+            item-title="name"
+            item-value="slug"
+            placeholder="Select subcategory"
+            variant="outlined"
+            density="compact"
+            clearable
+            :disabled="!filters.category"
+            hide-details
+            @update:model-value="handleFilterChange"
+          />
         </div>
 
         <!-- Price Range Filter -->
         <div class="filter-group">
           <label class="filter-label">Price Range</label>
-          <v-select v-model="filters.priceRange" :items="priceRanges" item-title="label" item-value="value"
-            placeholder="Select price range" variant="outlined" density="compact" clearable hide-details
-            @update:model-value="applyFilters" />
+          <v-select
+            v-model="filters.priceRange"
+            :items="priceRanges"
+            item-title="label"
+            item-value="value"
+            placeholder="Select price range"
+            variant="outlined"
+            density="compact"
+            clearable
+            hide-details
+            @update:model-value="handleFilterChange"
+          />
         </div>
 
         <!-- Rating Filter -->
         <div class="filter-group">
           <label class="filter-label">Minimum Rating</label>
-          <v-select v-model="filters.minRating" :items="ratingOptions" item-title="label" item-value="value"
-            placeholder="Select rating" variant="outlined" density="compact" clearable hide-details
-            @update:model-value="applyFilters" />
+          <v-select
+            v-model="filters.minRating"
+            :items="ratingOptions"
+            item-title="label"
+            item-value="value"
+            placeholder="Select rating"
+            variant="outlined"
+            density="compact"
+            clearable
+            hide-details
+            @update:model-value="handleFilterChange"
+          />
         </div>
 
         <!-- Sort By -->
         <div class="filter-group">
           <label class="filter-label">Sort By</label>
-          <v-select v-model="filters.sortBy" :items="sortOptions" item-title="label" item-value="value"
-            variant="outlined" density="compact" hide-details @update:model-value="applyFilters" />
+          <v-select
+            v-model="filters.sortBy"
+            :items="sortOptions"
+            item-title="label"
+            item-value="value"
+            variant="outlined"
+            density="compact"
+            hide-details
+            @update:model-value="handleFilterChange"
+          />
         </div>
 
         <!-- Sort Order -->
         <div class="filter-group">
           <label class="filter-label">Sort Order</label>
-          <v-select v-model="filters.sortOrder" :items="sortOrderOptions" item-title="label" item-value="value"
-            variant="outlined" density="compact" hide-details @update:model-value="applyFilters" />
+          <v-select
+            v-model="filters.sortOrder"
+            :items="sortOrderOptions"
+            item-title="label"
+            item-value="value"
+            variant="outlined"
+            density="compact"
+            hide-details
+            @update:model-value="handleFilterChange"
+          />
         </div>
 
         <!-- Items Per Page -->
         <div class="filter-group">
           <label class="filter-label">Items Per Page</label>
-          <v-select v-model="filters.limit" :items="itemsPerPageOptions" item-title="label" item-value="value"
-            variant="outlined" density="compact" hide-details @update:model-value="applyFilters" />
+          <v-select
+            v-model="filters.limit"
+            :items="itemsPerPageOptions"
+            item-title="label"
+            item-value="value"
+            variant="outlined"
+            density="compact"
+            hide-details
+            @update:model-value="handleFilterChange"
+          />
         </div>
 
         <!-- Clear Filters -->
         <div class="filter-group">
-          <v-btn color="secondary" variant="outlined" @click="clearFilters" class="clear-filters-btn" block>
+          <v-btn
+            color="secondary"
+            variant="outlined"
+            @click="clearFilters"
+            class="clear-filters-btn"
+            block
+          >
             <v-icon icon="mdi-refresh" class="mr-2" />
             Clear All Filters
           </v-btn>
@@ -107,7 +182,9 @@ const router = useRouter();
 // Computed properties
 const availableSubcategories = computed(() => {
   if (!filters.value.category) return [];
-  const selectedCategory = props.categories.find(cat => cat.slug === filters.value.category);
+  const selectedCategory = props.categories.find(
+    (cat) => cat.slug === filters.value.category
+  );
   return selectedCategory?.subcategories || [];
 });
 
@@ -123,7 +200,7 @@ const filters = ref({
   sortBy: 'createdAt',
   sortOrder: 'desc',
   page: 1,
-  limit: 12
+  limit: 12,
 });
 
 // Initialize filters from URL query parameters
@@ -132,7 +209,8 @@ const initializeFiltersFromQuery = () => {
 
   if (query.search) filters.value.search = query.search as string;
   if (query.category) filters.value.category = query.category as string;
-  if (query.subcategory) filters.value.subcategory = query.subcategory as string;
+  if (query.subcategory)
+    filters.value.subcategory = query.subcategory as string;
   if (query.priceRange) filters.value.priceRange = query.priceRange as string;
   if (query.minRating) filters.value.minRating = query.minRating as string;
   if (query.sortBy) filters.value.sortBy = query.sortBy as string;
@@ -145,8 +223,12 @@ const initializeFiltersFromQuery = () => {
 const updateQueryParams = (newFilters: any) => {
   const query: any = {};
 
-  Object.keys(newFilters).forEach(key => {
-    if (newFilters[key] !== '' && newFilters[key] !== null && newFilters[key] !== undefined) {
+  Object.keys(newFilters).forEach((key) => {
+    if (
+      newFilters[key] !== '' &&
+      newFilters[key] !== null &&
+      newFilters[key] !== undefined
+    ) {
       query[key] = newFilters[key];
     }
   });
@@ -170,13 +252,13 @@ const priceRanges = [
   { label: '$50 - $100', value: '50-100' },
   { label: '$100 - $200', value: '100-200' },
   { label: '$200 - $500', value: '200-500' },
-  { label: 'Over $500', value: '500+' }
+  { label: 'Over $500', value: '500+' },
 ];
 
 const ratingOptions = [
   { label: '4+ Stars', value: 4 },
   { label: '3+ Stars', value: 3 },
-  { label: '2+ Stars', value: 2 }
+  { label: '2+ Stars', value: 2 },
 ];
 
 const sortOptions = [
@@ -184,18 +266,18 @@ const sortOptions = [
   { label: 'Name A-Z', value: 'name' },
   { label: 'Price Low to High', value: 'price' },
   { label: 'Price High to Low', value: 'price' },
-  { label: 'Highest Rated', value: 'rating' }
+  { label: 'Highest Rated', value: 'rating' },
 ];
 
 const sortOrderOptions = [
   { label: 'Descending', value: 'desc' },
-  { label: 'Ascending', value: 'asc' }
+  { label: 'Ascending', value: 'asc' },
 ];
 
 const itemsPerPageOptions = [
   { label: '12 per page', value: 12 },
   { label: '24 per page', value: 24 },
-  { label: '48 per page', value: 48 }
+  { label: '48 per page', value: 48 },
 ];
 
 // Methods
@@ -222,6 +304,10 @@ const applyFilters = (resetPage = true) => {
   emit('filtersChanged', newFilters);
 };
 
+const handleFilterChange = () => {
+  applyFilters(true);
+};
+
 const handleCategoryChange = () => {
   // When category changes, reset subcategory to empty
   filters.value.subcategory = '';
@@ -240,7 +326,7 @@ const clearFilters = () => {
     sortBy: 'createdAt',
     sortOrder: 'desc',
     page: 1,
-    limit: 12
+    limit: 12,
   };
   // Clear URL query parameters
   router.replace({ query: {} });
@@ -254,29 +340,37 @@ const updatePage = (page: number) => {
 };
 
 // Watch for filter changes (excluding page changes)
-watch(() => ({
-  search: filters.value.search,
-  category: filters.value.category,
-  subcategory: filters.value.subcategory,
-  priceRange: filters.value.priceRange,
-  minPrice: filters.value.minPrice,
-  maxPrice: filters.value.maxPrice,
-  minRating: filters.value.minRating,
-  sortBy: filters.value.sortBy,
-  sortOrder: filters.value.sortOrder,
-  limit: filters.value.limit
-}), () => {
-  // Debounce filter changes to avoid too many API calls
-  clearTimeout((window as any).filterTimeout);
-  (window as any).filterTimeout = setTimeout(() => {
-    applyFilters();
-  }, 300);
-}, { deep: true });
+watch(
+  () => ({
+    search: filters.value.search,
+    category: filters.value.category,
+    subcategory: filters.value.subcategory,
+    priceRange: filters.value.priceRange,
+    minPrice: filters.value.minPrice,
+    maxPrice: filters.value.maxPrice,
+    minRating: filters.value.minRating,
+    sortBy: filters.value.sortBy,
+    sortOrder: filters.value.sortOrder,
+    limit: filters.value.limit,
+  }),
+  () => {
+    // Debounce filter changes to avoid too many API calls
+    clearTimeout((window as any).filterTimeout);
+    (window as any).filterTimeout = setTimeout(() => {
+      applyFilters();
+    }, 300);
+  },
+  { deep: true }
+);
 
 // Watch for route query changes (when user navigates back/forward)
-watch(() => route.query, () => {
-  initializeFiltersFromQuery();
-}, { deep: true });
+watch(
+  () => route.query,
+  () => {
+    initializeFiltersFromQuery();
+  },
+  { deep: true }
+);
 
 // Lifecycle
 onMounted(() => {
@@ -289,7 +383,7 @@ defineExpose({
   applyFilters,
   clearFilters,
   updateQueryParams,
-  updatePage
+  updatePage,
 });
 </script>
 

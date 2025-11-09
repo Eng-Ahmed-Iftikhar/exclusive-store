@@ -15,7 +15,7 @@
           <v-icon :icon="getNotificationIcon(notification.type)" class="mr-2" />
           <span>{{ notification.message }}</span>
         </div>
-        
+
         <template v-slot:actions>
           <v-btn
             icon="mdi-close"
@@ -31,8 +31,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useNotificationsStore } from '../stores/modules/notifications';
-import type { Notification } from '../stores/modules/notifications';
+import {
+  useNotificationsStore,
+  INotifications,
+} from '../stores/modules/notifications';
 
 const notificationsStore = useNotificationsStore();
 
@@ -42,7 +44,7 @@ const removeNotification = (id: string) => {
   notificationsStore.removeNotification(id);
 };
 
-const getNotificationColor = (type: Notification['type']) => {
+const getNotificationColor = (type: INotifications.Notification['type']) => {
   switch (type) {
     case 'success':
       return 'success';
@@ -57,7 +59,7 @@ const getNotificationColor = (type: Notification['type']) => {
   }
 };
 
-const getNotificationIcon = (type: Notification['type']) => {
+const getNotificationIcon = (type: INotifications.Notification['type']) => {
   switch (type) {
     case 'success':
       return 'mdi-check-circle';
@@ -81,12 +83,10 @@ const getNotificationIcon = (type: Notification['type']) => {
   right: 0;
   z-index: 9999;
   pointer-events: none;
-
 }
 
 .notification-snackbar {
   pointer-events: none;
-
 }
 
 .notification-content {

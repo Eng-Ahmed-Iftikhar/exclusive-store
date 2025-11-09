@@ -11,7 +11,9 @@
 
           <!-- Error State -->
           <v-card v-else-if="error" class="text-center pa-8 main-card">
-            <v-icon size="64" color="error" class="mb-4">mdi-alert-circle</v-icon>
+            <v-icon size="64" color="error" class="mb-4"
+              >mdi-alert-circle</v-icon
+            >
             <div class="text-h6 text-error mb-2">Error Loading Order</div>
             <div class="text-body-1 text-medium-emphasis">{{ error }}</div>
             <v-btn @click="retryLoadOrder" class="mt-4" color="primary">
@@ -22,12 +24,23 @@
           <!-- Success State -->
           <v-card v-else-if="order" class="text-center pa-8 main-card">
             <SuccessIcon />
-            <SuccessMessage title="Order Confirmed!"
-              message="Thank you for your purchase. Your order has been successfully placed and confirmed." />
-            <OrderDetails :order-items="orderItems" :order-total="orderTotal" :shipping-cost="shippingCost" :tax="tax"
-              :payment-method="paymentMethod" :payment-status="paymentStatus" :order-status="orderStatus" />
+            <SuccessMessage
+              title="Order Confirmed!"
+              message="Thank you for your purchase. Your order has been successfully placed and confirmed."
+            />
+            <OrderDetails
+              :order-items="orderItems"
+              :order-total="orderTotal"
+              :shipping-cost="shippingCost"
+              :tax="tax"
+              :payment-method="paymentMethod"
+              :payment-status="paymentStatus"
+              :order-status="orderStatus"
+            />
             <NextSteps />
-            <SuccessActionButtons :show-view-orders="authStore.isAuthenticated" />
+            <SuccessActionButtons
+              :show-view-orders="authStore.isAuthenticated"
+            />
           </v-card>
         </v-col>
       </v-row>
@@ -36,77 +49,75 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { useAuthStore } from '../../../stores/modules/auth/auth.store'
-import { useCheckoutStore } from '../../../stores/modules/checkout/checkout.store'
+import { computed, ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { useAuthStore } from '../../../stores/modules/auth/auth.store';
+import { useCheckoutStore } from '../../../stores/modules/checkout/checkout.store';
 import {
   SuccessIcon,
   SuccessMessage,
   OrderDetails,
   NextSteps,
-  SuccessActionButtons
-} from '../components'
+  SuccessActionButtons,
+} from '../components';
 
-const route = useRoute()
-const authStore = useAuthStore()
-const checkoutStore = useCheckoutStore()
+const route = useRoute();
+const authStore = useAuthStore();
+const checkoutStore = useCheckoutStore();
 
-const orderId = computed(() => route.params.orderId as string)
+const orderId = computed(() => route.params.orderId as string);
 
 // Order data state
-const order = ref<any>(null)
-const loading = ref(true)
-const error = ref<string | null>(null)
+const order = ref<any>(null);
+const loading = ref(true);
+const error = ref<string | null>(null);
 
 // Computed values from order data
-const orderItems = computed(() => order.value?.items || [])
-const orderTotal = computed(() => order.value?.total || 0)
-const shippingCost = computed(() => order.value?.shippingCost || 0)
-const tax = computed(() => order.value?.tax || 0)
-const subtotal = computed(() => order.value?.subtotal || 0)
-
+const orderItems = computed(() => order.value?.items || []);
+const orderTotal = computed(() => order.value?.total || 0);
+const shippingCost = computed(() => order.value?.shippingCost || 0);
+const tax = computed(() => order.value?.tax || 0);
 
 // Payment information from order data
 const paymentMethod = computed(() => {
   if (order.value?.stripePaymentIntentId) {
-    return 'Credit Card (**** **** **** ****)'
+    return 'Credit Card (**** **** **** ****)';
   }
-  return order.value?.paymentMethod || 'Credit Card'
-})
+  return order.value?.paymentMethod || 'Credit Card';
+});
 
 const paymentStatus = computed(() => {
-  return order.value?.paymentStatus || 'Not Paid'
-})
+  return order.value?.paymentStatus || 'Not Paid';
+});
 
 const orderStatus = computed(() => {
-  return order.value?.status || 'Confirmed'
-})
+  return order.value?.status || 'Confirmed';
+});
 
 const loadOrder = async () => {
   try {
-    loading.value = true
-    error.value = null
+    loading.value = true;
+    error.value = null;
 
     if (orderId.value) {
-      const orderData = await checkoutStore.getOrderById(orderId.value)
-      order.value = orderData
+      const orderData = await checkoutStore.getOrderById(orderId.value);
+      order.value = orderData;
     }
   } catch (err: any) {
-    error.value = err.message || 'Failed to load order details'
-    console.error('Error loading order:', err)
+    error.value = err.message || 'Failed to load order details';
+    console.error('Error loading order:', err);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const retryLoadOrder = () => {
-  loadOrder()
-}
+  loadOrder();
+};
 
 onMounted(() => {
-  loadOrder()
-})
+  loadOrder();
+});
 </script>
 
 <style scoped>

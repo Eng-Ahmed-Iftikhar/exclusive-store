@@ -77,7 +77,8 @@ export async function recalculateCartPrices(
   cartId: string
 ): Promise<ICart.Cart> {
   try {
-    return await cartApi.recalculateCartPrices(cartId);
+    const response = await cartApi.recalculateCartPrices(cartId);
+    return response.cart;
   } catch (err) {
     throw new Error('Failed to recalculate cart prices');
   }

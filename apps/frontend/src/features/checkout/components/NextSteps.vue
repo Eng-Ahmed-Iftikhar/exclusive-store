@@ -1,12 +1,12 @@
 <template>
   <v-card class="next-steps-card mb-8 pa-6" color="info" variant="tonal">
-    <h3 class="text-h6 font-weight-semibold text-info-darken-1 mb-4 text-center">What happens next?</h3>
+    <h3
+      class="text-h6 font-weight-semibold text-info-darken-1 mb-4 text-center"
+    >
+      What happens next?
+    </h3>
     <div class="steps-list">
-      <div 
-        v-for="(step, index) in steps" 
-        :key="index"
-        class="step-item"
-      >
+      <div v-for="(step, index) in steps" :key="index" class="step-item">
         <div class="step-content">
           <div class="step-indicator">
             <v-icon color="info" size="16">mdi-circle</v-icon>
@@ -23,12 +23,12 @@ interface NextStepsProps {
   steps?: string[];
 }
 
-const props = withDefaults(defineProps<NextStepsProps>(), {
+withDefaults(defineProps<NextStepsProps>(), {
   steps: () => [
     "You'll receive an order confirmation email shortly",
     "We'll process your order and prepare it for shipping",
-    "You'll receive tracking information once your order ships"
-  ]
+    "You'll receive tracking information once your order ships",
+  ],
 });
 </script>
 

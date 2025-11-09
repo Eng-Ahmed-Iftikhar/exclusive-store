@@ -34,7 +34,7 @@ interface CTAButton {
   text: string;
   to: string;
   color: string;
-  variant: string;
+  variant: 'flat' | 'text' | 'elevated' | 'tonal' | 'outlined' | 'plain';
   icon: string;
 }
 
@@ -64,7 +64,7 @@ defineProps<CTASectionProps>();
     flex-direction: column;
     align-items: center;
   }
-  
+
   .cta-buttons .v-btn {
     margin: 0 0 16px 0 !important;
   }

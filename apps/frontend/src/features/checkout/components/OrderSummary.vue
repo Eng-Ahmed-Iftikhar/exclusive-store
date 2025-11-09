@@ -3,31 +3,33 @@
     <h4 class="summary-title">Order Summary</h4>
     <div class="summary-item">
       <span>Subtotal:</span>
-      <span>${{ order?.subtotal?.toFixed(2) || '0.00' }}</span>
+      <span>${{ order?.orderDetails?.subtotal?.toFixed(2) || '0.00' }}</span>
     </div>
     <div class="summary-item">
       <span>Shipping:</span>
-      <span>${{ order?.shippingCost?.toFixed(2) || '0.00' }}</span>
+      <span
+        >${{ order?.orderDetails?.shippingCost?.toFixed(2) || '0.00' }}</span
+      >
     </div>
     <div class="summary-item">
       <span>Tax:</span>
-      <span>${{ order?.tax?.toFixed(2) || '0.00' }}</span>
+      <span>${{ order?.orderDetails?.tax?.toFixed(2) || '0.00' }}</span>
     </div>
     <div class="summary-item total">
       <span>Total:</span>
-      <span>${{ order?.total?.toFixed(2) || '0.00' }}</span>
+      <span>${{ order?.orderDetails?.total?.toFixed(2) || '0.00' }}</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ICheckout } from '../../../stores/modules/checkout/checkout.types'
+import { ICheckout } from '../../../stores/modules/checkout';
 
 interface Props {
-  order?: ICheckout.OrderResponse
+  order?: ICheckout.OrderResponse;
 }
 
-defineProps<Props>()
+defineProps<Props>();
 </script>
 
 <style scoped>

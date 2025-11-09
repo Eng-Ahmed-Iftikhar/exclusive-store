@@ -9,7 +9,7 @@
     >
       Continue Shopping
     </v-btn>
-    
+
     <v-btn
       v-if="showViewOrders"
       :to="{ name: 'profile' }"
@@ -28,8 +28,8 @@ interface SuccessActionButtonsProps {
   showViewOrders?: boolean;
 }
 
-const props = withDefaults(defineProps<SuccessActionButtonsProps>(), {
-  showViewOrders: false
+withDefaults(defineProps<SuccessActionButtonsProps>(), {
+  showViewOrders: false,
 });
 </script>
 
@@ -71,7 +71,7 @@ const props = withDefaults(defineProps<SuccessActionButtonsProps>(), {
   .action-buttons {
     flex-direction: row;
   }
-  
+
   .action-buttons .v-btn:not(:first-child) {
     margin-left: 16px;
   }

@@ -34,14 +34,14 @@ interface HeroSectionProps {
   buttonIcon?: string;
 }
 
-const props = withDefaults(defineProps<HeroSectionProps>(), {
+withDefaults(defineProps<HeroSectionProps>(), {
   showButton: true,
   buttonText: 'Learn More',
-  buttonIcon: 'mdi-arrow-right'
+  buttonIcon: 'mdi-arrow-right',
 });
 
 defineEmits<{
-  buttonClick: []
+  buttonClick: [];
 }>();
 </script>
 
@@ -57,7 +57,7 @@ defineEmits<{
   .hero-section {
     min-height: 50vh;
   }
-  
+
   .text-h2 {
     font-size: 2.5rem !important;
   }

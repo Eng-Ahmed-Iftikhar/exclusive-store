@@ -10,6 +10,9 @@ export default defineConfig(() => ({
   server: {
     port: 4200,
     host: 'localhost',
+    fs: {
+      allow: [path.resolve(__dirname, '../../')],
+    },
   },
   preview: {
     port: 4300,
@@ -19,7 +22,7 @@ export default defineConfig(() => ({
     vue(),
     (typeof (vuetifyPlugin as any) === 'function'
       ? (vuetifyPlugin as any)
-      : ((vuetifyPlugin as any)?.default || undefined))?.({ autoImport: true }),
+      : (vuetifyPlugin as any)?.default || undefined)?.({ autoImport: true }),
   ].filter(Boolean) as any,
   // Uncomment this if you are using workers.
   // worker: {

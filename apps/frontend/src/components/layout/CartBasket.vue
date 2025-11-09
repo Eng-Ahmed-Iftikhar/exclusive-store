@@ -7,7 +7,7 @@
       size="small"
       class="cart-icon-btn"
       @click="showCartDrawer = true"
-      :loading="cartStore.loading.value"
+      :loading="cartStore.loading"
     >
       <v-badge
         :content="cartStore.cartItemsCount"
@@ -21,9 +21,7 @@
     </v-btn>
 
     <!-- Cart Drawer Component -->
-    <CartDrawer
-      v-model="showCartDrawer"
-    />
+    <CartDrawer v-model="showCartDrawer" />
   </div>
 </template>
 

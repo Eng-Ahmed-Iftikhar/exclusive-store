@@ -8,14 +8,23 @@
       </v-row>
 
       <v-row v-if="favorites.length > 0">
-        <v-col v-for="favorite in favorites" :key="favorite.id" cols="12" sm="6" md="4" lg="3">
+        <v-col
+          v-for="favorite in favorites"
+          :key="favorite.id"
+          cols="12"
+          sm="6"
+          md="4"
+          lg="3"
+        >
           <ProductCard :product="favorite" />
         </v-col>
       </v-row>
 
       <v-row v-else>
         <v-col cols="12" class="text-center">
-          <v-icon size="120" color="grey-lighten-1" class="mb-4">mdi-heart-outline</v-icon>
+          <v-icon size="120" color="grey-lighten-1" class="mb-4"
+            >mdi-heart-outline</v-icon
+          >
           <h2 class="text-h5 font-weight-medium mb-2">No favorites yet</h2>
           <p class="text-body-1 text-medium-emphasis mb-6">
             Start adding products to your favorites to see them here
@@ -33,9 +42,7 @@
 import ProductCard from '../../../components/ProductCard.vue';
 import { ref, onMounted } from 'vue';
 
-
-
-const favorites = ref([]);
+const favorites = ref<any[]>([]);
 
 onMounted(async () => {
   // Load favorites from store or API
