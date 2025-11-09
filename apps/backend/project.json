@@ -48,22 +48,13 @@
         "watch": true
       }
     },
-    "serve": {
-      "executor": "@nx/js:node",
-      "defaultConfiguration": "development",
+     "serve": {
+      "executor": "nx:run-commands",
       "options": {
-        "buildTarget": "backend:build:development"
-      },
-      "configurations": {
-        "development": {
-          "buildTarget": "backend:build:development"
-        },
-        "production": {
-          "buildTarget": "backend:build:production"
-        }
+        "command": "node dist/apps/backend/main.js"
       }
     },
-    "start": {
+    "prod": {
       "executor": "nx:run-commands",
       "options": {
         "command": "node dist/apps/backend/main.js"

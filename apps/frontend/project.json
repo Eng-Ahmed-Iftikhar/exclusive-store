@@ -37,14 +37,15 @@
         "hmr": false
       }
     },
-    "preview": {
-      "executor": "@nx/vite:preview-server",
-      "defaultConfiguration": "development",
+    "prod": {
+      "executor": "@nx/vite:dev-server",
+      "defaultConfiguration": "production",
       "options": {
         "buildTarget": "frontend:build:production",
-        "port": 4300
+        "hmr": false
       }
     },
+
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],

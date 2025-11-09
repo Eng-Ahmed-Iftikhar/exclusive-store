@@ -36,6 +36,14 @@
         "buildTarget": "admin:build:production",
         "hmr": false
       }
+    },
+    "prod": {
+      "executor": "@nx/vite:dev-server",
+      "defaultConfiguration": "production",
+      "options": {
+        "buildTarget": "admin:build:production",
+        "hmr": false
+      }
     }
   }
 }

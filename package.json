@@ -3,17 +3,24 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "dev": "nx run-many -t serve -p frontend,backend,admin --parallel",
+    "dev": "nx run-many -t dev -p frontend,backend,admin --parallel",
     "start": "nx run-many -t serve -p frontend,backend,admin --parallel",
     "build": "nx run-many -t build -p frontend,backend,admin",
     "lint": "nx run-many -t lint -p frontend,backend,admin",
     "typecheck": "nx run-many -t typecheck -p frontend,backend,admin",
+    
     "frontend:dev": "npx nx run frontend:dev",
     "frontend:build": "npx nx run frontend:build",
+    "frontend:prod": "npx nx run frontend:prod",
+
     "backend:dev": "npx nx run backend:dev",
     "backend:build": "npx nx run backend:build",
+    "backend:prod": "npx nx run backend:prod",
+
     "admin:dev": "npx nx run admin:dev",
     "admin:build": "npx nx run admin:build",
+    "admin:prod": "npx nx run admin:prod",
+
     "clean": "nx reset",
     "prisma:seed": "tsx apps/backend/prisma/seed.ts",
     "prisma:studio": "nx run backend:prisma:studio",
