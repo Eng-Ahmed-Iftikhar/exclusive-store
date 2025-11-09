@@ -13,7 +13,7 @@ export type Subjects =
   | 'product'
   | 'order'
   | 'finance'
-  | 'transactions'
+  | 'transaction'
   | 'payment'
   | 'review'
   | 'favorite'

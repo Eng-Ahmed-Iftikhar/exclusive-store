@@ -20,6 +20,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ onEdit, onCreate }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [limit, setLimit] = useState(10);
+  const ability = useAbility();
 
   const queryParams = {
     page: currentPage,
@@ -146,8 +147,6 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ onEdit, onCreate }) => {
     );
   }
 
-  const ability = useAbility();
-
   return (
     <div
       className={`rounded-xl border ${
@@ -175,7 +174,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ onEdit, onCreate }) => {
               Manage system resources and access controls
             </p>
           </div>
-          {ability.can('create', 'resources') && (
+          {ability.can('create', 'resource') && (
             <button
               onClick={onCreate}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -328,7 +327,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ onEdit, onCreate }) => {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      {ability.can('edit', 'resources') && (
+                      {ability.can('edit', 'resource') && (
                         <button
                           onClick={() => onEdit(resource)}
                           className={`p-2 rounded-lg transition-colors ${
@@ -340,7 +339,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ onEdit, onCreate }) => {
                           <FiEdit className="w-4 h-4" />
                         </button>
                       )}
-                      {ability.can('delete', 'resources') && (
+                      {ability.can('delete', 'resource') && (
                         <button
                           onClick={() => handleDelete(resource.id)}
                           className={`p-2 rounded-lg transition-colors ${

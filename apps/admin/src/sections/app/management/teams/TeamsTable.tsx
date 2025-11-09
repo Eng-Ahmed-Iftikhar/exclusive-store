@@ -47,6 +47,7 @@ const TeamsTable: React.FC<TeamsTableProps> = ({ onEdit, onCreate }) => {
     refetchOnMountOrArgChange: true,
     skip: false,
   });
+  const ability = useAbility();
 
   const [deleteTeam] = useDeleteTeamMutation();
 
@@ -163,8 +164,6 @@ const TeamsTable: React.FC<TeamsTableProps> = ({ onEdit, onCreate }) => {
     );
   }
 
-  const ability = useAbility();
-
   return (
     <div
       className={`rounded-xl border ${
@@ -192,7 +191,7 @@ const TeamsTable: React.FC<TeamsTableProps> = ({ onEdit, onCreate }) => {
               Manage teams and team members
             </p>
           </div>
-          {ability.can('create', 'teams') && (
+          {ability.can('create', 'team') && (
             <button
               onClick={onCreate}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -364,7 +363,7 @@ const TeamsTable: React.FC<TeamsTableProps> = ({ onEdit, onCreate }) => {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      {ability.can('view', 'teams') && (
+                      {ability.can('view', 'team') && (
                         <button
                           onClick={() => handleViewDetails(team.id)}
                           className={`p-2 rounded-lg transition-colors ${
@@ -377,7 +376,7 @@ const TeamsTable: React.FC<TeamsTableProps> = ({ onEdit, onCreate }) => {
                           <FiEye className="w-4 h-4" />
                         </button>
                       )}
-                      {ability.can('edit', 'teams') && (
+                      {ability.can('edit', 'team') && (
                         <button
                           onClick={() => onEdit(team)}
                           className={`p-2 rounded-lg transition-colors ${
@@ -390,7 +389,7 @@ const TeamsTable: React.FC<TeamsTableProps> = ({ onEdit, onCreate }) => {
                           <FiEdit className="w-4 h-4" />
                         </button>
                       )}
-                      {ability.can('delete', 'teams') && (
+                      {ability.can('delete', 'team') && (
                         <button
                           onClick={() => handleDelete(team.id)}
                           className={`p-2 rounded-lg transition-colors ${
