@@ -9,6 +9,11 @@ export interface User {
   email: string;
   name: string;
   role: Role;
+  roleDetails?: {
+    id: string;
+    name: string;
+    displayName: string;
+  };
   permissions: string[];
   roles: string[];
   createdAt: string;

@@ -8,11 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Transaction,
-  TransactionType,
-  TransactionStatus,
-} from '@/apis/services/transactionApi';
+import { Transaction, TransactionType } from '@/apis/services/transactionApi';
 
 interface TransactionsTableContentProps {
   transactions: Transaction[];

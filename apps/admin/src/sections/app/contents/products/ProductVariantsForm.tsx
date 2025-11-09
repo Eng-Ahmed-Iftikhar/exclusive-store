@@ -103,13 +103,13 @@ const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({
     salePrice: v.prices?.[0]?.salePrice
       ? Number(v.prices[0].salePrice)
       : undefined,
-    quantity: v.stock?.quantity || 0,
-    minThreshold: v.stock?.minThreshold || 10,
+    quantity: v.stock?.[0]?.quantity || 0,
+    minThreshold: v.stock?.[0]?.minThreshold || 10,
     isDefault: v.isDefault,
     isActive: v.isActive,
     sortOrder: v.sortOrder,
     priceId: v.prices?.[0]?.id,
-    stockId: v.stock?.id,
+    stockId: v.stock?.[0]?.id,
   }));
 
   const form = useForm<FormData>({

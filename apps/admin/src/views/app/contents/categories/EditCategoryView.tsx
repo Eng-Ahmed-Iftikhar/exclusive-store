@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import EditCategoryForm from '@/sections/app/contents/categories/EditCategoryForm';
 import { PermissionGuard } from '@/components/PermissionGuard';

@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store';
 import {
-  useGetTeamByIdQuery,
-  useUpdateTeamMutation,
-  useAddUsersToTeamMutation,
-  useRemoveUserFromTeamMutation,
-  useAddMultipleRolesToUserMutation,
-  useRemoveRolesFromUserMutation,
-  useAddUsersByEmailMutation,
   useAddRolesToTeamMutation,
+  useAddUsersByEmailMutation,
+  useGetTeamByIdQuery,
   useGetTeamRolesQuery,
   useRemoveRoleFromTeamMutation,
+  useRemoveUserFromTeamMutation,
+  useUpdateTeamMutation,
 } from '@/apis/services/teamApi';
+import { RootState } from '@/store';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import TeamForm from './TeamForm';
 
 interface EditTeamFormProps {
@@ -36,16 +33,13 @@ const EditTeamForm: React.FC<EditTeamFormProps> = ({
   const { data: team, isLoading, error } = useGetTeamByIdQuery(teamId);
 
   const [updateTeam] = useUpdateTeamMutation();
-  const [addUsersToTeam] = useAddUsersToTeamMutation();
   const [addUsersByEmail] = useAddUsersByEmailMutation();
   const [removeUserFromTeam] = useRemoveUserFromTeamMutation();
-  const [addMultipleRolesToUser] = useAddMultipleRolesToUserMutation();
-  const [removeRolesFromUser] = useRemoveRolesFromUserMutation();
   const [addRolesToTeam] = useAddRolesToTeamMutation();
   const [removeRoleFromTeam] = useRemoveRoleFromTeamMutation();
 
   // Get team roles
-  const { data: teamRolesData } = useGetTeamRolesQuery(teamId);
+  useGetTeamRolesQuery(teamId);
 
   useEffect(() => {
     if (team) {

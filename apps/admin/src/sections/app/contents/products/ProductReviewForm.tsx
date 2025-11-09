@@ -156,7 +156,7 @@ const ProductReviewForm: React.FC<ProductReviewFormProps> = ({
                     ${variant.prices?.[0]?.price || '0.00'}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Stock: {variant.stock?.quantity || 0}
+                    Stock: {variant.stock?.[0]?.quantity || 0}
                   </div>
                 </div>
               </div>

@@ -24,7 +24,6 @@ import { PermissionGuard } from '../../../components/PermissionGuard';
 const SidebarNavigation: React.FC = () => {
   const dispatch = useDispatch();
   const { sidebarOpen, theme } = useSelector((state: RootState) => state.ui);
-  const { user } = useSelector((state: RootState) => state.user);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   const iconMap = {

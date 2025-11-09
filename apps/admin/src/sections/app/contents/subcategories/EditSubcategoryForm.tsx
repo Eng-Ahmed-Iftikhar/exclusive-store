@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   useUpdateSubcategoryMutation,
   useGetSubcategoryByIdQuery,
-  Subcategory,
 } from '@/apis/services/subcategoryApi';
 import { SubcategoryFormValues } from '@/types/categories';
 import SubcategoryForm from './SubcategoryForm';

@@ -193,15 +193,6 @@ export const useNotificationSocket = (
     }
   }, []);
 
-  const markAsRead = useCallback((notificationId: string) => {
-    if (socketRef.current?.connected) {
-      socketRef.current.emit('mark-as-read', {
-        notificationIds: [notificationId],
-      });
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-    }
-  }, []);
-
   const getNotifications = useCallback((page = 1, limit = 10) => {
     return new Promise<Notification[]>((resolve) => {
       if (socketRef.current?.connected) {

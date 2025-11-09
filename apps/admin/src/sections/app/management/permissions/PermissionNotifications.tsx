@@ -34,38 +34,6 @@ const PermissionNotifications: React.FC<PermissionNotificationsProps> = ({
     }
   };
 
-  // Example notification functions
-  const notifyPermissionCreated = (permission: any) => {
-    showNotification(
-      'success',
-      'Permission Created',
-      `Permission "${permission.displayName}" has been created successfully.`
-    );
-    onPermissionCreated?.(permission);
-  };
-
-  const notifyPermissionUpdated = (permission: any) => {
-    showNotification(
-      'success',
-      'Permission Updated',
-      `Permission "${permission.displayName}" has been updated successfully.`
-    );
-    onPermissionUpdated?.(permission);
-  };
-
-  const notifyPermissionDeleted = (permissionId: string) => {
-    showNotification(
-      'warning',
-      'Permission Deleted',
-      'Permission has been deleted successfully.'
-    );
-    onPermissionDeleted?.(permissionId);
-  };
-
-  const notifyError = (message: string) => {
-    showNotification('error', 'Error', message);
-  };
-
   return (
     <div
       className={`p-4 rounded-lg border ${

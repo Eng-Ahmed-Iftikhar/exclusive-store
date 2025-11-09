@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-  Transaction,
-  TransactionType,
-  TransactionStatus,
-} from '@/apis/services/transactionApi';
+import { Transaction } from '@/apis/services/transactionApi';
 import {
   FiDollarSign,
   FiCalendar,

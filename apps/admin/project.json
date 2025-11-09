@@ -21,40 +21,21 @@
         }
       }
     },
-    "serve": {
+    "dev": {
       "executor": "@nx/vite:dev-server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "admin:build"
-      },
-      "configurations": {
-        "development": {
-          "buildTarget": "admin:build:development",
-          "hmr": true
-        },
-        "production": {
-          "buildTarget": "admin:build:production",
-          "hmr": false
-        }
+        "buildTarget": "admin:build:development",
+        "hmr": true
       }
     },
-    "preview": {
-      "executor": "@nx/vite:preview-server",
-      "defaultConfiguration": "development",
+    "serve": {
+      "executor": "@nx/vite:dev-server",
+      "defaultConfiguration": "production",
       "options": {
-        "buildTarget": "admin:build"
+        "buildTarget": "admin:build:production",
+        "hmr": false
       }
-    },
-    "test": {
-      "executor": "@nx/vite:test",
-      "outputs": ["{options.reportsDirectory}"],
-      "options": {
-        "reportsDirectory": "../../coverage/apps/admin"
-      }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"]
     }
   }
 }
