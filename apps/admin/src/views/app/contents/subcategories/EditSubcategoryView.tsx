@@ -80,7 +80,7 @@ function EditSubcategoryView() {
   }
 
   return (
-    <PermissionGuard action="edit" subject="subcategories">
+    <PermissionGuard action="edit" subject="subcategory">
       <div className="space-y-6">
         <SubcategoryForm
           mode="edit"

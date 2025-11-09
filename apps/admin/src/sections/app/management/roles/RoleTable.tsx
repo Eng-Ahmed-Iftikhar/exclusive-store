@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAbility } from '@/lib/AbilityContext';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import {
@@ -153,6 +154,8 @@ const RoleTable: React.FC<RoleTableProps> = ({ onEdit, onCreate }) => {
     );
   }
 
+  const ability = useAbility();
+
   return (
     <div
       className={`rounded-xl border ${
@@ -180,17 +183,19 @@ const RoleTable: React.FC<RoleTableProps> = ({ onEdit, onCreate }) => {
               Manage user roles and access permissions
             </p>
           </div>
-          <button
-            onClick={onCreate}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              theme === 'dark'
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-          >
-            <FiPlus className="w-4 h-4" />
-            Create
-          </button>
+          {ability.can('create', 'roles') && (
+            <button
+              onClick={onCreate}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                theme === 'dark'
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
+            >
+              <FiPlus className="w-4 h-4" />
+              Create
+            </button>
+          )}
         </div>
       </div>
 
@@ -380,7 +385,8 @@ const RoleTable: React.FC<RoleTableProps> = ({ onEdit, onCreate }) => {
                     <div className="flex items-center gap-2">
                       {/* Only show edit button if not system role and not current user's own role */}
                       {!role.isSystem &&
-                        currentUser?.roleDetails?.id !== role.id && (
+                        currentUser?.roleDetails?.id !== role.id &&
+                        ability.can('edit', 'roles') && (
                           <button
                             onClick={() => onEdit(role)}
                             className={`p-2 rounded-lg transition-colors ${
@@ -394,7 +400,8 @@ const RoleTable: React.FC<RoleTableProps> = ({ onEdit, onCreate }) => {
                         )}
                       {/* Only show delete button if not system role and not current user's own role */}
                       {!role.isSystem &&
-                        currentUser?.roleDetails?.id !== role.id && (
+                        currentUser?.roleDetails?.id !== role.id &&
+                        ability.can('delete', 'roles') && (
                           <button
                             onClick={() => handleDelete(role.id)}
                             className={`p-2 rounded-lg transition-colors ${

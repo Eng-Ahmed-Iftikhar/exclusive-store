@@ -31,7 +31,7 @@ function CreateSubcategoryView() {
   };
 
   return (
-    <PermissionGuard action="create" subject="subcategories">
+    <PermissionGuard action="create" subject="subcategory">
       <div className="space-y-6">
         <SubcategoryForm
           mode="create"

@@ -85,7 +85,7 @@ const CategorySubcategoriesList: React.FC<CategorySubcategoriesListProps> = ({
                 </div>
               </div>
               <div className="flex items-center space-x-1 ml-2">
-                <PermissionGuard action="view" subject="subcategories">
+                <PermissionGuard action="view" subject="subcategory">
                   <Button
                     size="sm"
                     variant="ghost"
@@ -94,7 +94,7 @@ const CategorySubcategoriesList: React.FC<CategorySubcategoriesListProps> = ({
                     <FiEye className="w-4 h-4" />
                   </Button>
                 </PermissionGuard>
-                <PermissionGuard action="edit" subject="subcategories">
+                <PermissionGuard action="edit" subject="subcategory">
                   <Button
                     size="sm"
                     variant="ghost"
@@ -120,7 +120,7 @@ const CategorySubcategoriesList: React.FC<CategorySubcategoriesListProps> = ({
       <p className="text-gray-600 dark:text-gray-400 mb-4">
         This category doesn't have any subcategories yet.
       </p>
-      <PermissionGuard action="create" subject="subcategories">
+      <PermissionGuard action="create" subject="subcategory">
         <Button onClick={onCreateSubcategory} variant="outline">
           <FiPlus className="w-4 h-4 mr-2" />
           Create First Subcategory

@@ -29,7 +29,7 @@ const CategoryDetailHeader: React.FC<CategoryDetailHeaderProps> = ({
         </div>
       </div>
       <div className="flex items-center space-x-2">
-        <PermissionGuard action="edit" subject="categories">
+        <PermissionGuard action="edit" subject="category">
           <Button onClick={onEdit} variant="outline">
             <FiEdit className="w-4 h-4 mr-2" />
             Edit Category

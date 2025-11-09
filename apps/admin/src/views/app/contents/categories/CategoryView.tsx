@@ -19,7 +19,7 @@ function CategoryView() {
   };
 
   return (
-    <PermissionGuard action="view" subject="categories">
+    <PermissionGuard action="view" subject="category">
       <div className="space-y-6">
         <CategoriesTable
           onEdit={handleEdit}

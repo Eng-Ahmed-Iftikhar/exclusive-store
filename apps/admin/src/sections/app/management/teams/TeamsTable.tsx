@@ -6,6 +6,7 @@ import {
 import DataPagination from '@/components/data-pagination';
 import { RootState } from '@/store';
 import React, { useState } from 'react';
+import { useAbility } from '@/lib/AbilityContext';
 import {
   FiEdit,
   FiFilter,
@@ -162,6 +163,8 @@ const TeamsTable: React.FC<TeamsTableProps> = ({ onEdit, onCreate }) => {
     );
   }
 
+  const ability = useAbility();
+
   return (
     <div
       className={`rounded-xl border ${
@@ -189,17 +192,19 @@ const TeamsTable: React.FC<TeamsTableProps> = ({ onEdit, onCreate }) => {
               Manage teams and team members
             </p>
           </div>
-          <button
-            onClick={onCreate}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              theme === 'dark'
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-          >
-            <FiPlus className="w-4 h-4" />
-            Create
-          </button>
+          {ability.can('create', 'teams') && (
+            <button
+              onClick={onCreate}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                theme === 'dark'
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
+            >
+              <FiPlus className="w-4 h-4" />
+              Create
+            </button>
+          )}
         </div>
       </div>
 
@@ -359,39 +364,45 @@ const TeamsTable: React.FC<TeamsTableProps> = ({ onEdit, onCreate }) => {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleViewDetails(team.id)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          theme === 'dark'
-                            ? 'text-green-400 hover:bg-green-900/30'
-                            : 'text-green-600 hover:bg-green-50'
-                        }`}
-                        title="View team details and manage members"
-                      >
-                        <FiEye className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => onEdit(team)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          theme === 'dark'
-                            ? 'text-blue-400 hover:bg-blue-900/30'
-                            : 'text-blue-600 hover:bg-blue-50'
-                        }`}
-                        title="Edit team"
-                      >
-                        <FiEdit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(team.id)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          theme === 'dark'
-                            ? 'text-red-400 hover:bg-red-900/30'
-                            : 'text-red-600 hover:bg-red-50'
-                        }`}
-                        title="Delete team"
-                      >
-                        <FiTrash2 className="w-4 h-4" />
-                      </button>
+                      {ability.can('view', 'teams') && (
+                        <button
+                          onClick={() => handleViewDetails(team.id)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            theme === 'dark'
+                              ? 'text-green-400 hover:bg-green-900/30'
+                              : 'text-green-600 hover:bg-green-50'
+                          }`}
+                          title="View team details and manage members"
+                        >
+                          <FiEye className="w-4 h-4" />
+                        </button>
+                      )}
+                      {ability.can('edit', 'teams') && (
+                        <button
+                          onClick={() => onEdit(team)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            theme === 'dark'
+                              ? 'text-blue-400 hover:bg-blue-900/30'
+                              : 'text-blue-600 hover:bg-blue-50'
+                          }`}
+                          title="Edit team"
+                        >
+                          <FiEdit className="w-4 h-4" />
+                        </button>
+                      )}
+                      {ability.can('delete', 'teams') && (
+                        <button
+                          onClick={() => handleDelete(team.id)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            theme === 'dark'
+                              ? 'text-red-400 hover:bg-red-900/30'
+                              : 'text-red-600 hover:bg-red-50'
+                          }`}
+                          title="Delete team"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

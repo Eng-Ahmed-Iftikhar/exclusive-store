@@ -31,7 +31,7 @@ function SubcategoryDetailView() {
 
   if (isLoading) {
     return (
-      <PermissionGuard action="view" subject="subcategories">
+      <PermissionGuard action="view" subject="subcategory">
         <SubcategoryLoadingSkeleton onBack={handleBack} />
       </PermissionGuard>
     );
@@ -39,14 +39,14 @@ function SubcategoryDetailView() {
 
   if (isError || !subcategory) {
     return (
-      <PermissionGuard action="view" subject="subcategories">
+      <PermissionGuard action="view" subject="subcategory">
         <SubcategoryNotFound onBack={handleBack} error={error} />
       </PermissionGuard>
     );
   }
 
   return (
-    <PermissionGuard action="view" subject="subcategories">
+    <PermissionGuard action="view" subject="subcategory">
       <div className="space-y-6">
         <SubcategoryDetailHeader
           subcategoryName={subcategory.name}

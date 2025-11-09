@@ -244,7 +244,7 @@ const OrderDetailSection: React.FC<OrderDetailSectionProps> = ({
       {order.status !== 'cancelled' && order.status !== 'delivered' && (
         <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm p-4">
           <div className="flex flex-wrap gap-2">
-            <PermissionGuard action="edit" subject="orders">
+            <PermissionGuard action="edit" subject="order">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -256,7 +256,7 @@ const OrderDetailSection: React.FC<OrderDetailSectionProps> = ({
                 Update Status
               </Button>
             </PermissionGuard>
-            <PermissionGuard action="edit" subject="orders">
+            <PermissionGuard action="edit" subject="order">
               <Button
                 variant="destructive"
                 onClick={() => setCancelDialogOpen(true)}
@@ -265,7 +265,7 @@ const OrderDetailSection: React.FC<OrderDetailSectionProps> = ({
                 Cancel Order
               </Button>
             </PermissionGuard>
-            <PermissionGuard action="edit" subject="orders">
+            <PermissionGuard action="edit" subject="order">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -279,7 +279,7 @@ const OrderDetailSection: React.FC<OrderDetailSectionProps> = ({
                 Update Shipping
               </Button>
             </PermissionGuard>
-            <PermissionGuard action="edit" subject="orders">
+            <PermissionGuard action="edit" subject="order">
               <Button
                 variant="outline"
                 onClick={() => {

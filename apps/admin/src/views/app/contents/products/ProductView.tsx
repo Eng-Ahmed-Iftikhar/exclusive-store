@@ -18,7 +18,7 @@ const ProductView: React.FC = () => {
   };
 
   return (
-    <PermissionGuard action="view" subject="products">
+    <PermissionGuard action="view" subject="product">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>

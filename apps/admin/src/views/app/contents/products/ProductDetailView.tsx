@@ -49,7 +49,7 @@ const ProductDetailView: React.FC = () => {
   }
 
   return (
-    <PermissionGuard action="view" subject="products">
+    <PermissionGuard action="view" subject="product">
       <div className="space-y-6">
         <ProductDetailHeader
           productName={product.name}
@@ -190,7 +190,7 @@ const ProductDetailView: React.FC = () => {
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   This product doesn't have any variants yet.
                 </p>
-                <PermissionGuard action="create" subject="products">
+                <PermissionGuard action="create" subject="product">
                   <Button onClick={handleEdit} variant="outline">
                     Add Variants
                   </Button>

@@ -17,7 +17,7 @@ function PermissionView() {
   return (
     <PermissionGuard
       action="view"
-      subject="permissions"
+      subject="permission"
       fallback={
         <div className="p-6">
           <div className="text-center py-12">

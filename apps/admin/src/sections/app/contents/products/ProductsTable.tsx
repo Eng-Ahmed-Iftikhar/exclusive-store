@@ -193,7 +193,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
               Manage products and inventory
             </p>
           </div>
-          <PermissionGuard action="create" subject="products">
+          <PermissionGuard action="create" subject="product">
             <button
               onClick={onCreate}
               className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors bg-blue-600 hover:bg-blue-700 text-white shadow-sm dark:shadow-slate-900/20"
@@ -449,7 +449,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      <PermissionGuard action="view" subject="products">
+                      <PermissionGuard action="view" subject="product">
                         <button
                           onClick={() => onView(product)}
                           className="p-2 rounded-lg transition-colors text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/30"
@@ -458,7 +458,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                           <FiEye className="w-4 h-4" />
                         </button>
                       </PermissionGuard>
-                      <PermissionGuard action="edit" subject="products">
+                      <PermissionGuard action="edit" subject="product">
                         <button
                           onClick={() => onEdit(product)}
                           className="p-2 rounded-lg transition-colors text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30"
@@ -467,7 +467,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                           <FiEdit className="w-4 h-4" />
                         </button>
                       </PermissionGuard>
-                      <PermissionGuard action="delete" subject="products">
+                      <PermissionGuard action="delete" subject="product">
                         <button
                           onClick={() => handleDelete(product.id)}
                           className="p-2 rounded-lg transition-colors text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"

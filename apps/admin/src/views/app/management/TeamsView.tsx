@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import TeamsTable from '@/sections/app/management/teams/TeamsTable';
+import { PermissionGuard } from '@/components/PermissionGuard';
 import { Team } from '@/apis/services/teamApi';
 
 function TeamsView() {
@@ -14,9 +15,15 @@ function TeamsView() {
   };
 
   return (
-    <div className="p-6">
-      <TeamsTable onEdit={handleEdit} onCreate={handleCreate} />
-    </div>
+    <PermissionGuard
+      action="view"
+      subject="team"
+      fallback={<div className="p-6">Unauthorized</div>}
+    >
+      <div className="p-6">
+        <TeamsTable onEdit={handleEdit} onCreate={handleCreate} />
+      </div>
+    </PermissionGuard>
   );
 }
 

@@ -1,15 +1,9 @@
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/routers/routes';
 import { RootState } from '../../../store';
-import {
-  FiPlus,
-  FiUsers,
-  FiPackage,
-  FiSettings,
-  FiBarChart,
-  FiMail,
-  FiShield,
-  FiFileText,
-} from 'react-icons/fi';
+import { FiPlus, FiPackage, FiLayers, FiShield, FiTag } from 'react-icons/fi';
+import { useAbility } from '@/lib/AbilityContext';
 
 interface QuickActionProps {
   title: string;
@@ -66,65 +60,74 @@ const QuickAction: React.FC<QuickActionProps> = ({
 
 const QuickActions: React.FC = () => {
   const { theme } = useSelector((state: RootState) => state.ui);
-
-  const actions = [
+  const navigate = useNavigate();
+  const ability = useAbility();
+  // Only include actions with valid, existing routes
+  const rawActions = [
     {
+      key: 'create-product',
+      required: () => ability.can('create', 'product'),
       title: 'Add Product',
       description: 'Create a new product listing',
       icon: <FiPlus className="w-5 h-5 text-white" />,
       color: 'bg-gradient-to-r from-blue-500 to-cyan-600',
-      onClick: () => console.log('Add Product clicked'),
+      onClick: () =>
+        navigate(
+          `${ROUTES.ADMIN_CONTENT}${ROUTES.ADMIN_CREATE_PRODUCT.replace(
+            '/*',
+            ''
+          )}`
+        ),
     },
     {
-      title: 'Manage Users',
-      description: 'View and manage user accounts',
-      icon: <FiUsers className="w-5 h-5 text-white" />,
-      color: 'bg-gradient-to-r from-green-500 to-emerald-600',
-      onClick: () => console.log('Manage Users clicked'),
-    },
-    {
+      key: 'view-products',
+      required: () => ability.can('view', 'product'),
       title: 'Inventory',
       description: 'Check stock levels and updates',
       icon: <FiPackage className="w-5 h-5 text-white" />,
       color: 'bg-gradient-to-r from-purple-500 to-pink-600',
-      onClick: () => console.log('Inventory clicked'),
+      onClick: () =>
+        navigate(`${ROUTES.ADMIN_CONTENT}${ROUTES.ADMIN_PRODUCTS}`),
     },
     {
-      title: 'Analytics',
-      description: 'View detailed reports',
-      icon: <FiBarChart className="w-5 h-5 text-white" />,
-      color: 'bg-gradient-to-r from-orange-500 to-red-600',
-      onClick: () => console.log('Analytics clicked'),
+      key: 'view-categories',
+      required: () => ability.can('view', 'category'),
+      title: 'Categories',
+      description: 'Browse and manage categories',
+      icon: <FiLayers className="w-5 h-5 text-white" />,
+      color: 'bg-gradient-to-r from-emerald-500 to-teal-600',
+      onClick: () =>
+        navigate(`${ROUTES.ADMIN_CONTENT}${ROUTES.ADMIN_CATEGORIES}`),
     },
     {
-      title: 'Send Email',
-      description: 'Send notifications to users',
-      icon: <FiMail className="w-5 h-5 text-white" />,
-      color: 'bg-gradient-to-r from-indigo-500 to-purple-600',
-      onClick: () => console.log('Send Email clicked'),
-    },
-    {
-      title: 'Security',
-      description: 'Manage security settings',
+      key: 'manage-roles',
+      required: () => ability.can('view', 'role'),
+      title: 'Roles',
+      description: 'View and manage roles',
       icon: <FiShield className="w-5 h-5 text-white" />,
-      color: 'bg-gradient-to-r from-red-500 to-pink-600',
-      onClick: () => console.log('Security clicked'),
+      color: 'bg-gradient-to-r from-rose-500 to-pink-600',
+      onClick: () =>
+        navigate(`${ROUTES.ADMIN_MANAGEMENT}${ROUTES.ADMIN_ROLES}`),
     },
     {
-      title: 'Reports',
-      description: 'Generate business reports',
-      icon: <FiFileText className="w-5 h-5 text-white" />,
-      color: 'bg-gradient-to-r from-teal-500 to-cyan-600',
-      onClick: () => console.log('Reports clicked'),
+      key: 'manage-permissions',
+      required: () => ability.can('view', 'permission'),
+      title: 'Permissions',
+      description: 'Manage access control',
+      icon: <FiTag className="w-5 h-5 text-white" />,
+      color: 'bg-gradient-to-r from-indigo-500 to-fuchsia-600',
+      onClick: () =>
+        navigate(`${ROUTES.ADMIN_MANAGEMENT}${ROUTES.ADMIN_PERMISSIONS}`),
     },
-    {
-      title: 'Settings',
-      description: 'Configure system settings',
-      icon: <FiSettings className="w-5 h-5 text-white" />,
-      color: 'bg-gradient-to-r from-gray-500 to-slate-600',
-      onClick: () => console.log('Settings clicked'),
-    },
-  ];
+  ] as const;
+
+  const actions = rawActions.filter((a) => {
+    try {
+      return a.required();
+    } catch {
+      return false;
+    }
+  });
 
   return (
     <div
@@ -143,8 +146,15 @@ const QuickActions: React.FC = () => {
       </h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {actions.map((action, index) => (
-          <QuickAction key={index} {...action} />
+        {actions.map((action) => (
+          <QuickAction
+            key={action.key}
+            title={action.title}
+            description={action.description}
+            icon={action.icon}
+            color={action.color}
+            onClick={action.onClick}
+          />
         ))}
       </div>
     </div>

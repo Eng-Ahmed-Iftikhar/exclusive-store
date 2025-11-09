@@ -73,7 +73,7 @@ const CategoryDetailView: React.FC = () => {
   }
 
   return (
-    <PermissionGuard action="view" subject="categories">
+    <PermissionGuard action="view" subject="category">
       <div className="space-y-6">
         <CategoryDetailHeader
           categoryName={category.name}
@@ -103,7 +103,7 @@ const CategoryDetailView: React.FC = () => {
                   Manage subcategories for this category
                 </p>
               </div>
-              <PermissionGuard action="create" subject="subcategories">
+              <PermissionGuard action="create" subject="subcategory">
                 <Button onClick={handleCreateSubcategory}>
                   <FiPlus className="w-4 h-4 mr-2" />
                   Add

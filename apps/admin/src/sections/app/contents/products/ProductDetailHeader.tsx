@@ -29,7 +29,8 @@ const ProductDetailHeader: React.FC<ProductDetailHeaderProps> = ({
         </div>
       </div>
       <div className="flex items-center space-x-2">
-        <PermissionGuard action="update" subject="items">
+        {/* Corrected action/subject to match CASL definitions */}
+        <PermissionGuard action="edit" subject="product">
           <Button onClick={onEdit} variant="outline">
             <FiEdit className="w-4 h-4 mr-2" />
             Edit Product

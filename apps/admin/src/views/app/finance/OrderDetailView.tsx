@@ -34,7 +34,7 @@ const OrderDetailView: React.FC = () => {
   }
 
   return (
-    <PermissionGuard action="view" subject="orders">
+    <PermissionGuard action="view" subject="order">
       <div className="space-y-6">
         <OrderDetailSection orderId={id} onBack={handleBack} />
       </div>

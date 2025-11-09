@@ -19,7 +19,7 @@ function SubcategoryView() {
   };
 
   return (
-    <PermissionGuard action="view" subject="subcategories">
+    <PermissionGuard action="view" subject="subcategory">
       <div className="space-y-6">
         <SubcategoriesTable
           onEdit={handleEdit}

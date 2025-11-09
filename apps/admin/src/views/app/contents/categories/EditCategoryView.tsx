@@ -22,7 +22,7 @@ function EditCategoryView() {
   };
 
   return (
-    <PermissionGuard action="edit" subject="categories">
+    <PermissionGuard action="edit" subject="category">
       <div className="space-y-6">
         <EditCategoryForm
           categoryId={id}

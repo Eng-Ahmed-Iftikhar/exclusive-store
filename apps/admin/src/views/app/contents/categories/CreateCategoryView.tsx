@@ -16,7 +16,7 @@ function CreateCategoryView() {
   };
 
   return (
-    <PermissionGuard action="create" subject="categories">
+    <PermissionGuard action="create" subject="category">
       <div className="space-y-6">
         <CreateCategoryForm
           onSuccess={handleSuccess}

@@ -1,5 +1,4 @@
 import LoginBranding from '@/sections/auth/login/LoginBranding';
-import LoginDemoCredentials from '@/sections/auth/login/LoginDemoCredentials';
 import LoginForm from '@/sections/auth/login/LoginForm';
 import LoginHeader from '@/sections/auth/login/LoginHeader';
 import LoginMobileHeader from '@/sections/auth/login/LoginMobileHeader';
@@ -26,9 +25,6 @@ const LoginView: React.FC = () => {
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 p-8">
               {/* Welcome Header */}
               <LoginHeader />
-
-              {/* Demo Credentials */}
-              <LoginDemoCredentials />
 
               {/* Login Form */}
               <LoginForm />

@@ -17,6 +17,7 @@ The RBAC system is built around the following components:
 Permissions are stored as strings in the format: `"resource:action"`
 
 Examples:
+
 - `"permissions:view"` - Can view permissions
 - `"permissions:create"` - Can create permissions
 - `"permissions:edit"` - Can edit permissions
@@ -31,14 +32,14 @@ Examples:
 import { PermissionGuard } from '@/components/PermissionGuard';
 
 // Protect a button
-<PermissionGuard action="create" subject="permissions">
+<PermissionGuard action="create" subject="permission">
   <button onClick={handleCreate}>Create Permission</button>
 </PermissionGuard>
 
 // Protect with fallback
-<PermissionGuard 
-  action="view" 
-  subject="permissions"
+<PermissionGuard
+  action="view"
+  subject="permission"
   fallback={<div>Access Denied</div>}
 >
   <PermissionTable />
@@ -53,7 +54,7 @@ import { useHasPermission, useCanManage } from '@/lib/AbilityContext';
 function MyComponent() {
   const canView = useHasPermission('permissions', 'view');
   const canManage = useCanManage('permissions');
-  
+
   return (
     <div>
       {canView && <div>View content</div>}
@@ -88,15 +89,15 @@ The system defines the following permission constants:
 import { PERMISSIONS } from '@/lib/abilities';
 
 // Permission management
-PERMISSIONS.PERMISSIONS_VIEW
-PERMISSIONS.PERMISSIONS_CREATE
-PERMISSIONS.PERMISSIONS_EDIT
-PERMISSIONS.PERMISSIONS_DELETE
-PERMISSIONS.PERMISSIONS_MANAGE
+PERMISSIONS.PERMISSIONS_VIEW;
+PERMISSIONS.PERMISSIONS_CREATE;
+PERMISSIONS.PERMISSIONS_EDIT;
+PERMISSIONS.PERMISSIONS_DELETE;
+PERMISSIONS.PERMISSIONS_MANAGE;
 
 // Resource management
-PERMISSIONS.RESOURCES_VIEW
-PERMISSIONS.RESOURCES_CREATE
+PERMISSIONS.RESOURCES_VIEW;
+PERMISSIONS.RESOURCES_CREATE;
 // ... etc
 ```
 
@@ -110,12 +111,7 @@ The backend `/me` API now returns user permissions in the following format:
     "id": "user_id",
     "email": "user@example.com",
     "name": "User Name",
-    "permissions": [
-      "permissions:view",
-      "permissions:create",
-      "resources:view",
-      "roles:manage"
-    ]
+    "permissions": ["permissions:view", "permissions:create", "resources:view", "roles:manage"]
   }
 }
 ```
@@ -123,6 +119,7 @@ The backend `/me` API now returns user permissions in the following format:
 ## Database Structure
 
 Permissions are derived from the RBAC tables:
+
 - `roles` - User roles
 - `resources` - System resources (permissions, resources, roles, teams)
 - `permissions` - Available actions (view, create, edit, delete, manage)
@@ -145,6 +142,7 @@ Users with the `super-admin` or `super_admin` role have unrestricted access to a
 - Initial setup and configuration
 
 The super-admin bypass is implemented at multiple levels:
+
 - **CASL Abilities**: Automatically grants `can('all', 'all')` permissions
 - **Permission Guards**: Bypasses all permission checks in components
 - **Navigation**: Shows all navigation items regardless of permissions

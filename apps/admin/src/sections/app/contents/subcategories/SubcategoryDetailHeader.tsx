@@ -36,7 +36,7 @@ const SubcategoryDetailHeader: React.FC<SubcategoryDetailHeaderProps> = ({
         </div>
       </div>
       <div className="flex items-center space-x-2">
-        <PermissionGuard action="edit" subject="subcategories">
+        <PermissionGuard action="edit" subject="subcategory">
           <Button onClick={onEdit} className="flex items-center space-x-2">
             <EditIcon className="w-4 h-4" />
             <span>Edit</span>

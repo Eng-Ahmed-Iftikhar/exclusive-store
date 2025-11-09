@@ -28,7 +28,7 @@ const TransactionsView: React.FC = () => {
   };
 
   return (
-    <PermissionGuard action="view" subject="transactions">
+    <PermissionGuard action="view" subject="transaction">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>

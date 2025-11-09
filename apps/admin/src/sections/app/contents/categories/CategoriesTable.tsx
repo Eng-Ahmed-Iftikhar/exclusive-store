@@ -201,7 +201,7 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({
               Manage categories and subcategories
             </p>
           </div>
-          <PermissionGuard action="create" subject="categories">
+          <PermissionGuard action="create" subject="category">
             <button
               onClick={onCreate}
               className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors bg-blue-600 hover:bg-blue-700 text-white shadow-sm dark:shadow-slate-900/20"
@@ -319,7 +319,7 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      <PermissionGuard action="view" subject="categories">
+                      <PermissionGuard action="view" subject="category">
                         <button
                           onClick={() => onView(category)}
                           className="p-2 rounded-lg transition-colors text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/30"
@@ -328,7 +328,7 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({
                           <FiEye className="w-4 h-4" />
                         </button>
                       </PermissionGuard>
-                      <PermissionGuard action="edit" subject="categories">
+                      <PermissionGuard action="edit" subject="category">
                         <button
                           onClick={() => onEdit(category)}
                           className="p-2 rounded-lg transition-colors text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30"
@@ -337,7 +337,7 @@ const CategoriesTable: React.FC<CategoriesTableProps> = ({
                           <FiEdit className="w-4 h-4" />
                         </button>
                       </PermissionGuard>
-                      <PermissionGuard action="delete" subject="categories">
+                      <PermissionGuard action="delete" subject="category">
                         <button
                           onClick={() => handleDelete(category.id)}
                           className="p-2 rounded-lg transition-colors text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"

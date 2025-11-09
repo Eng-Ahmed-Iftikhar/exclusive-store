@@ -29,7 +29,10 @@ export const useAbility = () => {
     if (!user || !user.permissions) {
       return createDefaultAbility();
     }
-    return createAbility(user.permissions as PermissionString[], user.role);
+    return createAbility(
+      user.permissions as PermissionString[],
+      user.role.name
+    );
   }, [user]);
 };
 

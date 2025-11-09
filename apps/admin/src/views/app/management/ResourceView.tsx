@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import ResourceTable from '@/sections/app/management/resources/ResourceTable';
+import { PermissionGuard } from '@/components/PermissionGuard';
 import { Resource } from '@/apis/services/resourceApi';
 
 function ResourceView() {
@@ -14,9 +15,15 @@ function ResourceView() {
   };
 
   return (
-    <div className="p-6">
-      <ResourceTable onEdit={handleEdit} onCreate={handleCreate} />
-    </div>
+    <PermissionGuard
+      action="view"
+      subject="resource"
+      fallback={<div className="p-6">Unauthorized</div>}
+    >
+      <div className="p-6">
+        <ResourceTable onEdit={handleEdit} onCreate={handleCreate} />
+      </div>
+    </PermissionGuard>
   );
 }
 

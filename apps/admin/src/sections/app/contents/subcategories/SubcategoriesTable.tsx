@@ -204,7 +204,7 @@ const SubcategoriesTable: React.FC<SubcategoriesTableProps> = ({
               Manage product subcategories
             </p>
           </div>
-          <PermissionGuard action="create" subject="subcategories">
+          <PermissionGuard action="create" subject="subcategory">
             <button
               onClick={onCreate}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -398,7 +398,7 @@ const SubcategoriesTable: React.FC<SubcategoriesTableProps> = ({
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      <PermissionGuard action="view" subject="subcategories">
+                      <PermissionGuard action="view" subject="subcategory">
                         <button
                           onClick={() => onView(subcategory)}
                           className={`p-2 rounded-lg transition-colors ${
@@ -411,7 +411,7 @@ const SubcategoriesTable: React.FC<SubcategoriesTableProps> = ({
                           <FiEye className="w-4 h-4" />
                         </button>
                       </PermissionGuard>
-                      <PermissionGuard action="edit" subject="subcategories">
+                      <PermissionGuard action="edit" subject="subcategory">
                         <button
                           onClick={() => onEdit(subcategory)}
                           className={`p-2 rounded-lg transition-colors ${
@@ -424,7 +424,7 @@ const SubcategoriesTable: React.FC<SubcategoriesTableProps> = ({
                           <FiEdit className="w-4 h-4" />
                         </button>
                       </PermissionGuard>
-                      <PermissionGuard action="delete" subject="subcategories">
+                      <PermissionGuard action="delete" subject="subcategory">
                         <button
                           onClick={() => handleDelete(subcategory.id)}
                           className={`p-2 rounded-lg transition-colors ${

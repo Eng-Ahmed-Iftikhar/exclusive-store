@@ -2,22 +2,22 @@ import { Ability, AbilityBuilder, createMongoAbility } from '@casl/ability';
 
 // Define the subjects (resources) that can be acted upon
 export type Subjects =
-  | 'permissions'
-  | 'resources'
-  | 'roles'
-  | 'teams'
-  | 'users'
+  | 'permission'
+  | 'resource'
+  | 'role'
+  | 'team'
+  | 'user'
   | 'dashboard'
-  | 'categories'
-  | 'subcategories'
-  | 'products'
-  | 'orders'
+  | 'category'
+  | 'subcategory'
+  | 'product'
+  | 'order'
   | 'finance'
   | 'transactions'
-  | 'payments'
-  | 'reviews'
-  | 'favorites'
-  | 'ratings'
+  | 'payment'
+  | 'review'
+  | 'favorite'
+  | 'rating'
   | 'cart'
   | 'all';
 
@@ -44,12 +44,6 @@ export function createAbility(
     createMongoAbility
   );
 
-  // Super-admin has unrestricted access to everything
-  if (userRole === 'super-admin' || userRole === 'super_admin') {
-    can('all', 'all');
-    return build();
-  }
-
   // If user has no permissions, they can't do anything
   if (!permissions || permissions.length === 0) {
     cannot('all', 'all');
@@ -71,11 +65,6 @@ export function createAbility(
       }
     }
   });
-
-  // Special handling for 'all' permissions
-  if (permissions.includes('all:all')) {
-    can('all', 'all');
-  }
 
   return build();
 }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAbility } from '@/lib/AbilityContext';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import {
@@ -145,6 +146,8 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ onEdit, onCreate }) => {
     );
   }
 
+  const ability = useAbility();
+
   return (
     <div
       className={`rounded-xl border ${
@@ -172,17 +175,19 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ onEdit, onCreate }) => {
               Manage system resources and access controls
             </p>
           </div>
-          <button
-            onClick={onCreate}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              theme === 'dark'
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-          >
-            <FiPlus className="w-4 h-4" />
-            Create
-          </button>
+          {ability.can('create', 'resources') && (
+            <button
+              onClick={onCreate}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                theme === 'dark'
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
+            >
+              <FiPlus className="w-4 h-4" />
+              Create
+            </button>
+          )}
         </div>
       </div>
 
@@ -323,26 +328,30 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ onEdit, onCreate }) => {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => onEdit(resource)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          theme === 'dark'
-                            ? 'text-blue-400 hover:bg-blue-900/30'
-                            : 'text-blue-600 hover:bg-blue-50'
-                        }`}
-                      >
-                        <FiEdit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(resource.id)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          theme === 'dark'
-                            ? 'text-red-400 hover:bg-red-900/30'
-                            : 'text-red-600 hover:bg-red-50'
-                        }`}
-                      >
-                        <FiTrash2 className="w-4 h-4" />
-                      </button>
+                      {ability.can('edit', 'resources') && (
+                        <button
+                          onClick={() => onEdit(resource)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            theme === 'dark'
+                              ? 'text-blue-400 hover:bg-blue-900/30'
+                              : 'text-blue-600 hover:bg-blue-50'
+                          }`}
+                        >
+                          <FiEdit className="w-4 h-4" />
+                        </button>
+                      )}
+                      {ability.can('delete', 'resources') && (
+                        <button
+                          onClick={() => handleDelete(resource.id)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            theme === 'dark'
+                              ? 'text-red-400 hover:bg-red-900/30'
+                              : 'text-red-600 hover:bg-red-50'
+                          }`}
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -177,7 +177,7 @@ const PermissionTable: React.FC<PermissionTableProps> = ({
               Manage system permissions and access controls
             </p>
           </div>
-          <PermissionGuard action="create" subject="permissions">
+          <PermissionGuard action="create" subject="permission">
             <button
               onClick={onCreate}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -330,7 +330,7 @@ const PermissionTable: React.FC<PermissionTableProps> = ({
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      <PermissionGuard action="edit" subject="permissions">
+                      <PermissionGuard action="edit" subject="permission">
                         <button
                           onClick={() => onEdit(permission)}
                           className={`p-2 rounded-lg transition-colors ${
@@ -342,7 +342,7 @@ const PermissionTable: React.FC<PermissionTableProps> = ({
                           <FiEdit className="w-4 h-4" />
                         </button>
                       </PermissionGuard>
-                      <PermissionGuard action="delete" subject="permissions">
+                      <PermissionGuard action="delete" subject="permission">
                         <button
                           onClick={() => handleDelete(permission.id)}
                           className={`p-2 rounded-lg transition-colors ${

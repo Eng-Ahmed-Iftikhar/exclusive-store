@@ -177,7 +177,7 @@ const OrderHistoryTableContent: React.FC<OrderHistoryTableContentProps> = ({
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <PermissionGuard action="view" subject="orders">
+                      <PermissionGuard action="view" subject="order">
                         <button
                           onClick={() => onViewOrder(order.id)}
                           className="p-2 rounded-lg transition-colors text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/30"
