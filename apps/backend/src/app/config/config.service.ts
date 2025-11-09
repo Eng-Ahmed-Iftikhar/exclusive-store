@@ -91,6 +91,10 @@ export class ConfigService {
     return this.nestConfigService.get<string>('FRONTEND_URL') as string;
   }
 
+  get adminUrl(): string {
+    return this.nestConfigService.get<string>('ADMIN_URL') as string;
+  }
+
   // Logging Configuration
   get logLevel(): string {
     return this.nestConfigService.get<string>('LOG_LEVEL', 'info');
