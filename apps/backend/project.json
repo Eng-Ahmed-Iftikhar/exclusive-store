@@ -13,7 +13,7 @@
       "options": {
         "target": "node",
         "compiler": "tsc",
-        "outputPath": "dist/apps/backend",
+        "outputPath": "apps/backend/dist",
         "main": "apps/backend/src/main.ts",
         "tsConfig": "apps/backend/tsconfig.app.json",
         "assets": ["apps/backend/src/assets"],
@@ -52,13 +52,13 @@
     "serve": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node dist/apps/backend/main.js"
+        "command": "node apps/backend/dist/main.js"
       }
     },
     "prod": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node dist/apps/backend/main.js"
+        "command": "node apps/backend/dist/main.js"
       }
     },
     "prisma:generate": {
