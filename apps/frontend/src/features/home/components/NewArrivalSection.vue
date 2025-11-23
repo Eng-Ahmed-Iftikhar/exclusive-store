@@ -23,12 +23,34 @@
         </v-btn>
       </div>
 
-      <div v-else-if="newArrivalItems.length > 0" class="products-container">
-        <ProductCard
-          v-for="product in newArrivalProducts"
-          :key="product.id"
-          :product="product"
-          :show-sale-tag="true"
+      <!-- Products Carousel -->
+      <div v-else-if="newArrivalItems.length > 0" class="products-carousel">
+        <v-btn 
+          v-show="canScrollLeft"
+          icon="mdi-chevron-left" 
+          variant="outlined" 
+          class="carousel-nav-btn prev-btn" 
+          size="large"
+          @click="scrollPrev" 
+        />
+
+        <div class="products-container" ref="containerRef" @scroll="updateScrollButtons">
+          <ProductCard
+            v-for="product in newArrivalProducts"
+            :key="product.id"
+            :product="product"
+            :show-sale-tag="true"
+            class="product-slide"
+          />
+        </div>
+
+         <v-btn 
+          v-show="canScrollRight"
+          icon="mdi-chevron-right" 
+          variant="outlined" 
+          class="carousel-nav-btn next-btn" 
+          size="large"
+          @click="scrollNext" 
         />
       </div>
 
@@ -41,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed } from 'vue';
+import { onMounted, computed, ref, nextTick } from 'vue';
 import { useProductsStore } from '../../../stores/modules/products';
 import ProductCard from '../../../components/ProductCard.vue';
 
@@ -49,10 +71,18 @@ import { Product } from '../../../stores/modules/products/products.interface';
 
 const productsStore = useProductsStore();
 
+// Container ref for scrolling
+const containerRef = ref<HTMLElement | null>(null);
+const canScrollLeft = ref(false);
+const canScrollRight = ref(false);
+
 // Fetch new arrival items on component mount
 onMounted(async () => {
   try {
     await fetchNewArrivals();
+    // Wait for DOM to update, then check scroll buttons
+    await nextTick();
+    updateScrollButtons();
   } catch (error) {
     // Failed to fetch new arrivals
   }
@@ -80,6 +110,42 @@ const loading = computed(() => productsStore.loading);
 
 // Error state
 const error = computed(() => productsStore.error);
+
+// Update scroll button visibility based on scroll position
+const updateScrollButtons = () => {
+  const container = containerRef.value;
+  if (!container) return;
+  
+  // Check if we can scroll left (not at start)
+  canScrollLeft.value = container.scrollLeft > 0;
+  
+  // Check if we can scroll right (not at end)
+  const maxScrollLeft = container.scrollWidth - container.clientWidth;
+  canScrollRight.value = container.scrollLeft < maxScrollLeft - 1;
+};
+
+// Scroll navigation functions
+const scrollNext = () => {
+  const container = containerRef.value;
+  if (!container) return;
+  
+  // Scroll by one card width (320px) + gap (24px)
+  const scrollAmount = 344;
+  container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+  
+  // Update buttons after scroll animation
+  setTimeout(updateScrollButtons, 350);
+};
+
+const scrollPrev = () => {
+  const container = containerRef.value;
+  if (!container) return;
+  
+  const scrollAmount = 344;
+  container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+  
+  setTimeout(updateScrollButtons, 350);
+};
 </script>
 
 <style scoped>
@@ -187,11 +253,56 @@ const error = computed(() => productsStore.error);
   max-width: 250px;
 }
 
+.products-carousel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+
+.carousel-nav-btn {
+  border-color: #ddd;
+  color: #666;
+  flex-shrink: 0;
+  border-radius: 8px;
+  width: 48px;
+  height: 48px;
+}
+
+
+.carousel-nav-btn:hover {
+  background: #f0f0f0;
+  transform: scale(1.05);
+}
+
 .products-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  flex-grow: 1;
+  display: flex;
   gap: 24px;
-  margin-top: 40px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 0;
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar */
+.products-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.products-container::-webkit-scrollbar {
+  display: none;
+}
+
+.product-slide {
+  flex: 0 0 320px;
+  width: 320px;
+  min-width: 320px;
+  scroll-snap-align: start;
 }
 
 .loading-state,
@@ -244,6 +355,12 @@ const error = computed(() => productsStore.error);
   .promo-block.large .promo-image img {
     max-width: 180px;
   }
+
+  .product-slide {
+    flex: 0 0 280px;
+    width: 280px;
+    min-width: 280px;
+  }
 }
 
 @media (max-width: 600px) {
@@ -279,6 +396,16 @@ const error = computed(() => productsStore.error);
 
   .promo-block.large .promo-image img {
     max-width: 150px;
+  }
+
+  .product-slide {
+    flex: 0 0 260px;
+    width: 260px;
+    min-width: 260px;
+  }
+
+  .carousel-nav-btn {
+    display: none;
   }
 }
 </style>

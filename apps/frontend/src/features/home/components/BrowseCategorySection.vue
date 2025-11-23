@@ -44,8 +44,10 @@
               @click="navigateToCategory(category)"
             >
               <div class="category-icon">
-                <img :src="category.image" alt="Category Icon" class="category-icon-img" />
-                <!-- <v-icon :icon="category.image || 'mdi-folder'" size="32" /> -->
+                <img v-if="category.image" :src="category.image" alt="Category Icon" class="category-icon-img" />
+               <div v-else class="no-image-placeholder">
+                <v-icon icon="mdi-image" size="24" />
+              </div>
               </div>
               <span class="category-name">{{ category.name }}</span>
             </div>
@@ -282,6 +284,15 @@ const prevSlide = () => {
   text-align: center;
   gap: 16px;
 }
+
+.no-image-placeholder {
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
 
 .loading-state p,
 .error-state p,

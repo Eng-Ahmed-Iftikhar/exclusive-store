@@ -22,7 +22,11 @@
       <!-- Categories List -->
       <ul v-else-if="categories.length > 0" class="categories-list">
         <li v-for="category in categories" :key="category.id" class="category-item">
-          <div class="category-header">
+          <div 
+            :ref="el => setCategoryRef(category.id, el)"
+            class="category-header"
+            @mouseenter="updateDropdownPosition(category.id)"
+          >
             <span class="category-name" @click="selectCategory(category.id)">
               {{ category.name }}
             </span>
@@ -32,7 +36,11 @@
 
           <!-- Subcategories Dropdown -->
           <transition name="subcategory-dropdown">
-            <div v-if="category.isExpanded && category.subcategories.length > 0" class="subcategories-dropdown">
+            <div 
+              v-if="category.isExpanded && category.subcategories.length > 0" 
+              class="subcategories-dropdown"
+              :style="getDropdownStyle(category.id)"
+            >
               <ul class="subcategories-list">
                 <li v-for="subcategory in category.subcategories" :key="subcategory.id" class="subcategory-item"
                   @click="selectSubcategory(category.id, subcategory.id)">
@@ -54,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCategoriesStore } from '../../../stores/modules/categories/categories.store';
 
@@ -64,13 +72,88 @@ const categoriesStore = useCategoriesStore();
 // Track expanded state separately
 const expandedCategories = ref<Set<string>>(new Set());
 
+// Track category header refs and positions
+const categoryRefs = ref<Map<string, HTMLElement>>(new Map());
+const dropdownPositions = ref<Map<string, { top: number; left: number }>>(new Map());
+
+// Set category ref
+const setCategoryRef = (categoryId: string, el: any) => {
+  if (el) {
+    categoryRefs.value.set(categoryId, el);
+  }
+};
+
+// Update dropdown position
+const updateDropdownPosition = (categoryId: string) => {
+  const el = categoryRefs.value.get(categoryId);
+  if (el) {
+    const rect = el.getBoundingClientRect();
+    dropdownPositions.value.set(categoryId, {
+      top: rect.top,
+      left: rect.right
+    });
+  }
+};
+
+// Update all expanded dropdown positions on scroll
+const updateAllDropdownPositions = () => {
+  expandedCategories.value.forEach(categoryId => {
+    updateDropdownPosition(categoryId);
+  });
+};
+
+// Get dropdown style
+const getDropdownStyle = (categoryId: string) => {
+  const position = dropdownPositions.value.get(categoryId);
+  if (position) {
+    return {
+      top: `${position.top}px`,
+      left: `${position.left}px`
+    };
+  }
+  return {};
+};
+
+// Close all dropdowns on page scroll (but not sidebar or dropdown scroll)
+const handlePageScroll = (event: Event) => {
+  const sidebar = document.querySelector('.categories-sidebar');
+  const target = event.target as HTMLElement;
+  
+  // Check if scroll is from sidebar or subcategories dropdown
+  const isFromSidebar = target === sidebar;
+  const isFromDropdown = target?.classList?.contains('subcategories-dropdown');
+  
+  // Only close if the scroll is not from the sidebar or dropdown itself
+  if (!isFromSidebar && !isFromDropdown && expandedCategories.value.size > 0) {
+    expandedCategories.value.clear();
+  }
+};
+
 // Fetch categories on component mount
 onMounted(async () => {
   try {
     await categoriesStore.fetchCategories({ isActive: true });
+    
+    // Listen for scroll events on the sidebar to update dropdown positions
+    const sidebar = document.querySelector('.categories-sidebar');
+    if (sidebar) {
+      sidebar.addEventListener('scroll', updateAllDropdownPositions);
+    }
+    
+    // Listen for page scroll to close dropdowns
+    window.addEventListener('scroll', handlePageScroll, true);
   } catch (error) {
     // Handle error silently or emit an event
   }
+});
+
+// Clean up event listeners
+onUnmounted(() => {
+  const sidebar = document.querySelector('.categories-sidebar');
+  if (sidebar) {
+    sidebar.removeEventListener('scroll', updateAllDropdownPositions);
+  }
+  window.removeEventListener('scroll', handlePageScroll, true);
 });
 
 // Get categories from store with subcategories already included
@@ -96,6 +179,11 @@ const toggleCategory = (categoryId: string) => {
     // If clicking a different category, close all others and open this one
     expandedCategories.value.clear(); // Close all categories
     expandedCategories.value.add(categoryId); // Open only this category
+    
+    // Update position after a brief delay to ensure DOM is updated
+    setTimeout(() => {
+      updateDropdownPosition(categoryId);
+    }, 10);
   }
 };
 
@@ -136,10 +224,34 @@ const selectSubcategory = (categoryId: string, subcategoryId: string) => {
 .categories-sidebar {
   background: #fff;
   border-right: 1px solid #f0f0f0;
+  height: 400px;
+  overflow-y: auto;
+  overflow-x: clip;
+  position: relative;
+}
+
+/* Custom scrollbar for sidebar */
+.categories-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.categories-sidebar::-webkit-scrollbar-track {
+  background: #f9f9f9;
+}
+
+.categories-sidebar::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.categories-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #999;
 }
 
 .categories-container {
   padding: 20px;
+  padding-right: 10px;
+  position: relative;
 }
 
 .categories-title {
@@ -163,7 +275,7 @@ const selectSubcategory = (categoryId: string, subcategoryId: string) => {
 
 .category-item {
   border-bottom: 1px solid #f5f5f5;
-  position: relative;
+  position: static;
 }
 
 .category-header {
@@ -209,16 +321,35 @@ const selectSubcategory = (categoryId: string, subcategoryId: string) => {
 }
 
 .subcategories-dropdown {
-  position: absolute;
-  left: 100%;
-  top: 0;
+  position: fixed;
   background: white;
   border: 1px solid #e0e0e0;
   border-radius: 0px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   min-width: 200px;
-  z-index: 1000;
-  overflow: hidden;
+  max-width: 250px;
+  max-height: 400px;
+  z-index: 9999;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar styling */
+.subcategories-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.subcategories-dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.subcategories-dropdown::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.subcategories-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .subcategories-list {

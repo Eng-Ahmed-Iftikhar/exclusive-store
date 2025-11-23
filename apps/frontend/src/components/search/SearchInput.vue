@@ -39,6 +39,7 @@
       :loading="loading"
       :search-results="searchResults"
       :search-query="searchQuery"
+      @category-selected="handleCategorySelected"
       @product-selected="handleProductSelected"
     />
   </div>
@@ -189,6 +190,11 @@ const handleClickOutside = (event: Event) => {
 
 const handleProductSelected = (product: any) => {
   // Clear search when a product is selected
+  clearSearch();
+};
+
+const handleCategorySelected = (category: any) => {
+  // Clear search when a category is selected
   clearSearch();
 };
 </script>

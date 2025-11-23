@@ -129,7 +129,7 @@ const getItemImage = (item: OrderItem) => {
     const primaryImage = item.images.find(img => img.isPrimary);
     return primaryImage ? primaryImage.url : item.images[0].url;
   }
-  return 'https://picsum.photos/40/40?random=1';
+  return import.meta.env.VITE_APP_PRODUCT_PLACEHOLDER_IMAGE;
 };
 </script>
 

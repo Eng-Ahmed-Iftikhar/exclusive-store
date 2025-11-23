@@ -1,11 +1,11 @@
 <template>
-  <section class="music-experience-banner">
+  <section v-if="flashSalesStore.hasActiveFlashSale" class="music-experience-banner">
     <v-container class="py-0">
       <div class="banner-container">
         <div class="banner-content">
-          <h2 class="banner-title">Flash Sale</h2>
-          <h3 class="banner-subtitle">Enhance Your Music Experience</h3>
-          <div class="countdown-timer">
+          <h2 class="banner-title">{{ flashSalesStore.activeFlashSale?.name || 'Flash Sale' }}</h2>
+          <h3 class="banner-subtitle">{{ flashSalesStore.activeFlashSale?.description || 'Enhance Your Music Experience' }}</h3>
+          <div v-if="!flashSaleTimer.isExpired" class="countdown-timer">
             <div class="timer-item">
               <span class="timer-number">{{ flashSaleTimer.safeTimeLeft.days }}</span>
               <span class="timer-label">Days</span>
@@ -45,13 +45,33 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
-import { useFlashSaleTimerStore } from '../../../stores';
+import { onMounted, onUnmounted, watch } from 'vue';
+import { useFlashSaleTimerStore, useFlashSalesStore } from '../../../stores';
 
 const flashSaleTimer = useFlashSaleTimerStore();
+const flashSalesStore = useFlashSalesStore();
 
-onMounted(() => {
-  flashSaleTimer.startTimer();
+onMounted(async () => {
+  // Fetch active flash sales
+  await flashSalesStore.fetchActiveFlashSales();
+  
+  // Start timer only if there's an active flash sale
+  if (flashSalesStore.hasActiveFlashSale && flashSalesStore.activeFlashSale) {
+    const endDate = new Date(flashSalesStore.activeFlashSale.endDate);
+    flashSaleTimer.setTargetDate(endDate);
+    flashSaleTimer.startTimer();
+  }
+});
+
+// Watch for changes in active flash sale
+watch(() => flashSalesStore.activeFlashSale, (newFlashSale) => {
+  if (newFlashSale) {
+    const endDate = new Date(newFlashSale.endDate);
+    flashSaleTimer.setTargetDate(endDate);
+    flashSaleTimer.startTimer();
+  } else {
+    flashSaleTimer.stopTimer();
+  }
 });
 
 onUnmounted(() => {

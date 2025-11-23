@@ -55,7 +55,7 @@ const hasMultipleImages = computed(() => {
 
 const currentImage = computed(() => {
   if (!props.images || props.images.length === 0) {
-    return { url: '/placeholder-product.jpg', altText: 'Product Image' };
+    return { url: import.meta.env.VITE_APP_PRODUCT_PLACEHOLDER_IMAGE, altText: 'Product Image' };
   }
   return props.images[currentImageIndex.value];
 });

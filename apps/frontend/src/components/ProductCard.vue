@@ -16,7 +16,7 @@
         />
         <img
           v-else
-          src="https://picsum.photos/400/300?random=16"
+          :src="PLACEHOLDER_IMAGE"
           :alt="product.name"
           class="product-image-img placeholder-image"
         />
@@ -182,6 +182,9 @@ const authStore = useAuthStore();
 const notificationsStore = useNotificationsStore();
 const cartStore = useCartStore();
 
+// Constants
+const PLACEHOLDER_IMAGE = import.meta.env.VITE_APP_PRODUCT_PLACEHOLDER_IMAGE;
+
 // Slideshow state
 const currentImageIndex = ref(0);
 const favoriteLoading = ref(false);
@@ -218,7 +221,7 @@ const currentImage = computed(() => {
     return productImages.value[currentImageIndex.value];
   }
   return {
-    url: 'https://picsum.photos/400/300?random=16',
+    url: PLACEHOLDER_IMAGE,
     altText: props.product.name,
   };
 });
@@ -226,7 +229,7 @@ const currentImage = computed(() => {
 // Handle image load errors
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement;
-  img.src = 'https://picsum.photos/400/300?random=' + props.product.id;
+  img.src = PLACEHOLDER_IMAGE;
 };
 
 // Favorite functionality
@@ -544,7 +547,7 @@ const getAvailableStock = (product: any) => {
   cursor: pointer;
   width: 100%;
   max-width: 280px !important;
-  min-width: 200px !important;
+  min-width: 260px !important;
   height: fit-content;
   min-height: 380px;
   display: flex;
@@ -582,13 +585,12 @@ const getAvailableStock = (product: any) => {
 .product-image-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: fill;
   transition: transform 0.3s ease;
 }
 
 .product-image-img.placeholder-image {
-  object-fit: contain;
-  padding: 20px;
+  object-fit: fill;
 }
 
 .product-card:hover .product-image-img {

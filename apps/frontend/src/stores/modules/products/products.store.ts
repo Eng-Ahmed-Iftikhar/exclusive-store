@@ -17,8 +17,12 @@ export const useProductsStore = defineStore('products', () => {
   const productsCount = computed(() => products.value.length);
   const hasProducts = computed(() => products.value.length > 0);
   const hasFeaturedProducts = computed(() => featuredProducts.value.length > 0);
-  const hasBestSellingProducts = computed(() => bestSellingProducts.value.length > 0);
-  const hasNewArrivalProducts = computed(() => newArrivalProducts.value.length > 0);
+  const hasBestSellingProducts = computed(
+    () => bestSellingProducts.value.length > 0
+  );
+  const hasNewArrivalProducts = computed(
+    () => newArrivalProducts.value.length > 0
+  );
 
   // ****** Actions ******
   const fetchProducts = async (
@@ -86,6 +90,21 @@ export const useProductsStore = defineStore('products', () => {
       return response;
     } catch (err) {
       error.value = 'Failed to fetch new arrival products';
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const fetchHeroSliderProducts = async (): Promise<IProducts.Product[]> => {
+    try {
+      loading.value = true;
+      error.value = null;
+
+      const response = await ProductsActions.getHeroSliderProducts();
+      return response;
+    } catch (err) {
+      error.value = 'Failed to fetch hero slider products';
       throw err;
     } finally {
       loading.value = false;
@@ -168,10 +187,10 @@ export const useProductsStore = defineStore('products', () => {
     fetchFeaturedProducts,
     fetchBestSellingProducts,
     fetchNewArrivalProducts,
+    fetchHeroSliderProducts,
     fetchProductById,
     searchProducts,
     clearError,
     reset,
   };
 });
-

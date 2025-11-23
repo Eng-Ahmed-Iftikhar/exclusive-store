@@ -5,24 +5,39 @@
       <div class="section-header">
         <div class="header-content">
           <div class="red-bar"></div>
-          <h2 class="section-title">Our Products Explore Our Products</h2>
+          <h2 class="section-title">Our Products</h2>
         </div>
       </div>
 
       <!-- Products Carousel -->
       <div class="products-carousel">
-        <v-btn icon="mdi-chevron-left" variant="outlined" class="carousel-nav-btn prev-btn" size="large"
-          @click="prevSlide" :disabled="currentIndex === 0" />
+        <v-btn 
+          v-show="canScrollLeft"
+          icon="mdi-chevron-left" 
+          variant="outlined" 
+          class="carousel-nav-btn prev-btn" 
+          size="large"
+          @click="scrollPrev" 
+        />
 
-        <div class="products-container">
-          <div class="products-slider" ref="sliderRef">
-            <ProductCard v-for="product in exploreItems" :key="product.id" :product="product" :show-sale-tag="true"
-              class="product-slide" />
-          </div>
+        <div class="products-container" ref="containerRef" @scroll="updateScrollButtons">
+          <ProductCard 
+            v-for="product in exploreItems" 
+            :key="product.id" 
+            :product="product" 
+            :show-sale-tag="true"
+            class="product-slide" 
+          />
         </div>
 
-        <v-btn icon="mdi-chevron-right" variant="outlined" class="carousel-nav-btn next-btn" size="large"
-          @click="nextSlide" :disabled="currentIndex >= maxIndex" />
+        <v-btn 
+          v-show="canScrollRight"
+          icon="mdi-chevron-right" 
+          variant="outlined" 
+          class="carousel-nav-btn next-btn" 
+          size="large"
+          @click="scrollNext" 
+        />
       </div>
 
       <!-- View All Button -->
@@ -36,21 +51,24 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed, ref, watch } from 'vue';
+import { onMounted, computed, ref, nextTick } from 'vue';
 import { IProducts, useProductsStore } from '../../../stores/modules/products';
 import ProductCard from '../../../components/ProductCard.vue';
 
 const productsStore = useProductsStore();
 
-// Carousel functionality
-const sliderRef = ref<HTMLElement | null>(null);
-const currentIndex = ref(0);
-const productsPerView = 3;
+// Container ref for scrolling
+const containerRef = ref<HTMLElement | null>(null);
+const canScrollLeft = ref(false);
+const canScrollRight = ref(false);
 
 // Fetch featured products on component mount
 onMounted(async () => {
   try {
     await productsStore.fetchFeaturedProducts();
+    // Wait for DOM to update, then check scroll buttons
+    await nextTick();
+    updateScrollButtons();
   } catch (error) {
     // Failed to fetch featured products
   }
@@ -59,43 +77,42 @@ onMounted(async () => {
 // Get featured products from store
 const exploreItems = computed(() => productsStore.featuredProducts as unknown as IProducts.Product[]);
 
-// Computed properties for carousel
-const maxIndex = computed(() => {
-  if (!exploreItems.value || exploreItems.value.length <= productsPerView) return 0;
-  return Math.ceil(exploreItems.value.length / productsPerView) - 1;
-});
-
-const canSlideNext = computed(() => currentIndex.value < maxIndex.value);
-const canSlidePrev = computed(() => currentIndex.value > 0);
-
-// Navigation functions
-const nextSlide = () => {
-  if (canSlideNext.value) {
-    currentIndex.value++;
-    updateSliderPosition();
-  }
+// Update scroll button visibility based on scroll position
+const updateScrollButtons = () => {
+  const container = containerRef.value;
+  if (!container) return;
+  
+  // Check if we can scroll left (not at start)
+  canScrollLeft.value = container.scrollLeft > 0;
+  
+  // Check if we can scroll right (not at end)
+  // Add small threshold (1px) to account for rounding errors
+  const maxScrollLeft = container.scrollWidth - container.clientWidth;
+  canScrollRight.value = container.scrollLeft < maxScrollLeft - 1;
 };
 
-const prevSlide = () => {
-  if (canSlidePrev.value) {
-    currentIndex.value--;
-    updateSliderPosition();
-  }
+// Scroll navigation functions
+const scrollNext = () => {
+  const container = containerRef.value;
+  if (!container) return;
+  
+  // Scroll by one card width (320px) + gap (24px)
+  const scrollAmount = 344; // 320px card + 24px gap
+  container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+  
+  // Update buttons after scroll animation
+  setTimeout(updateScrollButtons, 350);
 };
 
-const updateSliderPosition = () => {
-  if (sliderRef.value) {
-    const slideWidth = 100 / productsPerView; // Each slide takes 1/3 of the container width
-    const translateX = -(currentIndex.value * slideWidth);
-    sliderRef.value.style.transform = `translateX(${translateX}%)`;
-  }
+const scrollPrev = () => {
+  const container = containerRef.value;
+  if (!container) return;
+  
+  const scrollAmount = 344;
+  container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+  
+  setTimeout(updateScrollButtons, 350);
 };
-
-// Reset slider position when products change
-watch(exploreItems, () => {
-  currentIndex.value = 0;
-  updateSliderPosition();
-}, { immediate: true });
 </script>
 
 <style scoped>
@@ -157,22 +174,30 @@ watch(exploreItems, () => {
 
 .products-container {
   flex-grow: 1;
-  overflow: hidden;
-  padding: 4px 0;
-}
-
-.products-slider {
   display: flex;
   gap: 24px;
-  transition: transform 0.3s ease;
-  min-width: max-content;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 0;
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar */
+.products-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.products-container::-webkit-scrollbar {
+  display: none;
 }
 
 .product-slide {
-  flex: 0 0 calc(33.333% - 16px);
-  width: 100%;
-  max-width: 280px !important;
-  min-width: 200px;
+  flex: 0 0 320px;
+  width: 320px;
+  min-width: 320px;
+  scroll-snap-align: start;
 }
 
 .product-card {
@@ -292,8 +317,10 @@ watch(exploreItems, () => {
 
 /* Responsive Design */
 @media (max-width: 960px) {
-  .products-container {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  .product-slide {
+    flex: 0 0 280px;
+    width: 280px;
+    min-width: 280px;
   }
 }
 
@@ -306,8 +333,10 @@ watch(exploreItems, () => {
     font-size: 24px;
   }
 
-  .products-container {
-    grid-template-columns: 1fr;
+  .product-slide {
+    flex: 0 0 260px;
+    width: 260px;
+    min-width: 260px;
   }
 
   .carousel-nav-btn {

@@ -334,6 +334,86 @@ export class ProductsService {
     return products.map((p) => this.mapToProductResponse(p));
   }
 
+  async getHeroSliderProducts(): Promise<ProductResponseDto[]> {
+    const includeOptions = {
+      category: {
+        select: { id: true, name: true, slug: true },
+      },
+      subcategory: {
+        select: { id: true, name: true, slug: true },
+      },
+      prices: { where: { isActive: true } },
+      stock: { where: { isInStock: true } },
+      variants: {
+        include: {
+          prices: { where: { isActive: true } },
+          stock: { where: { isInStock: true } },
+          images: {
+            include: {
+              file: {
+                select: {
+                  id: true,
+                  url: true,
+                  secureUrl: true,
+                  originalName: true,
+                  format: true,
+                  width: true,
+                  height: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      reviews: { where: { isApproved: true } },
+      ratings: true,
+    };
+
+    // 1. Get top selling product (using featured + highest sort order as proxy)
+    const topSaleProduct = await this.prisma.product.findFirst({
+      where: {
+        isActive: true,
+        isFeatured: true,
+      },
+      include: includeOptions,
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+    });
+
+    // 2. Get newest product (latest created)
+    const newestProduct = await this.prisma.product.findFirst({
+      where: {
+        isActive: true,
+      },
+      include: includeOptions,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // 3. Get a random featured product (excluding the ones already selected)
+    const excludeIds = [topSaleProduct?.id, newestProduct?.id].filter(Boolean);
+    const featuredProducts = await this.prisma.product.findMany({
+      where: {
+        isActive: true,
+        isFeatured: true,
+        id: { notIn: excludeIds },
+      },
+      include: includeOptions,
+      take: 5, // Get a few to choose from randomly
+    });
+
+    // Pick a random one from the featured products
+    const randomProduct =
+      featuredProducts.length > 0
+        ? featuredProducts[Math.floor(Math.random() * featuredProducts.length)]
+        : null;
+
+    // Combine all three products, filtering out nulls
+    const sliderProducts = [topSaleProduct, newestProduct, randomProduct]
+      .filter(Boolean)
+      .slice(0, 3); // Ensure we have max 3 products
+
+    return sliderProducts.map((p) => this.mapToProductResponse(p));
+  }
+
   async getProductById(id: string): Promise<ProductResponseDto> {
     const product = await this.prisma.product.findUnique({
       where: { id },

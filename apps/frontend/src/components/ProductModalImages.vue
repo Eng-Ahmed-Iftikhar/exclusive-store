@@ -18,7 +18,7 @@
     </div>
 
     <!-- Thumbnail Images -->
-    <div v-if="hasMultipleImages" class="thumbnail-images">
+    <div class="thumbnail-images">
       <div v-for="(image, index) in productImages" :key="index" class="thumbnail-item"
         :class="{ active: currentImageIndex === index }" @click="goToImage(index)">
         <img :src="image.url" :alt="image.altText || 'Product image'" class="thumbnail-image"
@@ -128,7 +128,7 @@ const currentImage = computed(() => {
   }
   // Fallback to same logic as ProductCard.vue
   return {
-    url: 'https://picsum.photos/400/300?random=16',
+    url: import.meta.env.VITE_APP_PRODUCT_PLACEHOLDER_IMAGE,
     altText: props.product.name
   };
 });

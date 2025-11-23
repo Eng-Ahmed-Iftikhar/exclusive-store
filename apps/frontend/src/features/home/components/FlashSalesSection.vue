@@ -7,7 +7,7 @@
           <div class="red-bar"></div>
           <h2 class="section-title">Today's Flash Sales</h2>
         </div>
-        <div class="countdown-timer">
+        <div v-if="flashSaleProducts.length>0" class="countdown-timer">
           <div class="timer-item">
             <span class="timer-number">{{ flashSaleTimer.safeTimeLeft.days.toString().padStart(2, '0') }}</span>
             <span class="timer-label">Days</span>

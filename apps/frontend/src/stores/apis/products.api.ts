@@ -44,6 +44,14 @@ export const productsApi = {
     return response.data;
   },
 
+  // Get hero slider products
+  async getHeroSliderProducts(): Promise<IProducts.Product[]> {
+    const response = await axiosInstance.get(
+      ProductsUrls.GET_HERO_SLIDER_PRODUCTS
+    );
+    return response.data;
+  },
+
   // Get top rated products
   async getTopRatedProducts(
     minRating?: number,

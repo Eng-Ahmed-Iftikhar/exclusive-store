@@ -80,6 +80,11 @@ export const useFlashSaleTimerStore = defineStore('flashSaleTimer', () => {
     startTimer();
   };
 
+  const setTargetDate = (newTargetDate: Date): void => {
+    targetDate.value = newTargetDate;
+    updateTimer();
+  };
+
   const clearError = (): void => {
     error.value = null;
   };
@@ -118,6 +123,7 @@ export const useFlashSaleTimerStore = defineStore('flashSaleTimer', () => {
     startTimer,
     stopTimer,
     resetTimer,
+    setTargetDate,
     updateTimer,
     clearError,
     reset,

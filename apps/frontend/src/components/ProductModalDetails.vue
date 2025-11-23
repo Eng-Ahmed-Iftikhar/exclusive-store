@@ -70,44 +70,41 @@
             'selected': selectedVariantId === variant.id,
             'out-of-stock': !isVariantInStock(variant)
           }" @click="handleVariantChange(variant.id)">
-            <!-- Variant Image -->
-            <div class="variant-image-container">
-              <img :src="getVariantImage(variant)" :alt="variant.name" class="variant-image"
-                @error="handleImageError" />
+            <div class="variant-card-content">
+              <!-- Variant Image - Left Side -->
+              <div class="variant-image-container">
+                <img :src="getVariantImage(variant)" :alt="variant.name" class="variant-image"
+                  @error="handleImageError" />
 
-              <!-- Stock Badge -->
-              <div v-if="!isVariantInStock(variant)" class="stock-badge out-of-stock-badge">
-                Out of Stock
-              </div>
-              <div v-else-if="getVariantStock(variant) < 5" class="stock-badge low-stock-badge">
-                Only {{ getVariantStock(variant) }} left
-              </div>
-            </div>
-
-            <!-- Variant Info -->
-            <div class="variant-info">
-              <h5 class="variant-name">{{ variant.name }}</h5>
-
-              <!-- Price -->
-              <div class="variant-price-row">
-                <template v-if="getVariantSalePrice(variant) < getVariantPrice(variant)">
-                  <span class="variant-sale-price">${{ getVariantSalePrice(variant).toFixed(2) }}</span>
-                  <span class="variant-original-price">${{ getVariantPrice(variant).toFixed(2) }}</span>
-                </template>
-                <template v-else>
-                  <span class="variant-current-price">${{ getVariantPrice(variant).toFixed(2) }}</span>
-                </template>
+                <!-- Stock Badge -->
+                <div v-if="!isVariantInStock(variant)" class="stock-badge out-of-stock-badge">
+                  Out
+                </div>
+                <div v-else-if="getVariantStock(variant) < 5" class="stock-badge low-stock-badge">
+                  {{ getVariantStock(variant) }}
+                </div>
               </div>
 
-              <!-- SKU -->
-              <div v-if="variant.sku" class="variant-sku">
-                SKU: {{ variant.sku }}
+              <!-- Variant Info - Right Side -->
+              <div class="variant-info">
+                <h5 class="variant-name">{{ variant.name }}</h5>
+
+                <!-- Price -->
+                <div class="variant-price-row">
+                  <template v-if="getVariantSalePrice(variant) < getVariantPrice(variant)">
+                    <span class="variant-sale-price">${{ getVariantSalePrice(variant).toFixed(2) }}</span>
+                    <span class="variant-original-price">${{ getVariantPrice(variant).toFixed(2) }}</span>
+                  </template>
+                  <template v-else>
+                    <span class="variant-current-price">${{ getVariantPrice(variant).toFixed(2) }}</span>
+                  </template>
+                </div>
               </div>
             </div>
 
             <!-- Selected Checkmark -->
             <div v-if="selectedVariantId === variant.id" class="selected-badge">
-              <v-icon icon="mdi-check-circle" size="24" color="white" />
+              <v-icon icon="mdi-check-circle" size="20" color="white" />
             </div>
 
             <!-- Unselect Hint -->
@@ -351,7 +348,7 @@ const getVariantImage = (variant: any) => {
     const firstImage = variant.images[0];
     return firstImage.file?.secureUrl || firstImage.file?.url || '';
   }
-  return 'https://placehold.co/600x400.png';
+  return 
 };
 
 const handleImageError = (e: Event) => {
@@ -514,7 +511,7 @@ const getReviewCount = (product: any) => {
 
 .variant-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
 
@@ -522,11 +519,11 @@ const getReviewCount = (product: any) => {
   position: relative;
   border: 2px solid #e0e0e0;
   border-radius: 12px;
-  padding: 8px;
+  padding: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
   background: #fff;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .variant-card:hover {
@@ -552,14 +549,20 @@ const getReviewCount = (product: any) => {
   transform: none;
 }
 
+.variant-card-content {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
 .variant-image-container {
   position: relative;
-  width: 100%;
-  height: 120px;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
   border-radius: 8px;
   overflow: hidden;
   background: #f8f8f8;
-  margin-bottom: 8px;
 }
 
 .variant-image {
@@ -570,41 +573,44 @@ const getReviewCount = (product: any) => {
 
 .stock-badge {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  padding: 4px 8px;
+  top: 4px;
+  right: 4px;
+  padding: 2px 6px;
   border-radius: 4px;
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 9px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
 }
 
 .out-of-stock-badge {
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   color: white;
 }
 
 .low-stock-badge {
-  background: rgba(255, 152, 0, 0.9);
+  background: rgba(255, 152, 0, 0.95);
   color: white;
 }
 
 .variant-info {
-  padding: 4px 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
 .variant-name {
-  font-size: 13px;
+  font-size: 14px;
   color: #333;
   font-weight: 600;
-  margin: 0 0 6px 0;
+  margin: 0;
   line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .variant-price-row {
@@ -635,23 +641,27 @@ const getReviewCount = (product: any) => {
 }
 
 .variant-sku {
-  font-size: 10px;
-  color: #666;
-  margin-top: 2px;
+  font-size: 11px;
+  color: #999;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .selected-badge {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: -13px;
+  right: -13px;
   background: #DB4444;
   border-radius: 50%;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
 }
 
 .unselect-hint {
@@ -677,12 +687,8 @@ const getReviewCount = (product: any) => {
 /* Responsive for smaller screens */
 @media (max-width: 768px) {
   .variant-cards {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: 1fr;
     gap: 10px;
-  }
-
-  .variant-image-container {
-    height: 100px;
   }
 }
 

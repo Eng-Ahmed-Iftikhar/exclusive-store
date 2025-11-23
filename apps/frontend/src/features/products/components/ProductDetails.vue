@@ -40,28 +40,38 @@
       <div class="variant-grid">
         <div v-for="variant in product.variants" :key="variant.id" class="variant-card"
           :class="{ 'selected': selectedVariantId === variant.id }" @click="selectVariant(variant.id)">
-          <div class="variant-image">
-            <img v-if="getVariantImage(variant)" :src="getVariantImage(variant) || ''" :alt="variant.name"
-              class="variant-img" @error="handleImageError" />
-            <div v-else class="no-image-placeholder">
-              <v-icon icon="mdi-image" size="24" />
+          <div class="variant-card-content">
+            <!-- Variant Image - Left Side -->
+            <div class="variant-image">
+              <img v-if="getVariantImage(variant)" :src="getVariantImage(variant) || ''" :alt="variant.name"
+                class="variant-img" @error="handleImageError" />
+              <div v-else class="no-image-placeholder">
+                <v-icon icon="mdi-image" size="24" />
+              </div>
+            </div>
+
+            <!-- Variant Info - Right Side -->
+            <div class="variant-info">
+              <h4 class="variant-name">{{ variant.name }}</h4>
+              <div class="variant-price">
+                <span v-if="getVariantSalePrice(variant)" class="variant-sale-price">
+                  ${{ getVariantSalePrice(variant) }}
+                </span>
+                <span class="variant-regular-price" :class="{ 'sale-price': getVariantSalePrice(variant) }">
+                  ${{ getVariantPrice(variant) }}
+                </span>
+              </div>
+              <div class="variant-stock">
+                <v-chip :color="isVariantInStock(variant) ? 'success' : 'error'" size="x-small" variant="outlined">
+                  {{ isVariantInStock(variant) ? 'In Stock' : 'Out of Stock' }}
+                </v-chip>
+              </div>
             </div>
           </div>
-          <div class="variant-info">
-            <h4 class="variant-name">{{ variant.name }}</h4>
-            <div class="variant-price">
-              <span v-if="getVariantSalePrice(variant)" class="variant-sale-price">
-                ${{ getVariantSalePrice(variant) }}
-              </span>
-              <span class="variant-regular-price" :class="{ 'sale-price': getVariantSalePrice(variant) }">
-                ${{ getVariantPrice(variant) }}
-              </span>
-            </div>
-            <div class="variant-stock">
-              <v-chip :color="isVariantInStock(variant) ? 'success' : 'error'" size="x-small" variant="outlined">
-                {{ isVariantInStock(variant) ? 'In Stock' : 'Out of Stock' }}
-              </v-chip>
-            </div>
+
+          <!-- Selected Badge -->
+          <div v-if="selectedVariantId === variant.id" class="selected-badge">
+            <v-icon icon="mdi-check-circle" size="20" color="white" />
           </div>
         </div>
       </div>
@@ -524,37 +534,46 @@ const handleImageError = (event: Event) => {
 
 .variant-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
   margin-bottom: 16px;
 }
 
 .variant-card {
+  position: relative;
   border: 2px solid #e0e0e0;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
   background: white;
+  overflow: visible;
 }
 
 .variant-card:hover {
-  border-color: #1976d2;
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.1);
+  border-color: #DB4444;
+  box-shadow: 0 4px 12px rgba(219, 68, 68, 0.15);
+  transform: translateY(-2px);
 }
 
 .variant-card.selected {
-  border-color: #1976d2;
-  background: #f3f8ff;
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
+  border-color: #DB4444;
+  background: #fff5f5;
+  box-shadow: 0 4px 16px rgba(219, 68, 68, 0.25);
+}
+
+.variant-card-content {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
 }
 
 .variant-image {
-  width: 100%;
+  width: 80px;
   height: 80px;
-  border-radius: 6px;
+  flex-shrink: 0;
+  border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 8px;
   background: #f5f5f5;
   display: flex;
   align-items: center;
@@ -576,32 +595,63 @@ const handleImageError = (event: Event) => {
 }
 
 .variant-info {
-  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  text-align: left;
+}
+
+.selected-badge {
+  position: absolute;
+  top: -13px;
+  right: -13px;
+  background: #DB4444;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
 }
 
 .variant-name {
   font-size: 14px;
   font-weight: 600;
   color: #333;
-  margin: 0 0 4px 0;
-  line-height: 1.2;
+  margin: 0;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .variant-price {
-  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .variant-sale-price {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   color: #DB4444;
-  margin-right: 8px;
 }
 
 .variant-regular-price {
   font-size: 14px;
-  font-weight: 500;
-  color: #666;
+  font-weight: 700;
+  color: #333;
+}
+
+.variant-regular-price.sale-price {
+  font-size: 11px;
+  font-weight: 400;
+  color: #999;
+  text-decoration: line-through;
 }
 
 .variant-regular-price.sale-price {
@@ -611,7 +661,7 @@ const handleImageError = (event: Event) => {
 
 .variant-stock {
   display: flex;
-  justify-content: center;
+  justify-content: start;
 }
 
 .variant-info-message {

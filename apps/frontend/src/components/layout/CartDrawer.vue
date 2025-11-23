@@ -287,7 +287,7 @@ const goToCheckout = () => {
 const handleImageError = (event: Event) => {
   const target = event.target as HTMLImageElement;
   target.src =
-    'https://picsum.photos/60/60?random=1';
+    import.meta.env.VITE_APP_PRODUCT_PLACEHOLDER_IMAGE;
 };
 </script>
 

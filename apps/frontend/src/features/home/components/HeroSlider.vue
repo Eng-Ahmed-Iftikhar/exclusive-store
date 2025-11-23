@@ -17,7 +17,7 @@
             variant="flat" 
             class="shop-now-btn"
             size="large"
-            to="/products"
+            :to="slide.link"
           >
             Shop Now
             <v-icon icon="mdi-arrow-right" class="ms-2" />
@@ -58,38 +58,57 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { useProductsStore } from '../../../stores';
+import type { IProducts } from '../../../stores/modules/products';
 
 interface Slide {
-  id: number;
+  id: string;
   title: string;
   subtitle: string;
   image: string;
+  link: string;
 }
 
-const slides = ref<Slide[]>([
-  {
-    id: 1,
-    title: "iPhone 14 Series",
-    subtitle: "Up to 10% off Voucher",
-    image: "@assets/images/hero_section.png"
-  },
-  {
-    id: 2,
-    title: "New Collection",
-    subtitle: "Discover the latest trends",
-    image: "/src/features/home/assets/images/hero_endframe__cvklg0xk3w6e_large 2.png"
-  },
-  {
-    id: 3,
-    title: "Summer Sale",
-    subtitle: "Up to 50% off selected items",
-    image: "/src/features/home/assets/images/hero_endframe__cvklg0xk3w6e_large 2.png"
-  }
-]);
-
+const PLACEHOLDER_IMAGE = import.meta.env.VITE_APP_HERO_PLACEHOLDER_IMAGE
+const productsStore = useProductsStore();
+const heroProducts = ref<IProducts.Product[]>([]);
 const currentSlide = ref(0);
 let autoplayInterval: ReturnType<typeof setInterval> | null = null;
+
+// Convert products to slides
+const slides = computed<Slide[]>(() => {
+  return heroProducts.value.map((product, index) => {
+    // Get the first variant's first image, or product's first image, or placeholder
+    const firstVariant = product.variants?.[0];
+    const variantImage = firstVariant?.images?.[0]?.file?.secureUrl || firstVariant?.images?.[0]?.file?.url;
+    const productImage = variantImage || PLACEHOLDER_IMAGE;
+
+    // Get the active price
+    const activePrice = firstVariant?.prices?.find((p) => p.isActive);
+    const priceText = activePrice 
+      ? `Starting at ${activePrice.currency} ${activePrice.salePrice || activePrice.price}`
+      : 'View Product';
+
+    // Create subtitle based on product index (top sale, newest, random)
+    let subtitle = '';
+    if (index === 0) {
+      subtitle = `🔥 Top Selling - ${priceText}`;
+    } else if (index === 1) {
+      subtitle = `✨ New Arrival - ${priceText}`;
+    } else {
+      subtitle = `⭐ Featured - ${priceText}`;
+    }
+
+    return {
+      id: product.id,
+      title: product.name,
+      subtitle,
+      image: productImage,
+      link: `/products/${product.id}`,
+    };
+  });
+});
 
 const nextSlide = () => {
   currentSlide.value = (currentSlide.value + 1) % slides.value.length;
@@ -118,8 +137,20 @@ const stopAutoplay = () => {
   }
 };
 
-onMounted(() => {
-  startAutoplay();
+onMounted(async () => {
+  // Fetch hero slider products
+  try {
+    const products = await productsStore.fetchHeroSliderProducts();
+    heroProducts.value = products;
+    
+    // Start autoplay only if we have slides
+    if (products.length > 0) {
+      startAutoplay();
+    }
+  } catch (error) {
+    console.error('Failed to load hero slider products:', error);
+    // Optionally show a fallback or error message
+  }
 });
 
 onUnmounted(() => {

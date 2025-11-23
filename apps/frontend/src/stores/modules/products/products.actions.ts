@@ -1,7 +1,9 @@
-import { IProducts } from ".";
-import { productsApi } from "../../apis/products.api";
+import { IProducts } from '.';
+import { productsApi } from '../../apis/products.api';
 
-export async function getProducts(params?: IProducts.ProductQueryParams): Promise<IProducts.ProductsResponse> {
+export async function getProducts(
+  params?: IProducts.ProductQueryParams
+): Promise<IProducts.ProductsResponse> {
   try {
     return await productsApi.getProducts(params);
   } catch (err) {
@@ -26,7 +28,18 @@ export async function getBestSellingProducts(): Promise<IProducts.Product[]> {
   }
 }
 
-export async function getTopRatedProducts(minRating: number = 4, limit: number = 10): Promise<IProducts.Product[]> {
+export async function getHeroSliderProducts(): Promise<IProducts.Product[]> {
+  try {
+    return await productsApi.getHeroSliderProducts();
+  } catch (err) {
+    throw new Error('Failed to fetch hero slider products');
+  }
+}
+
+export async function getTopRatedProducts(
+  minRating: number = 4,
+  limit: number = 10
+): Promise<IProducts.Product[]> {
   try {
     return await productsApi.getTopRatedProducts(minRating, limit);
   } catch (err) {
@@ -34,7 +47,9 @@ export async function getTopRatedProducts(minRating: number = 4, limit: number =
   }
 }
 
-export async function getNewArrivalProducts(limit: number = 8): Promise<IProducts.Product[]> {
+export async function getNewArrivalProducts(
+  limit: number = 8
+): Promise<IProducts.Product[]> {
   try {
     return await productsApi.getNewArrivalProducts(limit);
   } catch (err) {
@@ -51,7 +66,7 @@ export async function getProductById(id: string): Promise<IProducts.Product> {
 }
 
 export async function getProductsByCategory(
-  categoryId: string, 
+  categoryId: string,
   params?: Omit<IProducts.ProductQueryParams, 'categoryId'>
 ): Promise<IProducts.ProductsResponse> {
   try {
@@ -62,7 +77,7 @@ export async function getProductsByCategory(
 }
 
 export async function getProductsBySubcategory(
-  subcategoryId: string, 
+  subcategoryId: string,
   params?: Omit<IProducts.ProductQueryParams, 'subcategoryId'>
 ): Promise<IProducts.ProductsResponse> {
   try {
@@ -73,7 +88,7 @@ export async function getProductsBySubcategory(
 }
 
 export async function searchProducts(
-  query: string, 
+  query: string,
   params?: Omit<IProducts.ProductQueryParams, 'search'>
 ): Promise<IProducts.ProductsResponse> {
   try {
@@ -85,4 +100,3 @@ export async function searchProducts(
     throw new Error('Failed to fetch search products');
   }
 }
-

@@ -7,7 +7,7 @@
           <label class="filter-label">Search Products</label>
           <v-text-field
             v-model="filters.search"
-            placeholder="Search..."
+            placeholder="Search product..."
             prepend-inner-icon="mdi-magnify"
             variant="outlined"
             density="compact"
@@ -20,12 +20,12 @@
         <!-- Category Filter -->
         <div class="filter-group">
           <label class="filter-label">Category</label>
-          <v-select
+          <v-autocomplete
             v-model="filters.category"
             :items="categories"
             item-title="name"
             item-value="slug"
-            placeholder="Select category"
+            placeholder="Select Category"
             variant="outlined"
             density="compact"
             clearable
@@ -37,12 +37,12 @@
         <!-- Subcategory Filter -->
         <div class="filter-group">
           <label class="filter-label">Subcategory</label>
-          <v-select
+          <v-autocomplete
             v-model="filters.subcategory"
             :items="availableSubcategories"
+            placeholder="Select Subcategory"
             item-title="name"
             item-value="slug"
-            placeholder="Select subcategory"
             variant="outlined"
             density="compact"
             clearable
@@ -55,12 +55,12 @@
         <!-- Price Range Filter -->
         <div class="filter-group">
           <label class="filter-label">Price Range</label>
-          <v-select
+          <v-autocomplete
             v-model="filters.priceRange"
             :items="priceRanges"
             item-title="label"
             item-value="value"
-            placeholder="Select price range"
+            placeholder="Select Price Range"
             variant="outlined"
             density="compact"
             clearable
@@ -72,12 +72,12 @@
         <!-- Rating Filter -->
         <div class="filter-group">
           <label class="filter-label">Minimum Rating</label>
-          <v-select
+          <v-autocomplete
             v-model="filters.minRating"
             :items="ratingOptions"
             item-title="label"
             item-value="value"
-            placeholder="Select rating"
+            placeholder="Select Minimum Rating"
             variant="outlined"
             density="compact"
             clearable
@@ -89,12 +89,13 @@
         <!-- Sort By -->
         <div class="filter-group">
           <label class="filter-label">Sort By</label>
-          <v-select
+          <v-autocomplete
             v-model="filters.sortBy"
             :items="sortOptions"
             item-title="label"
             item-value="value"
             variant="outlined"
+            placeholder="Select Sort By"
             density="compact"
             hide-details
             @update:model-value="handleFilterChange"
@@ -104,11 +105,12 @@
         <!-- Sort Order -->
         <div class="filter-group">
           <label class="filter-label">Sort Order</label>
-          <v-select
+          <v-autocomplete
             v-model="filters.sortOrder"
             :items="sortOrderOptions"
             item-title="label"
             item-value="value"
+            placeholder="Select Sort Order"
             variant="outlined"
             density="compact"
             hide-details
@@ -119,11 +121,12 @@
         <!-- Items Per Page -->
         <div class="filter-group">
           <label class="filter-label">Items Per Page</label>
-          <v-select
+          <v-autocomplete
             v-model="filters.limit"
             :items="itemsPerPageOptions"
             item-title="label"
             item-value="value"
+            placeholder="Select Items Per Page"
             variant="outlined"
             density="compact"
             hide-details
@@ -190,13 +193,13 @@ const availableSubcategories = computed(() => {
 
 // Filters
 const filters = ref({
-  search: '',
-  category: '',
-  subcategory: '',
-  priceRange: '',
+  search: undefined as string | undefined,
+  category: undefined as string | undefined,
+  subcategory: undefined,
+  priceRange: undefined,
   minPrice: undefined as number | undefined,
   maxPrice: undefined as number | undefined,
-  minRating: '',
+  minRating: undefined as number | undefined,
   sortBy: 'createdAt',
   sortOrder: 'desc',
   page: 1,
@@ -212,7 +215,7 @@ const initializeFiltersFromQuery = () => {
   if (query.subcategory)
     filters.value.subcategory = query.subcategory as string;
   if (query.priceRange) filters.value.priceRange = query.priceRange as string;
-  if (query.minRating) filters.value.minRating = query.minRating as string;
+  if (query.minRating) filters.value.minRating = Number(query.minRating as string);
   if (query.sortBy) filters.value.sortBy = query.sortBy as string;
   if (query.sortOrder) filters.value.sortOrder = query.sortOrder as string;
   if (query.page) filters.value.page = parseInt(query.page as string) || 1;
@@ -322,7 +325,7 @@ const clearFilters = () => {
     priceRange: '',
     minPrice: undefined,
     maxPrice: undefined,
-    minRating: '',
+    minRating: undefined,
     sortBy: 'createdAt',
     sortOrder: 'desc',
     page: 1,
@@ -423,6 +426,12 @@ defineExpose({
   margin-top: 0;
   width: 100%;
   height: 40px;
+}
+
+.placeholder-text {
+  color: #9e9e9e;
+  font-size: 14px;
+  pointer-events: none;
 }
 
 /* Responsive adjustments */

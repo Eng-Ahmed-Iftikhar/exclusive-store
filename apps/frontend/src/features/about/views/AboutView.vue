@@ -17,7 +17,7 @@
     <StorySection
       title="Our Story"
       :paragraphs="storyParagraphs"
-      image-src="https://picsum.photos/600/400?random=about"
+      :image-src="PLACEHOLDER_IMAGE"
       image-alt="Our Story"
     />
 
@@ -44,6 +44,9 @@ import MissionSection from '../components/MissionSection.vue';
 import StorySection from '../components/StorySection.vue';
 import ValuesSection from '../components/ValuesSection.vue';
 import CTASection from '../components/CTASection.vue';
+
+
+const PLACEHOLDER_IMAGE = import.meta.env.VITE_APP_PRODUCT_PLACEHOLDER_IMAGE;
 
 const missionStats = ref([
   { value: '10K+', label: 'Happy Customers' },

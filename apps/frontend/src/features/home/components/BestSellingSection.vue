@@ -26,14 +26,33 @@
 
       <!-- Products Carousel -->
       <div v-else-if="bestSellingProducts.length > 0" class="products-carousel">
-        <v-btn icon="mdi-chevron-left" variant="outlined" class="carousel-nav-btn prev-btn" size="large" />
+        <v-btn
+          v-show="canScrollLeft"
+          icon="mdi-chevron-left"
+          variant="outlined"
+          class="carousel-nav-btn prev-btn"
+          size="large"
+          @click="scrollPrev"
+        />
 
-        <div class="products-container">
-          <ProductCard v-for="product in bestSellingProducts" :key="product.id" :product="product"
-            :show-sale-tag="true" />
+        <div class="products-container" ref="productsContainer" @scroll="updateScrollButtons">
+          <ProductCard
+            v-for="product in bestSellingProducts"
+            :key="product.id"
+            :product="product"
+            :show-sale-tag="true"
+            class="product-card-item"
+          />
         </div>
 
-        <v-btn icon="mdi-chevron-right" variant="outlined" class="carousel-nav-btn next-btn" size="large" />
+        <v-btn
+          v-show="canScrollRight"
+          icon="mdi-chevron-right"
+          variant="outlined"
+          class="carousel-nav-btn next-btn"
+          size="large"
+          @click="scrollNext"
+        />
       </div>
 
       <!-- Empty State -->
@@ -53,16 +72,24 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed } from 'vue';
+import { onMounted, computed, ref, nextTick } from 'vue';
 import { useProductsStore } from '../../../stores/modules/products';
 import ProductCard from '../../../components/ProductCard.vue';
 
 const productsStore = useProductsStore();
 
+// ref to the scroll container
+const productsContainer = ref<HTMLElement | null>(null);
+const canScrollLeft = ref(false);
+const canScrollRight = ref(false);
+
 // Fetch best selling items on component mount
 onMounted(async () => {
   try {
     await productsStore.fetchBestSellingProducts();
+    // Wait for DOM to update, then check scroll buttons
+    await nextTick();
+    updateScrollButtons();
   } catch (error) {
     // Failed to fetch best selling items
   }
@@ -77,6 +104,39 @@ const loading = computed(() => productsStore.loading);
 // Error state
 const error = computed(() => productsStore.error);
 
+// Update scroll button visibility based on scroll position
+const updateScrollButtons = () => {
+  const container = productsContainer.value;
+  if (!container) return;
+  
+  // Check if we can scroll left (not at start)
+  canScrollLeft.value = container.scrollLeft > 0;
+  
+  // Check if we can scroll right (not at end)
+  const maxScrollLeft = container.scrollWidth - container.clientWidth;
+  canScrollRight.value = container.scrollLeft < maxScrollLeft - 1;
+};
+
+// Scroll helpers for prev / next buttons
+function scrollNext() {
+  const el = productsContainer.value;
+  if (!el) return;
+  // Scroll by 80% of the visible width for a smooth slide
+  const amount = Math.max(el.clientWidth * 0.8, 300);
+  el.scrollBy({ left: amount, behavior: 'smooth' });
+  
+  // Update buttons after scroll animation
+  setTimeout(updateScrollButtons, 350);
+}
+
+function scrollPrev() {
+  const el = productsContainer.value;
+  if (!el) return;
+  const amount = Math.max(el.clientWidth * 0.8, 300);
+  el.scrollBy({ left: -amount, behavior: 'smooth' });
+  
+  setTimeout(updateScrollButtons, 350);
+}
 
 </script>
 
@@ -118,11 +178,14 @@ const error = computed(() => productsStore.error);
   margin-bottom: 40px;
 }
 
+
 .carousel-nav-btn {
   border-color: #ddd;
   color: #666;
   flex-shrink: 0;
   border-radius: 8px;
+  width: 48px;
+  height: 48px;
 }
 
 .carousel-nav-btn:hover {
@@ -131,10 +194,23 @@ const error = computed(() => productsStore.error);
 }
 
 .products-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  display: flex;
+  align-items: stretch;
   gap: 24px;
-  flex-grow: 1;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px; /* allow space for scrollbar if present */
+  flex: 1 1 auto;
+}
+
+/* Hide native scrollbar visually but keep functionality */
+.products-container {
+  -ms-overflow-style: none; /* IE 10+ */
+  scrollbar-width: none; /* Firefox */
+}
+.products-container::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
 }
 
 .product-card {
@@ -143,10 +219,12 @@ const error = computed(() => productsStore.error);
   border-radius: 0px;
   overflow: hidden;
   transition: all 0.3s ease;
+  flex: 0 0 260px; /* fixed slide width */
   width: 100%;
-  max-width: 280px !important;
-  min-width: 200px !important;
+  max-width: 280px;
+  min-width: 260px;
   cursor: pointer;
+  scroll-snap-align: start;
 }
 
 .product-card:hover {

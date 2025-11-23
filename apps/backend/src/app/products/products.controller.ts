@@ -157,6 +157,21 @@ export class ProductsController {
     );
   }
 
+  @Get('hero-slider')
+  @ApiOperation({
+    summary: 'Get hero slider products',
+    description:
+      'Retrieve 3 products for hero slider: top sale, newest, and random featured',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Hero slider products retrieved successfully',
+    type: [ProductResponseDto],
+  })
+  async getHeroSliderProducts(): Promise<ProductResponseDto[]> {
+    return this.productsService.getHeroSliderProducts();
+  }
+
   @Get('featured')
   @ApiOperation({
     summary: 'Get featured products',

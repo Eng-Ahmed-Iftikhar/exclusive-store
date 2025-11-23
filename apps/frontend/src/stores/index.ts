@@ -2,6 +2,7 @@ import { useAuthStore } from './modules/auth';
 import { useCategoriesStore } from './modules/categories';
 import { useProductsStore } from './modules/products';
 import { useFlashSaleTimerStore } from './modules/flash-sale-timer';
+import { useFlashSalesStore } from './modules/flash-sales';
 import { useFavoritesStore } from './modules/favorites';
 import { useNotificationsStore } from './modules/notifications';
 import { useCartStore } from './modules/cart';
@@ -16,6 +17,7 @@ export {
   useCategoriesStore,
   useProductsStore,
   useFlashSaleTimerStore,
+  useFlashSalesStore,
   useFavoritesStore,
   useNotificationsStore,
   useCartStore,

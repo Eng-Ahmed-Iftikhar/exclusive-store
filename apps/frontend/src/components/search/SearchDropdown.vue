@@ -15,18 +15,32 @@
           <span class="section-title">Categories</span>
         </div>
         <div class="categories-list">
-          <div v-for="category in searchResults.categories" :key="category.id" class="category-item"
-            @click="handleCategoryClick(category)">
-            <div class="category-icon">
-              <v-icon :icon="category.icon || 'mdi-folder'" size="20" color="primary" />
+          <div v-for="category in searchResults.categories" :key="category.id" class="category-wrapper">
+            <div class="category-item" @click="handleCategoryClick(category)">
+              <div class="category-icon">
+                <v-icon :icon="category.icon || 'mdi-folder'" size="20" color="primary" />
+              </div>
+              <div class="category-info">
+                <div class="category-name">{{ category.name }}</div>
+                <div v-if="category.subcategories.length > 0" class="subcategories">
+                  {{ category.subcategories.length }} subcategories
+                </div>
+              </div>
+              <v-icon icon="mdi-chevron-right" size="16" color="grey" />
             </div>
-            <div class="category-info">
-              <div class="category-name">{{ category.name }}</div>
-              <div v-if="category.subcategories.length > 0" class="subcategories">
-                {{ category.subcategories.length }} subcategories
+            
+            <!-- Subcategories List -->
+            <div v-if="category.subcategories.length > 0" class="subcategories-list">
+              <div 
+                v-for="subcategory in category.subcategories" 
+                :key="subcategory.id" 
+                class="subcategory-item"
+                @click.stop="handleSubcategoryClick(category, subcategory)"
+              >
+                <v-icon icon="mdi-subdirectory-arrow-right" size="16" color="grey" />
+                <span class="subcategory-name">{{ subcategory.name }}</span>
               </div>
             </div>
-            <v-icon icon="mdi-chevron-right" size="16" color="grey" />
           </div>
         </div>
       </div>
@@ -41,7 +55,7 @@
           <button v-for="product in searchResults.products" :key="product.id" class="product-item"
             @click="handleProductClick(product)" type="button">
             <div class="product-image">
-              <img :src="product.primaryImage || '/placeholder-product.jpg'" :alt="product.name"
+              <img :src="product.primaryImage || PLACEHOLDER_IMAGE" :alt="product.name"
                 @error="handleImageError" />
             </div>
             <div class="product-info">
@@ -100,13 +114,45 @@ const hasResults = computed(() => {
   return props.searchResults.categories.length > 0 || props.searchResults.products.length > 0;
 });
 
+const PLACEHOLDER_IMAGE= import.meta.env.VITE_APP_PRODUCT_PLACEHOLDER_IMAGE;
+
 // Event handlers
 const handleCategoryClick = (category: CategoryResult) => {
-  router.push(`/products?category=${category.slug}`);
+  // Close the dropdown first
+  const event = new CustomEvent('close-search-dropdown');
+  window.dispatchEvent(event);
+  
+  // Navigate to products page with category slug as query parameter
+  router.push({
+    name: 'products',
+    query: {
+      category: category.slug || category.name.toLowerCase().replace(/\s+/g, '-')
+    }
+  });
+
+  emit('categorySelected', category);
+};
+
+const handleSubcategoryClick = (category: CategoryResult, subcategory: { id: string; name: string; slug: string; icon?: string }) => {
+  // Close the dropdown first
+  const event = new CustomEvent('close-search-dropdown');
+  window.dispatchEvent(event);
+  
+  // Navigate to products page with both category and subcategory slugs as query parameters
+  router.push({
+    name: 'products',
+    query: {
+      category: category.slug || category.name.toLowerCase().replace(/\s+/g, '-'),
+      subcategory: subcategory.slug || subcategory.name.toLowerCase().replace(/\s+/g, '-')
+    }
+  });
+  emit('categorySelected', category);
+
 };
 
 const emit = defineEmits<{
-  productSelected: [product: ProductResult]
+  productSelected: [product: ProductResult],
+  categorySelected: [category: CategoryResult]
 }>();
 
 const handleProductClick = (product: ProductResult) => {
@@ -206,6 +252,10 @@ const handleImageError = (event: Event) => {
 
 
 
+.category-wrapper {
+  margin-bottom: 8px;
+}
+
 .category-item {
   display: flex;
   align-items: center;
@@ -214,7 +264,6 @@ const handleImageError = (event: Event) => {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-bottom: 4px;
   height: 48px;
 }
 
@@ -246,6 +295,35 @@ const handleImageError = (event: Event) => {
 .subcategories {
   font-size: 11px;
   color: #666;
+}
+
+.subcategories-list {
+  margin-left: 32px;
+  margin-top: 4px;
+  padding-left: 16px;
+  border-left: 2px solid #f0f0f0;
+}
+
+.subcategory-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 2px;
+}
+
+.subcategory-item:hover {
+  background: #f8f9fa;
+  padding-left: 16px;
+}
+
+.subcategory-name {
+  font-size: 13px;
+  color: #555;
+  font-weight: 400;
 }
 
 

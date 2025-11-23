@@ -31,11 +31,17 @@ import HeroSlider from './HeroSlider.vue';
   display: flex;
   gap: 0;
   align-items: flex-start;
+  overflow: hidden;
+  position: relative;
 }
 
 .categories-sidebar-wrapper {
   flex: 0 0 25%;
   max-width: 300px;
+  height: 400px;
+  overflow: visible;
+  position: relative;
+  z-index: 10;
 }
 
 .hero-banner-wrapper {
@@ -43,6 +49,7 @@ import HeroSlider from './HeroSlider.vue';
   height: 400px; /* Fixed height for hero slider */
   min-height: 400px;
   max-height: 400px;
+  overflow: hidden;
 }
 
 /* Responsive Design */
