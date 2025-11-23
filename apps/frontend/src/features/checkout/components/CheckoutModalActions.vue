@@ -34,7 +34,7 @@
     </div>
 
     <!-- Loading Actions -->
-    <div v-else class="loading-actions">
+    <!-- <div v-else class="loading-actions">
       <v-btn
         color="error"
         variant="outlined"
@@ -43,7 +43,7 @@
       >
         Cancel Order
       </v-btn>
-    </div>
+    </div> -->
   </v-card-actions>
 </template>
 
