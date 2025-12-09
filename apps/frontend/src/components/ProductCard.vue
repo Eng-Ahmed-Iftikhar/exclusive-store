@@ -3,6 +3,7 @@
     class="product-card"
     :class="{ 'out-of-stock': !isInStock }"
     @click="navigateToProduct"
+    v-bind="attrs"
   >
     <div class="product-image">
       <!-- Image Display -->
@@ -155,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted, useAttrs } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import {
@@ -165,6 +166,10 @@ import {
   useAuthStore,
 } from '../stores/index';
 import ProductModal from './ProductModal.vue';
+
+defineOptions({
+  inheritAttrs: false,
+});
 
 interface ProductCardProps {
   product: any;
@@ -181,6 +186,9 @@ const favoritesStore = useFavoritesStore();
 const authStore = useAuthStore();
 const notificationsStore = useNotificationsStore();
 const cartStore = useCartStore();
+
+// Get attrs for manual inheritance
+const attrs = useAttrs();
 
 // Constants
 const PLACEHOLDER_IMAGE = import.meta.env.VITE_APP_PRODUCT_PLACEHOLDER_IMAGE;
@@ -722,6 +730,7 @@ const getAvailableStock = (product: any) => {
   line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;

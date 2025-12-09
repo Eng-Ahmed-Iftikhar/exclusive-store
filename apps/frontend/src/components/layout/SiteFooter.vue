@@ -2,23 +2,11 @@
   <v-footer color="black" class="text-white pt-12" elevation="0">
     <v-container class="py-0 footer-container">
       <v-row class="text-body-2" no-gutters>
-        <v-col cols="12" sm="6" lg="3">
-          <div class="mb-4">
+        <v-col cols="12" sm="6" lg="3" class="d-flex justify-center justify-lg-start">
+          <div class="my-auto">
             <BrandLogo />
           </div>
-          <p class="mb-3" style="opacity: 0.8">{{ $t('footer.subscribe') }}</p>
-          <p class="mb-3" style="opacity: 0.6">{{ $t('footer.offer') }}</p>
-          <div class="d-flex align-center">
-            <v-text-field
-              variant="outlined"
-              density="compact"
-              hide-details
-              placeholder="Enter your email"
-              class="me-2"
-              style="max-width: 190px"
-            />
-            <v-btn color="white" text="→" variant="flat" size="small" />
-          </div>
+
         </v-col>
         <v-col cols="12" sm="6" lg="3" class="mt-8 mt-lg-0">
           <h3 class="text-h6 mb-4">{{ $t('footer.support') }}</h3>

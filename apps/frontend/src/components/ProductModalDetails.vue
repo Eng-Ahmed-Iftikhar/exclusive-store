@@ -348,12 +348,12 @@ const getVariantImage = (variant: any) => {
     const firstImage = variant.images[0];
     return firstImage.file?.secureUrl || firstImage.file?.url || '';
   }
-  return 
+  return import.meta.env.VITE_APP_VARIANT_PLACEHOLDER_IMAGE;
 };
 
 const handleImageError = (e: Event) => {
   const target = e.target as HTMLImageElement;
-  target.src = 'https://placehold.co/600x400.png';
+  target.src = import.meta.env.VITE_APP_VARIANT_PLACEHOLDER_IMAGE;
 };
 
 const getAverageRating = (product: any) => {

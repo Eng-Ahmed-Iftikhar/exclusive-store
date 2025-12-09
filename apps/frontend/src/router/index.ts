@@ -84,6 +84,17 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/cart',
+      name: 'cart',
+      component: () => import('../features/cart/views/CartView.vue'),
+    },
+    {
+      path: '/wishlist',
+      name: 'wishlist',
+      component: () => import('../features/wishlist/views/WishlistView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/checkout',
       name: 'checkout',
       component: () => import('../features/checkout/views/CheckoutView.vue'),
@@ -93,6 +104,21 @@ const router = createRouter({
       name: 'order-success',
       component: () =>
         import('../features/checkout/views/OrderSuccessView.vue'),
+    },
+    {
+      path: '/privacy',
+      name: 'privacy',
+      component: () => import('../features/info/views/PrivacyView.vue'),
+    },
+    {
+      path: '/terms',
+      name: 'terms',
+      component: () => import('../features/info/views/TermsView.vue'),
+    },
+    {
+      path: '/faq',
+      name: 'faq',
+      component: () => import('../features/info/views/FAQView.vue'),
     },
   ],
 });
