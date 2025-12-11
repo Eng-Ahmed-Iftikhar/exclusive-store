@@ -13,6 +13,18 @@ export interface CartItem {
     description: string;
     sku: string;
     price: string;
+    prices?: Array<{
+      id: string;
+      variantId: string;
+      price: number;
+      salePrice?: number;
+      currency: string;
+      isActive: boolean;
+      validFrom: string | Date;
+      validTo?: string | Date;
+      createdAt: string | Date;
+      updatedAt: string | Date;
+    }>;
     salePrice: string;
     currency: string;
     isActive: boolean;
