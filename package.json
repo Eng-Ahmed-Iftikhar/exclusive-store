@@ -21,7 +21,7 @@
     "admin:prod": "npx nx run admin:prod",
 
     "clean": "nx reset",
-    "prisma:seed": "tsx apps/backend/prisma/seed.ts",
+    "prisma:seed": "cd apps/backend && npx tsx prisma/seed.ts",
     "prisma:studio": "nx run backend:prisma:studio",
 
     "kill-node": "taskkill /f /im node.exe"

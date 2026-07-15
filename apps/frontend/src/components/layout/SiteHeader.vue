@@ -24,7 +24,7 @@ const closeMobileMenu = () => {
   <header class="w-full bg-white border-b">
     <v-container class="py-3">
       <!-- Desktop Layout -->
-      <div class="d-flex align-center w-100 desktop-nav">
+      <div class="d-flex align-center  w-100 desktop-nav">
         <div class="me-6">
           <BrandLogo />
         </div>
@@ -49,7 +49,7 @@ const closeMobileMenu = () => {
         <!-- User Authentication Section -->
         <div v-if="!isAuthenticated" class="d-flex align-center desktop-auth">
           <v-btn to="/login" variant="text" class="nav-link me-2">Login</v-btn>
-          <v-btn to="/signup" color="primary" variant="flat" class="btn-cap nav-link">Sign Up</v-btn>
+          <!-- <v-btn to="/signup" color="primary" variant="flat" class="btn-cap nav-link">Sign Up</v-btn> -->
         </div>
 
         <!-- User Profile Section -->
@@ -59,12 +59,12 @@ const closeMobileMenu = () => {
       <!-- Mobile Layout -->
       <div class="mobile-nav">
         <!-- Mobile Header Row -->
-        <div class="d-flex align-center justify-space-between w-100 mb-3">
+        <div class="d-flex align-center flex-wrap justify-space-between w-100 mb-3">
           <div>
             <BrandLogo />
           </div>
 
-          <div class="d-flex align-center">
+          <div class="d-flex align-center flex-grow-1 ">
             <!-- Mobile Search -->
             <div class="me-3 mobile-search">
               <SearchInput :placeholder="String($t('nav.searchPlaceholder'))" />
@@ -204,6 +204,7 @@ const closeMobileMenu = () => {
 @media (min-width: 1024px) {
   .desktop-nav {
     display: flex !important;
+
   }
 
   .mobile-nav {
@@ -228,7 +229,7 @@ const closeMobileMenu = () => {
 
 .mobile-search {
   min-width: 200px;
-  max-width: 250px;
+  width: 100% !important;
 }
 
 .mobile-menu-btn {
@@ -312,7 +313,7 @@ const closeMobileMenu = () => {
 @media (max-width: 480px) {
   .mobile-search {
     min-width: 150px;
-    max-width: 200px;
+    width: 100% !important;
   }
 
   .mobile-nav-links {

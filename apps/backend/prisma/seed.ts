@@ -1,13 +1,22 @@
-import { PrismaClient } from '@prisma/client';
-import { seedPermissions } from './seed/01-permissions';
-import { seedResources } from './seed/02-resources';
-import { seedRoles } from './seed/03-roles';
-import { seedRolePermissions } from './seed/04-role-permissions';
-import { seedCategories } from './seed/05-categories';
-import { seedSubcategories } from './seed/06-subcategories';
-import { seedProducts } from './seed/07-products';
-import { seedVariants } from './seed/08-variants';
-import { seedUsers } from './seed/09-users';
+import path from 'path';
+import dotenv from 'dotenv';
+
+const backendEnvPath = path.resolve(process.cwd(), '.env');
+const workspaceEnvPath = path.resolve(process.cwd(), '../../.env');
+
+dotenv.config({ path: backendEnvPath });
+dotenv.config({ path: workspaceEnvPath });
+
+const { PrismaClient } = require('@prisma/client');
+const { seedPermissions } = require('./seed/01-permissions');
+const { seedResources } = require('./seed/02-resources');
+const { seedRoles } = require('./seed/03-roles');
+const { seedRolePermissions } = require('./seed/04-role-permissions');
+const { seedCategories } = require('./seed/05-categories');
+const { seedSubcategories } = require('./seed/06-subcategories');
+const { seedProducts } = require('./seed/07-products');
+const { seedVariants } = require('./seed/08-variants');
+const { seedUsers } = require('./seed/09-users');
 
 const prisma = new PrismaClient();
 
@@ -16,6 +25,7 @@ async function main() {
   console.log('=====================================');
 
   try {
+    await seedUsers();
     // Step 1: Seed permissions (create, update, view, delete)
     await seedPermissions();
     console.log('');

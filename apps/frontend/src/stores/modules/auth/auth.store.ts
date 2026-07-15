@@ -36,8 +36,8 @@ export const useAuthStore = defineStore('auth', () => {
       console.log('==========================');
 
       // Check if we have valid response data
-      if (response && response.user && response.accessToken) {
-        user.value = response.user;
+      if (response && response.accessToken) {
+
         accessToken.value = response.accessToken;
 
         // Store token in localStorage for persistence
@@ -191,6 +191,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       // Clear only token from localStorage
       localStorage.removeItem('accessToken');
+      isInitialized.value = false;
 
       isLoading.value = false;
     }
@@ -213,6 +214,7 @@ export const useAuthStore = defineStore('auth', () => {
 
         if (userData) {
           user.value = userData;
+            isInitialized.value = true;
           console.log('User data set successfully');
         } else {
           console.log('No user data received, clearing token');
@@ -220,6 +222,7 @@ export const useAuthStore = defineStore('auth', () => {
           accessToken.value = null;
           localStorage.removeItem('accessToken');
         }
+
       } catch (error) {
         console.error('Error fetching user data:', error);
         // If user fetch fails, clear the invalid token
@@ -229,7 +232,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     // Mark as initialized regardless of success/failure
-    isInitialized.value = true;
+
     console.log('Auth store initialized');
     console.log('================================');
   };

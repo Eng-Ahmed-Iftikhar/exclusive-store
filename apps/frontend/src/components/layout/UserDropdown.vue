@@ -58,7 +58,7 @@ const confirmLogout = async () => {
               {{ user?.name?.charAt(0)?.toUpperCase() || 'U' }}
             </span>
           </v-avatar>
-          <span class="user-name">{{ user?.name || 'User' }}</span>
+        
           <v-icon 
             icon="mdi-chevron-down" 
             class="ms-1 chevron-icon"
